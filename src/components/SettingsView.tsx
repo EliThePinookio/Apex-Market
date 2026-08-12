@@ -9,12 +9,15 @@ import {
   CheckCircle2,
   AlertTriangle,
   RotateCcw,
+  Trash2,
   Smartphone,
   Shield,
   Bell,
+  RefreshCw,
 } from 'lucide-react';
 import { BusinessProfile } from '../types';
-import { saveBusinessProfile, resetDatabaseToDemo } from '../services/dbService';
+import { saveBusinessProfile, resetDatabaseToDemo, clearAllBusinessData } from '../services/dbService';
+import { PinModal } from './PinModal';
 
 interface SettingsViewProps {
   profile: BusinessProfile;
@@ -45,6 +48,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [newPin, setNewPin] = useState(profile.ownerPin || '1234');
   const [lowStockAlertEnabled, setLowStockAlertEnabled] = useState(profile.lowStockAlertEnabled);
   const [allowNegativeStock, setAllowNegativeStock] = useState(profile.allowNegativeStock);
+  const [isProcessingData, setIsProcessingData] = useState(false);
+  const [securityAction, setSecurityAction] = useState<'wipe' | 'reload' | null>(null);
 
   const cur = profile.currencySymbol;
 
@@ -69,15 +74,31 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     onNotification('Settings updated & saved');
   };
 
-  const handleResetData = async () => {
-    if (
-      confirm(
-        'Are you sure you want to reset all records to initial demo seed data? This replaces all existing local/cloud items.'
-      )
-    ) {
-      await resetDatabaseToDemo();
-      onNotification('Database restored to initial demo state!');
-      window.location.reload();
+  const handleClearAllData = () => {
+    setSecurityAction('wipe');
+  };
+
+  const handleReloadSampleData = () => {
+    setSecurityAction('reload');
+  };
+
+  const handleConfirmSecurityAction = async () => {
+    const action = securityAction;
+    setSecurityAction(null);
+    setIsProcessingData(true);
+    try {
+      if (action === 'wipe') {
+        await clearAllBusinessData();
+        onNotification('Secret passcode verified! Database completely wiped and ready for fresh business entries.');
+      } else if (action === 'reload') {
+        await resetDatabaseToDemo();
+        onNotification('Secret passcode verified! Default sample catalog reloaded.');
+      }
+    } catch (e) {
+      console.error('Error executing reset action:', e);
+      onNotification('Error completing reset action. Please try again.');
+    } finally {
+      setIsProcessingData(false);
     }
   };
 
@@ -111,21 +132,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* PWA App Install Promotion Card */}
       {canInstallPwa && !isPwaInstalled && (
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-900 to-indigo-900 border border-blue-500/40 shadow-xl flex items-center justify-between">
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-cyan-950/80 via-blue-950/80 to-purple-950/80 border border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.2)] backdrop-blur-xl flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-xl bg-blue-500 text-white shadow-md">
+            <div className="p-2.5 rounded-xl bg-cyan-500 text-slate-950 font-black shadow-[0_0_12px_rgba(6,182,212,0.4)]">
               <Smartphone className="w-6 h-6" />
             </div>
             <div>
               <h4 className="text-xs font-bold text-slate-100">Install Mobile App</h4>
-              <p className="text-[11px] text-blue-200">
+              <p className="text-[11px] text-cyan-200">
                 Use offline, fullscreen with quick home screen launch.
               </p>
             </div>
           </div>
           <button
             onClick={onInstallPwa}
-            className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs whitespace-nowrap shadow-lg"
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black text-xs whitespace-nowrap shadow-[0_0_15px_rgba(16,185,129,0.3)] active:scale-95 transition-all"
           >
             Install PWA
           </button>
@@ -134,9 +155,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       <form onSubmit={handleSaveSettings} className="space-y-4">
         {/* Business Information */}
-        <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-md space-y-3">
+        <div className="p-4 rounded-2xl glass-panel border border-slate-800/80 shadow-md space-y-3">
           <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center space-x-2">
-            <Store className="w-4 h-4 text-blue-400" />
+            <Store className="w-4 h-4 text-cyan-400" />
             <span>Business Information</span>
           </h3>
 
@@ -150,7 +171,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 required
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-cyan-500"
               />
             </div>
 
@@ -163,7 +184,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   type="text"
                   value={ownerName}
                   onChange={(e) => setOwnerName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-cyan-500"
                 />
               </div>
 
@@ -174,7 +195,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <select
                   value={currencySymbol}
                   onChange={(e) => setCurrencySymbol(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 font-bold focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 font-bold focus:outline-none focus:border-cyan-500"
                 >
                   <option value="$">$ (USD / AUD / CAD)</option>
                   <option value="€">€ (Euro)</option>
@@ -199,24 +220,24 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 value={receiptHeaderMsg}
                 placeholder="e.g. Thank you for shopping with us!"
                 onChange={(e) => setReceiptHeaderMsg(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-cyan-500"
               />
             </div>
           </div>
         </div>
 
         {/* Security & Owner Lock */}
-        <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-md space-y-3">
+        <div className="p-4 rounded-2xl glass-panel border border-slate-800/80 shadow-md space-y-3">
           <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center space-x-2">
             <Lock className="w-4 h-4 text-emerald-400" />
             <span>Owner PIN Protection</span>
           </h3>
 
           <div className="space-y-3 text-xs">
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
               <div>
                 <p className="font-semibold text-slate-200">Require Owner Security PIN</p>
-                <p className="text-[10px] text-slate-500">
+                <p className="text-[10px] text-slate-400">
                   Protect sensitivity analytics, settings & profit data
                 </p>
               </div>
@@ -224,7 +245,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 type="checkbox"
                 checked={isPinLocked}
                 onChange={(e) => setIsPinLocked(e.target.checked)}
-                className="w-4 h-4 accent-blue-600 rounded cursor-pointer"
+                className="w-4 h-4 accent-cyan-500 rounded cursor-pointer"
               />
             </div>
 
@@ -238,7 +259,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   maxLength={6}
                   value={newPin}
                   onChange={(e) => setNewPin(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 font-bold tracking-widest text-base focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 font-bold tracking-widest text-base focus:outline-none focus:border-cyan-500"
                 />
               </div>
             )}
@@ -246,17 +267,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
 
         {/* Inventory Rules */}
-        <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-md space-y-3">
+        <div className="p-4 rounded-2xl glass-panel border border-slate-800/80 shadow-md space-y-3">
           <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center space-x-2">
             <Bell className="w-4 h-4 text-amber-400" />
             <span>Inventory Stock Rules</span>
           </h3>
 
           <div className="space-y-2.5 text-xs">
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
               <div>
                 <p className="font-semibold text-slate-200">Low Stock Alert Notifications</p>
-                <p className="text-[10px] text-slate-500">
+                <p className="text-[10px] text-slate-400">
                   Highlight items below minimum threshold
                 </p>
               </div>
@@ -264,14 +285,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 type="checkbox"
                 checked={lowStockAlertEnabled}
                 onChange={(e) => setLowStockAlertEnabled(e.target.checked)}
-                className="w-4 h-4 accent-blue-600 rounded cursor-pointer"
+                className="w-4 h-4 accent-cyan-500 rounded cursor-pointer"
               />
             </div>
 
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
               <div>
                 <p className="font-semibold text-slate-200">Allow Negative Stock Sales</p>
-                <p className="text-[10px] text-slate-500">
+                <p className="text-[10px] text-slate-400">
                   Allow POS sales even when stock quantity is 0
                 </p>
               </div>
@@ -279,7 +300,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 type="checkbox"
                 checked={allowNegativeStock}
                 onChange={(e) => setAllowNegativeStock(e.target.checked)}
-                className="w-4 h-4 accent-blue-600 rounded cursor-pointer"
+                className="w-4 h-4 accent-cyan-500 rounded cursor-pointer"
               />
             </div>
           </div>
@@ -288,31 +309,71 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {/* Submit Save Settings Button */}
         <button
           type="submit"
-          className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs shadow-lg shadow-blue-900/30 flex items-center justify-center space-x-2"
+          className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs shadow-[0_0_20px_rgba(6,182,212,0.3)] active:scale-95 transition-all flex items-center justify-center space-x-2"
         >
-          <CheckCircle2 className="w-4 h-4" />
+          <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
           <span>Save Profile Preferences</span>
         </button>
       </form>
 
-      {/* Database Reset Option */}
-      <div className="p-4 rounded-2xl bg-slate-900 border border-rose-500/20 shadow-md space-y-2 pt-3">
-        <h3 className="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center space-x-2">
-          <Database className="w-4 h-4" />
-          <span>Reset Demo Database</span>
+      {/* Data Management Options */}
+      <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-md space-y-3 pt-3">
+        <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center space-x-2">
+          <Database className="w-4 h-4 text-blue-400" />
+          <span>Business Data & Records Management</span>
         </h3>
         <p className="text-[11px] text-slate-400">
-          Reinitializes the database with initial retail seed items and transactions.
+          Wipe all sample data to start completely fresh, or reload default catalog entries if needed.
         </p>
 
-        <button
-          onClick={handleResetData}
-          className="w-full py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold text-xs flex items-center justify-center space-x-1.5"
-        >
-          <RotateCcw className="w-4 h-4" />
-          <span>Reset to Demo Data</span>
-        </button>
+        <div className="grid grid-cols-2 gap-2 pt-1">
+          <button
+            type="button"
+            onClick={handleClearAllData}
+            disabled={isProcessingData}
+            className="py-2.5 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold text-xs flex items-center justify-center space-x-1.5 transition-all disabled:opacity-50 active:scale-95"
+          >
+            {isProcessingData ? (
+              <RefreshCw className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
+            <span>{isProcessingData ? 'Clearing...' : 'Wipe All Data'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleReloadSampleData}
+            disabled={isProcessingData}
+            className="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-semibold text-xs flex items-center justify-center space-x-1.5 transition-all disabled:opacity-50 active:scale-95"
+          >
+            {isProcessingData ? (
+              <RefreshCw className="w-4 h-4 animate-spin text-cyan-400" />
+            ) : (
+              <RotateCcw className="w-4 h-4 text-slate-400" />
+            )}
+            <span>{isProcessingData ? 'Loading...' : 'Load Samples'}</span>
+          </button>
+        </div>
       </div>
+
+      {/* Security Check Passcode Modal for Reset Actions */}
+      <PinModal
+        isOpen={!!securityAction}
+        onClose={() => setSecurityAction(null)}
+        correctPin={profile.ownerPin || '1234'}
+        title={
+          securityAction === 'wipe'
+            ? 'Confirm Data Wipe'
+            : 'Confirm Sample Reload'
+        }
+        subtitle={
+          securityAction === 'wipe'
+            ? 'Enter owner passcode PIN to wipe all business figures and start completely fresh.'
+            : 'Enter owner passcode PIN to reload sample catalog figures.'
+        }
+        onSuccess={handleConfirmSecurityAction}
+      />
     </div>
   );
 };

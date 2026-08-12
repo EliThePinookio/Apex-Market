@@ -19,6 +19,7 @@ import {
   Cell,
 } from 'recharts';
 import { Transaction, Product, BusinessProfile, FinancialSummary } from '../types';
+import { GeminiProfitAdvisor } from './GeminiProfitAdvisor';
 
 interface AnalyticsViewProps {
   transactions: Transaction[];
@@ -103,19 +104,23 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         </div>
 
         {/* Time Period Filter */}
-        <div className="flex items-center space-x-1 p-1 bg-slate-900 rounded-xl border border-slate-800 text-[11px] font-semibold">
+        <div className="flex items-center space-x-1 p-1.5 glass-panel rounded-2xl border border-slate-800/80 text-[11px] font-bold">
           <button
             onClick={() => setPeriod('7days')}
-            className={`px-2.5 py-1 rounded-lg transition-colors ${
-              period === '7days' ? 'bg-blue-600 text-white' : 'text-slate-400'
+            className={`px-3 py-1 rounded-xl transition-all active:scale-95 ${
+              period === '7days'
+                ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-black shadow-[0_0_12px_rgba(6,182,212,0.3)]'
+                : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             7 Days
           </button>
           <button
             onClick={() => setPeriod('30days')}
-            className={`px-2.5 py-1 rounded-lg transition-colors ${
-              period === '30days' ? 'bg-blue-600 text-white' : 'text-slate-400'
+            className={`px-3 py-1 rounded-xl transition-all active:scale-95 ${
+              period === '30days'
+                ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-black shadow-[0_0_12px_rgba(6,182,212,0.3)]'
+                : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             30 Days
@@ -125,33 +130,36 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
       {/* Margin Metric Cards */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 shadow-md">
+        <div className="p-3.5 rounded-2xl glass-panel-interactive border border-emerald-500/20 shadow-md">
           <p className="text-[10px] text-slate-400 font-bold uppercase">Gross Profit Margin</p>
-          <p className="text-xl font-extrabold text-emerald-400 mt-1">{grossMarginPercent}%</p>
-          <p className="text-[11px] text-slate-400 mt-0.5">
+          <p className="text-xl font-black text-emerald-400 mt-1">{grossMarginPercent}%</p>
+          <p className="text-[11px] text-slate-300 font-medium mt-0.5">
             {cur}{summary.grossProfit.toFixed(2)}
           </p>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 shadow-md">
+        <div className="p-3.5 rounded-2xl glass-panel-interactive border border-cyan-500/20 shadow-md">
           <p className="text-[10px] text-slate-400 font-bold uppercase">Net Profit Margin</p>
-          <p className="text-xl font-extrabold text-blue-400 mt-1">{profitMarginPercent}%</p>
-          <p className="text-[11px] text-slate-400 mt-0.5">
+          <p className="text-xl font-black text-cyan-400 mt-1">{profitMarginPercent}%</p>
+          <p className="text-[11px] text-slate-300 font-medium mt-0.5">
             {cur}{summary.netProfit.toFixed(2)}
           </p>
         </div>
       </div>
 
+      {/* Gemini AI Profit Advisor Section */}
+      <GeminiProfitAdvisor summary={summary} profile={profile} products={products} />
+
       {/* Recharts Bar Chart: Sales vs Expenses */}
-      <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-3">
+      <div className="p-4 rounded-2xl glass-panel border border-slate-800/80 shadow-xl space-y-3">
         <div className="flex items-center justify-between text-xs font-bold text-slate-200">
           <span>Revenue vs Expenses Trend</span>
-          <div className="flex items-center space-x-3 text-[10px]">
+          <div className="flex items-center space-x-3 text-[10px] font-semibold">
             <span className="flex items-center">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 mr-1" /> Sales
+              <span className="w-2 h-2 rounded-full bg-emerald-400 mr-1 shadow-[0_0_8px_rgba(16,185,129,0.5)]" /> Sales
             </span>
             <span className="flex items-center">
-              <span className="w-2 h-2 rounded-full bg-rose-500 mr-1" /> Expense
+              <span className="w-2 h-2 rounded-full bg-rose-500 mr-1 shadow-[0_0_8px_rgba(244,63,94,0.5)]" /> Expense
             </span>
           </div>
         </div>
@@ -162,7 +170,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickLine={false} />
               <YAxis stroke="#64748b" fontSize={10} tickLine={false} />
               <Tooltip
-                contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', fontSize: '11px' }}
+                contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', borderColor: 'rgba(6, 182, 212, 0.3)', borderRadius: '16px', fontSize: '11px', backdropFilter: 'blur(12px)' }}
                 formatter={(val: any) => [`${cur}${Number(val).toFixed(2)}`, '']}
               />
               <Bar dataKey="sales" fill="#10b981" radius={[4, 4, 0, 0]} />
@@ -173,33 +181,33 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       </div>
 
       {/* Structured Profit & Loss Statement Table */}
-      <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-3">
+      <div className="p-4 rounded-2xl glass-panel border border-slate-800/80 shadow-xl space-y-3">
         <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
           Income & Profit Loss Statement (P&L)
         </h3>
 
         <div className="space-y-2 text-xs">
-          <div className="flex justify-between p-2 rounded-xl bg-slate-950 font-semibold text-slate-200">
+          <div className="flex justify-between p-2 rounded-xl bg-slate-950/70 font-semibold text-slate-200 border border-slate-800/80">
             <span>Sales Revenue</span>
-            <span className="text-emerald-400 font-extrabold">{cur}{summary.totalRevenue.toFixed(2)}</span>
+            <span className="text-emerald-400 font-black">{cur}{summary.totalRevenue.toFixed(2)}</span>
           </div>
 
-          <div className="flex justify-between p-2 rounded-xl bg-slate-950/60 text-slate-400">
+          <div className="flex justify-between p-2 rounded-xl bg-slate-950/40 text-slate-400 border border-slate-800/40">
             <span>Less: Cost of Goods Sold (COGS)</span>
             <span>- {cur}{summary.totalCOGS.toFixed(2)}</span>
           </div>
 
-          <div className="flex justify-between p-2 rounded-xl bg-slate-950/90 font-bold text-slate-100 border-l-2 border-emerald-500">
+          <div className="flex justify-between p-2 rounded-xl bg-slate-950/90 font-bold text-slate-100 border-l-2 border-emerald-400">
             <span>GROSS PROFIT</span>
-            <span className="text-emerald-400">={cur}{summary.grossProfit.toFixed(2)}</span>
+            <span className="text-emerald-400 font-black">={cur}{summary.grossProfit.toFixed(2)}</span>
           </div>
 
-          <div className="flex justify-between p-2 rounded-xl bg-slate-950/60 text-slate-400">
+          <div className="flex justify-between p-2 rounded-xl bg-slate-950/40 text-slate-400 border border-slate-800/40">
             <span>Less: Operating Expenses</span>
             <span className="text-rose-400">- {cur}{summary.totalExpenses.toFixed(2)}</span>
           </div>
 
-          <div className="flex justify-between p-3 rounded-xl bg-blue-950/40 border border-blue-500/30 font-extrabold text-sm text-slate-100">
+          <div className="flex justify-between p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/40 font-black text-sm text-slate-100 shadow-[0_0_15px_rgba(6,182,212,0.15)]">
             <span>NET BUSINESS PROFIT</span>
             <span className={summary.netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
               {cur}{summary.netProfit.toFixed(2)}

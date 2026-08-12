@@ -41,6 +41,12 @@ const CACHE_KEYS = {
   OFFLINE_QUEUE: 'app_offline_queue_v1',
 };
 
+// Subscriber sets for real-time local + online reactivity
+const productSubscribers = new Set<(products: Product[]) => void>();
+const categorySubscribers = new Set<(categories: Category[]) => void>();
+const transactionSubscribers = new Set<(transactions: Transaction[]) => void>();
+const profileSubscribers = new Set<(profile: BusinessProfile) => void>();
+
 // Helper for local storage read
 function getLocalCache<T>(key: string, defaultValue: T): T {
   try {
@@ -60,128 +66,239 @@ function setLocalCache<T>(key: string, data: T): void {
   }
 }
 
+function getProductsCache(): Product[] {
+  const hasInit = localStorage.getItem('app_has_initialized_v1');
+  return getLocalCache<Product[]>(CACHE_KEYS.PRODUCTS, hasInit ? [] : INITIAL_PRODUCTS);
+}
+
+function getTransactionsCache(): Transaction[] {
+  const hasInit = localStorage.getItem('app_has_initialized_v1');
+  return getLocalCache<Transaction[]>(CACHE_KEYS.TRANSACTIONS, hasInit ? [] : INITIAL_TRANSACTIONS);
+}
+
+export function notifyProducts(): void {
+  const current = getProductsCache();
+  productSubscribers.forEach((cb) => cb(current));
+}
+
+export function notifyCategories(): void {
+  const current = getLocalCache<Category[]>(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
+  categorySubscribers.forEach((cb) => cb(current));
+}
+
+export function notifyTransactions(): void {
+  const current = getTransactionsCache();
+  transactionSubscribers.forEach((cb) => cb(current));
+}
+
+export function notifyProfile(): void {
+  const current = getLocalCache<BusinessProfile>(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
+  profileSubscribers.forEach((cb) => cb(current));
+}
+
+async function clearFirestoreCollection(collectionName: string): Promise<void> {
+  if (!db) return;
+  try {
+    const snap = await getDocs(collection(db, collectionName));
+    if (snap.empty) return;
+    const docs = snap.docs;
+    for (let i = 0; i < docs.length; i += 400) {
+      const batch = writeBatch(db);
+      const chunk = docs.slice(i, i + 400);
+      chunk.forEach((d) => batch.delete(d.ref));
+      await batch.commit();
+    }
+  } catch (e) {
+    console.warn(`Error clearing Firestore collection ${collectionName}:`, e);
+  }
+}
+
 // Subscribe to Products
 export function subscribeProducts(callback: (products: Product[]) => void): () => void {
-  // Return local cache immediately
-  const local = getLocalCache<Product[]>(CACHE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
+  productSubscribers.add(callback);
+  const local = getProductsCache();
   callback(local);
 
-  try {
-    const q = query(collection(db, 'products'), orderBy('updatedAt', 'desc'));
-    return onSnapshot(
-      q,
-      (snapshot) => {
-        if (!snapshot.empty) {
-          const list: Product[] = snapshot.docs.map((d) => ({
-            id: d.id,
-            ...(d.data() as Omit<Product, 'id'>),
-          }));
-          setLocalCache(CACHE_KEYS.PRODUCTS, list);
-          callback(list);
-        } else {
-          // If Firestore is empty, seed initial products
-          seedInitialData().then(() => {
-            callback(INITIAL_PRODUCTS);
-          });
+  let unsubFirestore = () => {};
+  if (db) {
+    try {
+      const q = query(collection(db, 'products'), orderBy('updatedAt', 'desc'));
+      unsubFirestore = onSnapshot(
+        q,
+        (snapshot) => {
+          if (!snapshot.empty) {
+            const list: Product[] = snapshot.docs.map((d) => ({
+              id: d.id,
+              ...(d.data() as Omit<Product, 'id'>),
+            }));
+            setLocalCache(CACHE_KEYS.PRODUCTS, list);
+            notifyProducts();
+          } else {
+            const hasInit = localStorage.getItem('app_has_initialized_v1');
+            if (!hasInit) {
+              seedInitialData().then(() => {
+                notifyProducts();
+              });
+            } else {
+              setLocalCache(CACHE_KEYS.PRODUCTS, []);
+              notifyProducts();
+            }
+          }
+        },
+        (err) => {
+          console.warn('Firestore snapshot error for products (using local store):', err);
         }
-      },
-      (err) => {
-        console.warn('Firestore snapshot error for products (using cache):', err);
-      }
-    );
-  } catch (e) {
-    console.warn('Firestore subscription failed, running offline mode');
-    return () => {};
+      );
+    } catch (e) {
+      console.warn('Firestore subscription failed, running local mode');
+    }
   }
+
+  return () => {
+    productSubscribers.delete(callback);
+    unsubFirestore();
+  };
 }
 
 // Subscribe to Categories
 export function subscribeCategories(callback: (categories: Category[]) => void): () => void {
+  categorySubscribers.add(callback);
   const local = getLocalCache<Category[]>(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
   callback(local);
 
-  try {
-    return onSnapshot(
-      collection(db, 'categories'),
-      (snapshot) => {
-        if (!snapshot.empty) {
-          const list: Category[] = snapshot.docs.map((d) => ({
-            id: d.id,
-            ...(d.data() as Omit<Category, 'id'>),
-          }));
-          setLocalCache(CACHE_KEYS.CATEGORIES, list);
-          callback(list);
+  let unsubFirestore = () => {};
+  if (db) {
+    try {
+      unsubFirestore = onSnapshot(
+        collection(db, 'categories'),
+        (snapshot) => {
+          if (!snapshot.empty) {
+            const list: Category[] = snapshot.docs.map((d) => ({
+              id: d.id,
+              ...(d.data() as Omit<Category, 'id'>),
+            }));
+            setLocalCache(CACHE_KEYS.CATEGORIES, list);
+            notifyCategories();
+          } else {
+            setLocalCache(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
+            notifyCategories();
+          }
+        },
+        (err) => {
+          console.warn('Firestore categories error:', err);
         }
-      },
-      (err) => {
-        console.warn('Firestore categories error:', err);
-      }
-    );
-  } catch (e) {
-    return () => {};
+      );
+    } catch (e) {
+      console.warn('Firestore categories subscription failed');
+    }
   }
+
+  return () => {
+    categorySubscribers.delete(callback);
+    unsubFirestore();
+  };
 }
 
 // Subscribe to Transactions
 export function subscribeTransactions(callback: (transactions: Transaction[]) => void): () => void {
-  const local = getLocalCache<Transaction[]>(CACHE_KEYS.TRANSACTIONS, INITIAL_TRANSACTIONS);
+  transactionSubscribers.add(callback);
+  const local = getTransactionsCache();
   callback(local);
 
-  try {
-    const q = query(collection(db, 'transactions'), orderBy('date', 'desc'), limit(500));
-    return onSnapshot(
-      q,
-      (snapshot) => {
-        if (!snapshot.empty) {
-          const list: Transaction[] = snapshot.docs.map((d) => ({
-            id: d.id,
-            ...(d.data() as Omit<Transaction, 'id'>),
-          }));
-          setLocalCache(CACHE_KEYS.TRANSACTIONS, list);
-          callback(list);
+  let unsubFirestore = () => {};
+  if (db) {
+    try {
+      const q = query(collection(db, 'transactions'), orderBy('date', 'desc'), limit(500));
+      unsubFirestore = onSnapshot(
+        q,
+        (snapshot) => {
+          if (!snapshot.empty) {
+            const list: Transaction[] = snapshot.docs.map((d) => ({
+              id: d.id,
+              ...(d.data() as Omit<Transaction, 'id'>),
+            }));
+            setLocalCache(CACHE_KEYS.TRANSACTIONS, list);
+            notifyTransactions();
+          } else {
+            setLocalCache(CACHE_KEYS.TRANSACTIONS, []);
+            notifyTransactions();
+          }
+        },
+        (err) => {
+          console.warn('Firestore transactions error:', err);
         }
-      },
-      (err) => {
-        console.warn('Firestore transactions error:', err);
-      }
-    );
-  } catch (e) {
-    return () => {};
+      );
+    } catch (e) {
+      console.warn('Firestore transactions subscription failed');
+    }
   }
+
+  return () => {
+    transactionSubscribers.delete(callback);
+    unsubFirestore();
+  };
 }
 
 // Subscribe to Business Profile
 export function subscribeProfile(callback: (profile: BusinessProfile) => void): () => void {
+  profileSubscribers.add(callback);
   const local = getLocalCache<BusinessProfile>(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
   callback(local);
 
-  try {
-    const docRef = doc(db, 'profile', 'business_info');
-    return onSnapshot(
-      docRef,
-      (docSnap) => {
-        if (docSnap.exists()) {
-          const data = docSnap.data() as BusinessProfile;
-          setLocalCache(CACHE_KEYS.PROFILE, data);
-          callback(data);
-        } else {
-          setDoc(docRef, INITIAL_BUSINESS_PROFILE);
+  let unsubFirestore = () => {};
+  if (db) {
+    try {
+      const docRef = doc(db, 'profile', 'business_info');
+      unsubFirestore = onSnapshot(
+        docRef,
+        (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data() as BusinessProfile;
+            setLocalCache(CACHE_KEYS.PROFILE, data);
+            notifyProfile();
+          } else {
+            setDoc(docRef, INITIAL_BUSINESS_PROFILE);
+          }
+        },
+        (err) => {
+          console.warn('Firestore profile error:', err);
         }
-      },
-      (err) => {
-        console.warn('Firestore profile error:', err);
-      }
-    );
-  } catch (e) {
-    return () => {};
+      );
+    } catch (e) {
+      console.warn('Firestore profile subscription failed');
+    }
   }
+
+  return () => {
+    profileSubscribers.delete(callback);
+    unsubFirestore();
+  };
 }
 
 // Seed initial database
 export async function seedInitialData(force = false): Promise<void> {
+  localStorage.setItem('app_has_initialized_v1', 'true');
+  if (!db) {
+    setLocalCache(CACHE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
+    setLocalCache(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
+    setLocalCache(CACHE_KEYS.TRANSACTIONS, INITIAL_TRANSACTIONS);
+    setLocalCache(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
+    notifyProducts();
+    notifyCategories();
+    notifyTransactions();
+    notifyProfile();
+    return;
+  }
+
   try {
-    const pSnap = await getDocs(collection(db, 'products'));
-    if (!pSnap.empty && !force) return;
+    if (!force) {
+      const pSnap = await getDocs(collection(db, 'products'));
+      if (!pSnap.empty) return;
+    } else {
+      await clearFirestoreCollection('products');
+      await clearFirestoreCollection('transactions');
+      await clearFirestoreCollection('categories');
+    }
 
     const batch = writeBatch(db);
 
@@ -213,6 +330,11 @@ export async function seedInitialData(force = false): Promise<void> {
     setLocalCache(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
     setLocalCache(CACHE_KEYS.TRANSACTIONS, INITIAL_TRANSACTIONS);
     setLocalCache(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
+
+    notifyProducts();
+    notifyCategories();
+    notifyTransactions();
+    notifyProfile();
   } catch (e) {
     console.error('Error seeding database:', e);
     // Ensure offline local cache is set regardless
@@ -220,6 +342,11 @@ export async function seedInitialData(force = false): Promise<void> {
     setLocalCache(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
     setLocalCache(CACHE_KEYS.TRANSACTIONS, INITIAL_TRANSACTIONS);
     setLocalCache(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
+
+    notifyProducts();
+    notifyCategories();
+    notifyTransactions();
+    notifyProfile();
   }
 }
 
@@ -231,14 +358,14 @@ export async function saveProduct(productData: Partial<Product>): Promise<string
 
   const product: Product = {
     id,
-    name: productData.name || 'New Product',
-    sku: productData.sku || `SKU-${Date.now().toString().slice(-4)}`,
-    category: productData.category || 'General',
+    name: productData.name?.trim() || 'New Product',
+    sku: productData.sku?.trim() || `SKU-${Date.now().toString().slice(-4)}`,
+    category: productData.category?.trim() || 'General',
     buyPrice: Number(productData.buyPrice) || 0,
     sellPrice: Number(productData.sellPrice) || 0,
-    stockQuantity: Number(productData.stockQuantity) || 0,
-    minStockThreshold: Number(productData.minStockThreshold) || 5,
-    unit: productData.unit || 'pcs',
+    stockQuantity: Number(productData.stockQuantity) ?? 0,
+    minStockThreshold: Number(productData.minStockThreshold) ?? 5,
+    unit: productData.unit?.trim() || 'pcs',
     barcode: productData.barcode || '',
     notes: productData.notes || '',
     createdAt: productData.createdAt || now,
@@ -251,12 +378,15 @@ export async function saveProduct(productData: Partial<Product>): Promise<string
     ? [product, ...currentProds]
     : currentProds.map((p) => (p.id === id ? product : p));
   setLocalCache(CACHE_KEYS.PRODUCTS, updatedProds);
+  notifyProducts(); // Instant UI sync across subscribers
 
   // Firestore write
-  try {
-    await setDoc(doc(db, 'products', id), product, { merge: true });
-  } catch (e) {
-    console.warn('Firestore product write saved locally (offline):', e);
+  if (db) {
+    try {
+      await setDoc(doc(db, 'products', id), product, { merge: true });
+    } catch (e) {
+      console.warn('Firestore product write saved locally (offline):', e);
+    }
   }
 
   return id;
@@ -267,11 +397,14 @@ export async function deleteProduct(productId: string): Promise<void> {
   const currentProds = getLocalCache<Product[]>(CACHE_KEYS.PRODUCTS, []);
   const updatedProds = currentProds.filter((p) => p.id !== productId);
   setLocalCache(CACHE_KEYS.PRODUCTS, updatedProds);
+  notifyProducts(); // Instant UI sync across subscribers
 
-  try {
-    await deleteDoc(doc(db, 'products', productId));
-  } catch (e) {
-    console.warn('Firestore product delete queued offline:', e);
+  if (db) {
+    try {
+      await deleteDoc(doc(db, 'products', productId));
+    } catch (e) {
+      console.warn('Firestore product delete queued offline:', e);
+    }
   }
 }
 
@@ -290,9 +423,6 @@ export async function recordSale(saleData: {
   let totalBuyPrice = 0;
 
   const productsList = getLocalCache<Product[]>(CACHE_KEYS.PRODUCTS, []);
-  const productMap = new Map(productsList.map((p) => [p.id, p]));
-
-  // Verify and update product stocks
   const updatedProducts = [...productsList];
 
   saleData.items.forEach((item) => {
@@ -309,12 +439,14 @@ export async function recordSale(saleData: {
         updatedAt: now,
       };
 
-      // Also attempt async Firestore update for product stock
-      setDoc(
-        doc(db, 'products', prod.id),
-        { stockQuantity: newStock, updatedAt: now },
-        { merge: true }
-      ).catch(() => {});
+      // Also attempt async Firestore update for product stock if configured
+      if (db) {
+        setDoc(
+          doc(db, 'products', prod.id),
+          { stockQuantity: newStock, updatedAt: now },
+          { merge: true }
+        ).catch(() => {});
+      }
     }
   });
 
@@ -344,11 +476,16 @@ export async function recordSale(saleData: {
   const currentTxs = getLocalCache<Transaction[]>(CACHE_KEYS.TRANSACTIONS, []);
   setLocalCache(CACHE_KEYS.TRANSACTIONS, [transaction, ...currentTxs]);
 
+  notifyProducts(); // Instant UI sync across subscribers
+  notifyTransactions(); // Instant UI sync across subscribers
+
   // Firestore write
-  try {
-    await setDoc(doc(db, 'transactions', txId), transaction);
-  } catch (e) {
-    console.warn('Sale saved offline:', e);
+  if (db) {
+    try {
+      await setDoc(doc(db, 'transactions', txId), transaction);
+    } catch (e) {
+      console.warn('Sale saved offline:', e);
+    }
   }
 
   return txId;
@@ -378,11 +515,14 @@ export async function recordExpense(expenseData: {
 
   const currentTxs = getLocalCache<Transaction[]>(CACHE_KEYS.TRANSACTIONS, []);
   setLocalCache(CACHE_KEYS.TRANSACTIONS, [transaction, ...currentTxs]);
+  notifyTransactions(); // Instant UI sync across subscribers
 
-  try {
-    await setDoc(doc(db, 'transactions', txId), transaction);
-  } catch (e) {
-    console.warn('Expense saved offline:', e);
+  if (db) {
+    try {
+      await setDoc(doc(db, 'transactions', txId), transaction);
+    } catch (e) {
+      console.warn('Expense saved offline:', e);
+    }
   }
 
   return txId;
@@ -409,11 +549,14 @@ export async function recordCapital(capitalData: {
 
   const currentTxs = getLocalCache<Transaction[]>(CACHE_KEYS.TRANSACTIONS, []);
   setLocalCache(CACHE_KEYS.TRANSACTIONS, [transaction, ...currentTxs]);
+  notifyTransactions(); // Instant UI sync across subscribers
 
-  try {
-    await setDoc(doc(db, 'transactions', txId), transaction);
-  } catch (e) {
-    console.warn('Capital transaction saved offline:', e);
+  if (db) {
+    try {
+      await setDoc(doc(db, 'transactions', txId), transaction);
+    } catch (e) {
+      console.warn('Capital transaction saved offline:', e);
+    }
   }
 
   return txId;
@@ -458,11 +601,16 @@ export async function recordStockRefill(refillData: {
     const txs = getLocalCache<Transaction[]>(CACHE_KEYS.TRANSACTIONS, []);
     setLocalCache(CACHE_KEYS.TRANSACTIONS, [tx, ...txs]);
 
-    try {
-      await setDoc(doc(db, 'products', prod.id), products[idx], { merge: true });
-      await setDoc(doc(db, 'transactions', txId), tx);
-    } catch (e) {
-      console.warn('Stock refill saved offline:', e);
+    notifyProducts(); // Instant UI sync across subscribers
+    notifyTransactions(); // Instant UI sync across subscribers
+
+    if (db) {
+      try {
+        await setDoc(doc(db, 'products', prod.id), products[idx], { merge: true });
+        await setDoc(doc(db, 'transactions', txId), tx);
+      } catch (e) {
+        console.warn('Stock refill saved offline:', e);
+      }
     }
   }
 }
@@ -472,11 +620,14 @@ export async function saveBusinessProfile(profile: Partial<BusinessProfile>): Pr
   const current = getLocalCache<BusinessProfile>(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
   const updated = { ...current, ...profile };
   setLocalCache(CACHE_KEYS.PROFILE, updated);
+  notifyProfile(); // Instant UI sync across subscribers
 
-  try {
-    await setDoc(doc(db, 'profile', 'business_info'), updated, { merge: true });
-  } catch (e) {
-    console.warn('Profile updated offline:', e);
+  if (db) {
+    try {
+      await setDoc(doc(db, 'profile', 'business_info'), updated, { merge: true });
+    } catch (e) {
+      console.warn('Profile updated offline:', e);
+    }
   }
 }
 
@@ -489,11 +640,14 @@ export async function saveCategory(category: Category): Promise<void> {
     : [...current, category];
 
   setLocalCache(CACHE_KEYS.CATEGORIES, updated);
+  notifyCategories(); // Instant UI sync across subscribers
 
-  try {
-    await setDoc(doc(db, 'categories', category.id), category, { merge: true });
-  } catch (e) {
-    console.warn('Category saved offline:', e);
+  if (db) {
+    try {
+      await setDoc(doc(db, 'categories', category.id), category, { merge: true });
+    } catch (e) {
+      console.warn('Category saved offline:', e);
+    }
   }
 }
 
@@ -502,20 +656,70 @@ export async function deleteTransaction(txId: string): Promise<void> {
   const current = getLocalCache<Transaction[]>(CACHE_KEYS.TRANSACTIONS, []);
   const updated = current.filter((t) => t.id !== txId);
   setLocalCache(CACHE_KEYS.TRANSACTIONS, updated);
+  notifyTransactions(); // Instant UI sync across subscribers
 
-  try {
-    await deleteDoc(doc(db, 'transactions', txId));
-  } catch (e) {
-    console.warn('Transaction deleted offline:', e);
+  if (db) {
+    try {
+      await deleteDoc(doc(db, 'transactions', txId));
+    } catch (e) {
+      console.warn('Transaction deleted offline:', e);
+    }
   }
 }
 
-// Clear or Reset database to seed data
+// Clear all business records and start completely fresh
+export async function clearAllBusinessData(): Promise<void> {
+  localStorage.setItem('app_has_initialized_v1', 'true');
+
+  setLocalCache(CACHE_KEYS.PRODUCTS, []);
+  setLocalCache(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
+  setLocalCache(CACHE_KEYS.TRANSACTIONS, []);
+  setLocalCache(CACHE_KEYS.MOVEMENTS, []);
+  
+  const cleanProfile = {
+    ...INITIAL_BUSINESS_PROFILE,
+    businessName: 'My Retail Store',
+    ownerName: 'Store Owner',
+  };
+  setLocalCache(CACHE_KEYS.PROFILE, cleanProfile);
+
+  notifyProducts();
+  notifyCategories();
+  notifyTransactions();
+  notifyProfile();
+
+  if (db) {
+    try {
+      await clearFirestoreCollection('products');
+      await clearFirestoreCollection('transactions');
+      await clearFirestoreCollection('movements');
+      await clearFirestoreCollection('categories');
+
+      const batch = writeBatch(db);
+      INITIAL_CATEGORIES.forEach((c) => {
+        batch.set(doc(db, 'categories', c.id), c);
+      });
+      batch.set(doc(db, 'profile', 'business_info'), cleanProfile);
+      await batch.commit();
+    } catch (e) {
+      console.warn('Error clearing Firestore collections:', e);
+    }
+  }
+}
+
+// Reset database to initial sample data
 export async function resetDatabaseToDemo(): Promise<void> {
+  localStorage.setItem('app_has_initialized_v1', 'true');
+
   setLocalCache(CACHE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
   setLocalCache(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
   setLocalCache(CACHE_KEYS.TRANSACTIONS, INITIAL_TRANSACTIONS);
   setLocalCache(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
+
+  notifyProducts();
+  notifyCategories();
+  notifyTransactions();
+  notifyProfile();
 
   await seedInitialData(true);
 }

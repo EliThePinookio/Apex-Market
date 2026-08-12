@@ -1,8 +1,8 @@
 import { Product, Category, Transaction, BusinessProfile } from '../types';
 
 export const INITIAL_BUSINESS_PROFILE: BusinessProfile = {
-  businessName: 'Apex Retail & Supplies',
-  ownerName: 'Alex Owner',
+  businessName: 'My Retail Store',
+  ownerName: 'Store Owner',
   currencySymbol: '$',
   ownerPin: '1234',
   isPinLocked: false,

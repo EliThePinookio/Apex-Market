@@ -7,6 +7,7 @@ import {
   subscribeProfile,
 } from './services/dbService';
 import { usePWA, registerServiceWorker } from './services/pwaService';
+import { BackgroundCanvas } from './components/BackgroundCanvas';
 import { Header } from './components/Header';
 import { BottomNav, NavTab } from './components/BottomNav';
 import { DashboardView } from './components/DashboardView';
@@ -146,125 +147,132 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-blue-500 selection:text-white pb-16">
-      {/* App Header Bar */}
-      <Header
-        profile={profile}
-        isOnline={isOnline}
-        lowStockCount={summary.lowStockCount}
-        isOwnerUnlocked={isOwnerUnlocked}
-        onToggleOwnerLock={() => {
-          if (isOwnerUnlocked) setIsOwnerUnlocked(false);
-          else setIsPinModalOpen(true);
-        }}
-        onOpenQuickAction={() => setIsQuickActionOpen(true)}
-        onNavigateToLowStock={handleNavigateToLowStock}
-      />
+    <div className="relative min-h-screen bg-[#0B0F19] text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-black pb-16 overflow-x-hidden">
+      {/* Background Active Floating Light Orbs Canvas */}
+      <BackgroundCanvas />
 
-      {/* Main View Area */}
-      <main className="flex-1 max-w-xl w-full mx-auto">
-        {activeTab === 'dashboard' && (
-          <DashboardView
-            summary={summary}
-            profile={profile}
-            products={products}
-            transactions={transactions}
-            onNavigateToPOS={() => setActiveTab('pos')}
-            onNavigateToInventory={(filterLow) => {
-              setInventoryLowStockFilter(!!filterLow);
-              setActiveTab('inventory');
-            }}
-            onNavigateToTransactions={() => setActiveTab('transactions')}
-            onNavigateToAnalytics={() => handleTabChange('analytics')}
-            onOpenQuickAction={() => setIsQuickActionOpen(true)}
-          />
+      {/* Main Container Content */}
+      <div className="relative z-10 flex flex-col min-h-screen">
+        {/* App Header Bar */}
+        <Header
+          profile={profile}
+          isOnline={isOnline}
+          lowStockCount={summary.lowStockCount}
+          isOwnerUnlocked={isOwnerUnlocked}
+          onToggleOwnerLock={() => {
+            if (isOwnerUnlocked) setIsOwnerUnlocked(false);
+            else setIsPinModalOpen(true);
+          }}
+          onOpenQuickAction={() => setIsQuickActionOpen(true)}
+          onNavigateToLowStock={handleNavigateToLowStock}
+        />
+
+        {/* Main View Area */}
+        <main className="flex-1 max-w-xl w-full mx-auto">
+          {activeTab === 'dashboard' && (
+            <DashboardView
+              summary={summary}
+              profile={profile}
+              products={products}
+              transactions={transactions}
+              onNavigateToPOS={() => setActiveTab('pos')}
+              onNavigateToInventory={(filterLow) => {
+                setInventoryLowStockFilter(!!filterLow);
+                setActiveTab('inventory');
+              }}
+              onNavigateToTransactions={() => setActiveTab('transactions')}
+              onNavigateToAnalytics={() => handleTabChange('analytics')}
+              onOpenQuickAction={() => setIsQuickActionOpen(true)}
+            />
+          )}
+
+          {activeTab === 'pos' && (
+            <POSView
+              products={products}
+              categories={categories}
+              profile={profile}
+              onSaleComplete={(msg) => showNotification(msg)}
+            />
+          )}
+
+          {activeTab === 'inventory' && (
+            <InventoryView
+              products={products}
+              categories={categories}
+              profile={profile}
+              initialFilterLowStock={inventoryLowStockFilter}
+              onNotification={(msg) => showNotification(msg)}
+            />
+          )}
+
+          {activeTab === 'transactions' && (
+            <TransactionsView
+              transactions={transactions}
+              products={products}
+              profile={profile}
+              summary={summary}
+              onNotification={(msg) => showNotification(msg)}
+            />
+          )}
+
+          {activeTab === 'analytics' && (
+            <AnalyticsView
+              transactions={transactions}
+              products={products}
+              profile={profile}
+              summary={summary}
+            />
+          )}
+
+          {activeTab === 'settings' && (
+            <SettingsView
+              profile={profile}
+              isOwnerUnlocked={isOwnerUnlocked}
+              onLockOwner={() => setIsOwnerUnlocked(false)}
+              onUnlockOwnerRequest={() => setIsPinModalOpen(true)}
+              canInstallPwa={canInstall}
+              isPwaInstalled={isInstalled}
+              onInstallPwa={triggerInstall}
+              onNotification={(msg) => showNotification(msg)}
+            />
+          )}
+        </main>
+
+        {/* Floating Bottom Navigation */}
+        <BottomNav
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          lowStockCount={summary.lowStockCount}
+        />
+
+        {/* Modals & Toasts */}
+        <QuickActionModal
+          isOpen={isQuickActionOpen}
+          onClose={() => setIsQuickActionOpen(false)}
+          products={products}
+          profile={profile}
+          onSuccess={(msg) => showNotification(msg)}
+        />
+
+        <PinModal
+          isOpen={isPinModalOpen}
+          onClose={() => setIsPinModalOpen(false)}
+          correctPin={profile.ownerPin || '1234'}
+          onSuccess={() => {
+            setIsOwnerUnlocked(true);
+            showNotification('Owner Mode Unlocked');
+          }}
+        />
+
+        {/* Floating Notification Toast */}
+        {notificationMsg && (
+          <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[#0F172A]/90 border border-emerald-400/50 text-emerald-300 px-5 py-3 rounded-2xl shadow-[0_10px_30px_rgba(16,185,129,0.3)] backdrop-blur-xl flex items-center space-x-2.5 text-xs font-bold animate-in fade-in slide-in-from-top duration-300">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{notificationMsg}</span>
+          </div>
         )}
-
-        {activeTab === 'pos' && (
-          <POSView
-            products={products}
-            categories={categories}
-            profile={profile}
-            onSaleComplete={(msg) => showNotification(msg)}
-          />
-        )}
-
-        {activeTab === 'inventory' && (
-          <InventoryView
-            products={products}
-            categories={categories}
-            profile={profile}
-            initialFilterLowStock={inventoryLowStockFilter}
-            onNotification={(msg) => showNotification(msg)}
-          />
-        )}
-
-        {activeTab === 'transactions' && (
-          <TransactionsView
-            transactions={transactions}
-            products={products}
-            profile={profile}
-            summary={summary}
-            onNotification={(msg) => showNotification(msg)}
-          />
-        )}
-
-        {activeTab === 'analytics' && (
-          <AnalyticsView
-            transactions={transactions}
-            products={products}
-            profile={profile}
-            summary={summary}
-          />
-        )}
-
-        {activeTab === 'settings' && (
-          <SettingsView
-            profile={profile}
-            isOwnerUnlocked={isOwnerUnlocked}
-            onLockOwner={() => setIsOwnerUnlocked(false)}
-            onUnlockOwnerRequest={() => setIsPinModalOpen(true)}
-            canInstallPwa={canInstall}
-            isPwaInstalled={isInstalled}
-            onInstallPwa={triggerInstall}
-            onNotification={(msg) => showNotification(msg)}
-          />
-        )}
-      </main>
-
-      {/* Floating Bottom Navigation */}
-      <BottomNav
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-        lowStockCount={summary.lowStockCount}
-      />
-
-      {/* Modals & Toasts */}
-      <QuickActionModal
-        isOpen={isQuickActionOpen}
-        onClose={() => setIsQuickActionOpen(false)}
-        products={products}
-        profile={profile}
-        onSuccess={(msg) => showNotification(msg)}
-      />
-
-      <PinModal
-        isOpen={isPinModalOpen}
-        onClose={() => setIsPinModalOpen(false)}
-        correctPin={profile.ownerPin || '1234'}
-        onSuccess={() => {
-          setIsOwnerUnlocked(true);
-          showNotification('Owner Mode Unlocked');
-        }}
-      />
-
-      {/* Floating Notification Toast */}
-      {notificationMsg && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 border border-emerald-500/50 text-emerald-300 px-4 py-2.5 rounded-2xl shadow-2xl backdrop-blur-md flex items-center space-x-2 text-xs font-bold animate-in fade-in slide-in-from-top duration-200">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          <span>{notificationMsg}</span>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
+

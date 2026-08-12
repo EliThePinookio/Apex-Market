@@ -1,39 +1,67 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import {
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  Firestore,
+} from 'firebase/firestore';
+import { getAuth, Auth } from 'firebase/auth';
 import config from '../firebase-applet-config.json';
 
+export const isFirestoreConfigured = Boolean(
+  config.projectId &&
+  config.projectId.trim() !== '' &&
+  config.apiKey &&
+  config.apiKey.trim() !== ''
+);
+
 const firebaseConfig = {
-  apiKey: config.apiKey,
-  authDomain: config.authDomain,
-  projectId: config.projectId,
-  storageBucket: config.storageBucket,
-  messagingSenderId: config.messagingSenderId,
-  appId: config.appId,
+  apiKey: config.apiKey || 'demo-key',
+  authDomain: config.authDomain || '',
+  projectId: config.projectId || 'demo-project',
+  storageBucket: config.storageBucket || '',
+  messagingSenderId: config.messagingSenderId || '',
+  appId: config.appId || '',
 };
 
-// Initialize Firebase App
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+// Initialize Firebase App only if properly configured
+const app = isFirestoreConfigured
+  ? (!getApps().length ? initializeApp(firebaseConfig) : getApp())
+  : null;
 
-// Get Firestore instance using custom database ID if specified
-export const db = config.firestoreDatabaseId
-  ? getFirestore(app, config.firestoreDatabaseId)
-  : getFirestore(app);
-
-// Get Auth instance
-export const auth = getAuth(app);
-
-// Attempt offline persistence
-try {
-  enableIndexedDbPersistence(db).catch((err) => {
-    if (err.code === 'failed-precondition') {
-      console.warn('Firestore persistence failed: Multiple tabs open');
-    } else if (err.code === 'unimplemented') {
-      console.warn('Firestore persistence not supported by browser');
+// Get Firestore instance safely
+export const db: Firestore | null = (() => {
+  if (!app || !isFirestoreConfigured) return null;
+  try {
+    return initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager(),
+      }),
+    });
+  } catch (e) {
+    try {
+      return config.firestoreDatabaseId
+        ? getFirestore(app, config.firestoreDatabaseId)
+        : getFirestore(app);
+    } catch (err) {
+      return null;
     }
-  });
-} catch (e) {
-  console.log('IndexedDB persistence setup skipped');
+  }
+})();
+
+// Safely initialize Auth instance only if valid API key is present
+let authInstance: Auth | null = null;
+if (app && isFirestoreConfigured) {
+  try {
+    authInstance = getAuth(app);
+  } catch (e) {
+    console.warn('Firebase Auth setup skipped:', e);
+  }
 }
 
+export const auth = authInstance;
+
 export default app;
+
+

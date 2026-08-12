@@ -143,10 +143,10 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
             <button
               key={item.id}
               onClick={() => setTypeFilter(item.id as any)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 ${
                 typeFilter === item.id
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'bg-slate-900 text-slate-400 hover:bg-slate-800 border border-slate-800'
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.3)] font-black scale-105'
+                  : 'bg-slate-900/80 text-slate-400 hover:text-slate-200 border border-slate-800'
               }`}
             >
               {item.label}
@@ -155,7 +155,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
         </div>
 
         {/* Date Filter Bar */}
-        <div className="grid grid-cols-4 gap-1 p-1 bg-slate-900 rounded-xl border border-slate-800 text-[11px] font-semibold text-center">
+        <div className="grid grid-cols-4 gap-1 p-1.5 glass-panel rounded-2xl border border-slate-800/80 text-[11px] font-bold text-center">
           {[
             { id: 'all', label: 'All Time' },
             { id: 'today', label: 'Today' },
@@ -165,9 +165,9 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
             <button
               key={d.id}
               onClick={() => setDatePreset(d.id as any)}
-              className={`py-1 rounded-lg transition-colors ${
+              className={`py-1.5 rounded-xl transition-all active:scale-95 ${
                 datePreset === d.id
-                  ? 'bg-slate-800 text-blue-400 font-bold'
+                  ? 'bg-cyan-500/20 text-cyan-300 font-black border border-cyan-500/30 shadow-sm'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -188,16 +188,16 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
             <div
               key={tx.id}
               onClick={() => setSelectedTx(tx)}
-              className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 shadow-md hover:border-slate-700 transition-all cursor-pointer flex items-center justify-between"
+              className="p-3.5 rounded-2xl glass-panel-interactive border border-slate-800/80 shadow-md hover:border-cyan-500/30 transition-all cursor-pointer flex items-center justify-between active:scale-[0.99]"
             >
               <div className="flex items-start space-x-3">
                 <span
-                  className={`mt-0.5 px-2 py-1 rounded-lg text-[10px] font-extrabold uppercase ${
+                  className={`mt-0.5 px-2 py-1 rounded-lg text-[10px] font-black uppercase ${
                     isSale
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-[0_0_8px_rgba(16,185,129,0.2)]'
                       : isExpense
-                      ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                      : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                      ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40 shadow-[0_0_8px_rgba(244,63,94,0.2)]'
+                      : 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_8px_rgba(245,158,11,0.2)]'
                   }`}
                 >
                   {tx.type}
@@ -217,7 +217,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
 
               <div className="text-right">
                 <p
-                  className={`text-sm font-extrabold ${
+                  className={`text-sm font-black ${
                     isSale
                       ? 'text-emerald-400'
                       : isExpense
@@ -228,7 +228,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                   {isExpense ? '-' : '+'}{cur}{tx.amount.toFixed(2)}
                 </p>
                 {isSale && tx.grossProfit !== undefined && (
-                  <p className="text-[10px] text-slate-500 font-semibold">
+                  <p className="text-[10px] text-cyan-400/90 font-bold">
                     Profit: +{cur}{tx.grossProfit.toFixed(2)}
                   </p>
                 )}

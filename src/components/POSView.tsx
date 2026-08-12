@@ -190,10 +190,10 @@ export const POSView: React.FC<POSViewProps> = ({
         <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-1">
           <button
             onClick={() => setSelectedCategory('All')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 ${
               selectedCategory === 'All'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'bg-slate-900 text-slate-400 hover:bg-slate-800 border border-slate-800'
+                ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_15px_rgba(6,182,212,0.3)] scale-105'
+                : 'bg-slate-900/80 text-slate-400 hover:text-slate-200 border border-slate-800'
             }`}
           >
             All Items
@@ -202,10 +202,10 @@ export const POSView: React.FC<POSViewProps> = ({
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.name)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 ${
                 selectedCategory === cat.name
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'bg-slate-900 text-slate-400 hover:bg-slate-800 border border-slate-800'
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_15px_rgba(6,182,212,0.3)] scale-105'
+                  : 'bg-slate-900/80 text-slate-400 hover:text-slate-200 border border-slate-800'
               }`}
             >
               {cat.name}
@@ -216,11 +216,11 @@ export const POSView: React.FC<POSViewProps> = ({
 
       {/* Cart Summary Header / Bar */}
       {cartItemsList.length > 0 && (
-        <div className="p-3 rounded-2xl bg-gradient-to-r from-blue-900/80 to-indigo-900/80 border border-blue-500/30 flex items-center justify-between shadow-xl animate-in slide-in-from-bottom duration-200">
+        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-cyan-950/80 via-blue-950/80 to-purple-950/80 border border-cyan-500/30 flex items-center justify-between shadow-[0_8px_32px_rgba(6,182,212,0.2)] backdrop-blur-xl animate-in slide-in-from-bottom duration-200">
           <div className="flex items-center space-x-3">
-            <div className="relative p-2 rounded-xl bg-blue-600 text-white">
+            <div className="relative p-2.5 rounded-xl bg-cyan-500 text-slate-950 font-black shadow-[0_0_15px_rgba(6,182,212,0.4)]">
               <ShoppingCart className="w-5 h-5" />
-              <span className="absolute -top-1.5 -right-1.5 bg-amber-400 text-slate-950 text-[10px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center">
+              <span className="absolute -top-1.5 -right-1.5 bg-amber-400 text-slate-950 text-[10px] font-extrabold w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-md animate-bounce">
                 {totalItemsCount}
               </span>
             </div>
@@ -237,7 +237,7 @@ export const POSView: React.FC<POSViewProps> = ({
           <button
             onClick={() => setIsCheckoutOpen(true)}
             id="pos-proceed-checkout-btn"
-            className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-emerald-900/30 active:scale-95 transition-all"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black text-xs shadow-[0_0_20px_rgba(16,185,129,0.35)] active:scale-95 transition-all"
           >
             Checkout ({cur}{subtotalSell.toFixed(2)})
           </button>
@@ -255,30 +255,30 @@ export const POSView: React.FC<POSViewProps> = ({
             <div
               key={p.id}
               onClick={() => !isOutOfStock && addToCart(p)}
-              className={`p-3 rounded-2xl border transition-all cursor-pointer relative flex flex-col justify-between ${
+              className={`p-3 rounded-2xl transition-all cursor-pointer relative flex flex-col justify-between active:scale-[0.98] ${
                 isOutOfStock
-                  ? 'bg-slate-900/40 border-slate-800/50 opacity-60'
+                  ? 'bg-slate-950/40 border border-slate-800/40 opacity-50'
                   : inCartQty > 0
-                  ? 'bg-slate-900 border-blue-500/80 ring-1 ring-blue-500/50 shadow-lg'
-                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                  ? 'glass-panel border-cyan-400/80 ring-2 ring-cyan-500/40 shadow-[0_0_20px_rgba(6,182,212,0.25)] scale-[1.01]'
+                  : 'glass-panel-interactive border-slate-800/80 hover:border-cyan-500/40'
               }`}
             >
               {inCartQty > 0 && (
-                <span className="absolute -top-2 -right-2 bg-blue-500 text-white font-extrabold text-xs px-2 py-0.5 rounded-full shadow-md">
+                <span className="absolute -top-2 -right-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-extrabold text-xs px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(6,182,212,0.4)]">
                   {inCartQty}x
                 </span>
               )}
 
               <div>
                 <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
-                  <span className="truncate max-w-[80px]">{p.category}</span>
+                  <span className="truncate max-w-[80px] font-semibold">{p.category}</span>
                   <span
-                    className={`font-semibold px-1.5 py-0.2 rounded-md ${
+                    className={`font-bold px-1.5 py-0.2 rounded-md ${
                       isOutOfStock
-                        ? 'bg-rose-500/20 text-rose-400'
+                        ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
                         : isLowStock
-                        ? 'bg-amber-500/20 text-amber-300'
-                        : 'bg-slate-800 text-slate-300'
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        : 'bg-slate-800/80 text-slate-300'
                     }`}
                   >
                     {p.stockQuantity} {p.unit}
@@ -291,15 +291,15 @@ export const POSView: React.FC<POSViewProps> = ({
               </div>
 
               <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 mt-1">
-                <span className="text-sm font-extrabold text-emerald-400">
+                <span className="text-sm font-black text-emerald-400">
                   {cur}{p.sellPrice.toFixed(2)}
                 </span>
                 <button
                   disabled={isOutOfStock}
-                  className={`p-1.5 rounded-lg text-xs font-bold transition-transform ${
+                  className={`p-1.5 rounded-xl text-xs font-bold transition-all ${
                     isOutOfStock
                       ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                      : 'bg-blue-600/30 hover:bg-blue-600 text-blue-300 active:scale-95'
+                      : 'bg-cyan-500/20 hover:bg-cyan-500 border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 hover:text-slate-950 active:scale-95 shadow-sm'
                   }`}
                 >
                   <Plus className="w-3.5 h-3.5" />
