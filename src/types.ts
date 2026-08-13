@@ -84,10 +84,62 @@ export interface BusinessProfile {
   currencySymbol: string;
   ownerPin: string; // Default 1234
   isPinLocked: boolean;
+  biometricEnabled?: boolean; // Apple Face ID / Touch ID / Device Biometrics
   taxRate: number; // % e.g. 0 or 5 or 10
   lowStockAlertEnabled: boolean;
   allowNegativeStock: boolean;
   receiptHeaderMsg?: string;
+}
+
+export interface ActualVsForecastMetric {
+  metricName: string;
+  actual: number;
+  forecastBaseline: number;
+  forecastConservative: number;
+  forecastOptimistic: number;
+  variancePercent: number; // (actual - forecastBaseline) / forecastBaseline * 100
+  trendDirection: 'up' | 'down' | 'flat';
+  status: 'outperforming' | 'on_track' | 'underperforming';
+}
+
+export interface WhatIfSimulationParams {
+  priceChangePercent: number; // -30% to +50%
+  volumeChangePercent: number; // -50% to +100%
+  cogsChangePercent: number; // -30% to +50%
+  expenseChangePercent: number; // -50% to +50%
+  additionalCapital: number;
+}
+
+export interface WhatIfSimulationResult {
+  currentRevenue: number;
+  projectedRevenue: number;
+  revenueDelta: number;
+
+  currentCOGS: number;
+  projectedCOGS: number;
+  cogsDelta: number;
+
+  currentGrossProfit: number;
+  projectedGrossProfit: number;
+  grossProfitDelta: number;
+  projectedGrossMarginPercent: number;
+
+  currentExpenses: number;
+  projectedExpenses: number;
+  expensesDelta: number;
+
+  currentNetProfit: number;
+  projectedNetProfit: number;
+  netProfitDelta: number;
+  netProfitDeltaPercent: number;
+  projectedNetMarginPercent: number;
+
+  currentBreakEvenRevenue: number;
+  projectedBreakEvenRevenue: number;
+  breakEvenDelta: number;
+
+  marginOfSafetyPercent: number;
+  projectedWorkingCash: number;
 }
 
 export type DateFilterPreset = 'today' | 'yesterday' | 'this_week' | 'this_month' | 'this_year' | 'all' | 'custom';

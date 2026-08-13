@@ -6,6 +6,7 @@ import {
   PiggyBank,
   PackagePlus,
   CheckCircle2,
+  Loader2,
 } from 'lucide-react';
 import { Product, BusinessProfile } from '../types';
 import {
@@ -33,6 +34,7 @@ export const QuickActionModal: React.FC<QuickActionModalProps> = ({
   onSuccess,
 }) => {
   const [mode, setMode] = useState<Mode>('sale');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Quick Sale State
   const [selectedProductId, setSelectedProductId] = useState('');
@@ -41,7 +43,7 @@ export const QuickActionModal: React.FC<QuickActionModalProps> = ({
 
   // Expense State
   const [expenseAmount, setExpenseAmount] = useState('');
-  const [expenseCategory, setExpenseCategory] = useState('Rent & Utilities');
+  const [expenseCategory, setExpenseCategory] = useState('Rent & Space');
   const [expenseDesc, setExpenseDesc] = useState('');
 
   // Capital State
@@ -59,76 +61,85 @@ export const QuickActionModal: React.FC<QuickActionModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
-    if (mode === 'sale') {
-      const targetId = selectedProductId || products[0]?.id;
-      const prod = products.find((p) => p.id === targetId);
-      if (!prod) {
-        alert('Please select a valid product for sale');
-        return;
-      }
-      if (saleQty > prod.stockQuantity && !profile.allowNegativeStock) {
-        alert(`Insufficient stock! Available: ${prod.stockQuantity} ${prod.unit}`);
-        return;
+    setIsSubmitting(true);
+    try {
+      if (mode === 'sale') {
+        const targetId = selectedProductId || products[0]?.id;
+        const prod = products.find((p) => p.id === targetId);
+        if (!prod) {
+          alert('Please select a valid product for sale');
+          return;
+        }
+        if (saleQty > prod.stockQuantity && !profile.allowNegativeStock) {
+          alert(`Insufficient stock! Available: ${prod.stockQuantity} ${prod.unit}`);
+          return;
+        }
+
+        await recordSale({
+          items: [
+            {
+              productId: prod.id,
+              productName: prod.name,
+              quantity: Number(saleQty),
+              unitBuyPrice: prod.buyPrice,
+              unitSellPrice: prod.sellPrice,
+              totalSellPrice: prod.sellPrice * Number(saleQty),
+              totalBuyPrice: prod.buyPrice * Number(saleQty),
+            },
+          ],
+          paymentMethod: salePaymentMethod,
+        });
+        onSuccess(`Sale recorded: ${saleQty}x ${prod.name}`);
+        setSaleQty(1);
+      } else if (mode === 'expense') {
+        if (!expenseAmount || Number(expenseAmount) <= 0) {
+          alert('Please enter a valid expense amount');
+          return;
+        }
+        await recordExpense({
+          amount: Number(expenseAmount),
+          category: expenseCategory,
+          description: expenseDesc || 'Quick Expense Entry',
+        });
+        onSuccess(`Expense recorded: ${cur}${expenseAmount}`);
+        setExpenseAmount('');
+        setExpenseDesc('');
+      } else if (mode === 'capital') {
+        if (!capitalAmount || Number(capitalAmount) <= 0) {
+          alert('Please enter a valid capital / funds amount');
+          return;
+        }
+        await recordCapital({
+          amount: Number(capitalAmount),
+          description: capitalDesc || 'Owner Capital Injection',
+        });
+        onSuccess(`Capital / Funds recorded: ${cur}${capitalAmount}`);
+        setCapitalAmount('');
+      } else if (mode === 'refill') {
+        const targetId = refillProductId || products[0]?.id;
+        const prod = products.find((p) => p.id === targetId);
+        if (!prod) {
+          alert('Please select a product to refill');
+          return;
+        }
+        await recordStockRefill({
+          productId: prod.id,
+          quantityToAdd: Number(refillQty),
+          costPerUnit: refillCost ? Number(refillCost) : prod.buyPrice,
+        });
+        onSuccess(`Stock refilled: +${refillQty} ${prod.unit} for ${prod.name}`);
+        setRefillCost('');
       }
 
-      await recordSale({
-        items: [
-          {
-            productId: prod.id,
-            productName: prod.name,
-            quantity: Number(saleQty),
-            unitBuyPrice: prod.buyPrice,
-            unitSellPrice: prod.sellPrice,
-            totalSellPrice: prod.sellPrice * Number(saleQty),
-            totalBuyPrice: prod.buyPrice * Number(saleQty),
-          },
-        ],
-        paymentMethod: salePaymentMethod,
-      });
-      onSuccess(`Sale recorded: ${saleQty}x ${prod.name}`);
-      setSaleQty(1);
-    } else if (mode === 'expense') {
-      if (!expenseAmount || Number(expenseAmount) <= 0) {
-        alert('Please enter a valid expense amount');
-        return;
-      }
-      await recordExpense({
-        amount: Number(expenseAmount),
-        category: expenseCategory,
-        description: expenseDesc || 'Quick Expense Entry',
-      });
-      onSuccess(`Expense recorded: ${cur}${expenseAmount}`);
-      setExpenseAmount('');
-      setExpenseDesc('');
-    } else if (mode === 'capital') {
-      if (!capitalAmount || Number(capitalAmount) <= 0) {
-        alert('Please enter a valid capital / funds amount');
-        return;
-      }
-      await recordCapital({
-        amount: Number(capitalAmount),
-        description: capitalDesc || 'Owner Capital Injection',
-      });
-      onSuccess(`Capital / Funds recorded: ${cur}${capitalAmount}`);
-      setCapitalAmount('');
-    } else if (mode === 'refill') {
-      const targetId = refillProductId || products[0]?.id;
-      const prod = products.find((p) => p.id === targetId);
-      if (!prod) {
-        alert('Please select a product to refill');
-        return;
-      }
-      await recordStockRefill({
-        productId: prod.id,
-        quantityToAdd: Number(refillQty),
-        costPerUnit: refillCost ? Number(refillCost) : prod.buyPrice,
-      });
-      onSuccess(`Stock refilled: +${refillQty} ${prod.unit} for ${prod.name}`);
-      setRefillCost('');
+      onClose();
+    } catch (err: any) {
+      console.error('Failed to submit entry:', err);
+      alert('An error occurred while saving. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    onClose();
   };
 
   return (
@@ -407,17 +418,28 @@ export const QuickActionModal: React.FC<QuickActionModalProps> = ({
           <div className="pt-2 flex justify-end space-x-2">
             <button
               type="button"
+              disabled={isSubmitting}
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-100 cursor-pointer"
+              className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-100 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex items-center space-x-1.5 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
+              disabled={isSubmitting}
+              className="flex items-center space-x-1.5 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
-              <span>Save Entry</span>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Processing...</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+                  <span>Save Entry</span>
+                </>
+              )}
             </button>
           </div>
         </form>

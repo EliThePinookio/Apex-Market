@@ -12,6 +12,7 @@ import {
   Smartphone,
   User,
   Tag,
+  Loader2,
 } from 'lucide-react';
 import { Product, TransactionItem, BusinessProfile, Category } from '../types';
 import { recordSale } from '../services/dbService';
@@ -41,6 +42,7 @@ export const POSView: React.FC<POSViewProps> = ({
   const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [cashTendered, setCashTendered] = useState<string>('');
   const [completedTx, setCompletedTx] = useState<any | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const cur = profile.currencySymbol;
 
@@ -125,28 +127,36 @@ export const POSView: React.FC<POSViewProps> = ({
   };
 
   const handleCheckout = async () => {
-    if (cartItemsList.length === 0) return;
+    if (cartItemsList.length === 0 || isProcessing) return;
 
-    const txId = await recordSale({
-      items: cartItemsList,
-      customerName,
-      paymentMethod,
-      discountAmount,
-      description: `Sale of ${totalItemsCount} item(s)`,
-    });
+    setIsProcessing(true);
+    try {
+      const txId = await recordSale({
+        items: cartItemsList,
+        customerName,
+        paymentMethod,
+        discountAmount,
+        description: `Sale of ${totalItemsCount} item(s)`,
+      });
 
-    const txObj = {
-      id: txId,
-      type: 'sale',
-      amount: finalTotal,
-      items: cartItemsList,
-      customerName: customerName || 'Walk-in Customer',
-      paymentMethod,
-      date: new Date().toISOString(),
-    };
+      const txObj = {
+        id: txId,
+        type: 'sale',
+        amount: finalTotal,
+        items: cartItemsList,
+        customerName: customerName || 'Walk-in Customer',
+        paymentMethod,
+        date: new Date().toISOString(),
+      };
 
-    setCompletedTx(txObj);
-    onSaleComplete(`Sale completed! Revenue: ${cur}${finalTotal.toFixed(2)}`);
+      setCompletedTx(txObj);
+      onSaleComplete(`Sale completed! Revenue: ${cur}${finalTotal.toFixed(2)}`);
+    } catch (err: any) {
+      console.error('POS checkout error:', err);
+      alert('An error occurred while processing checkout.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const resetPosState = () => {
@@ -554,11 +564,21 @@ export const POSView: React.FC<POSViewProps> = ({
 
                   <button
                     onClick={handleCheckout}
+                    disabled={isProcessing}
                     id="pos-confirm-payment-btn"
-                    className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-md active:scale-95 transition-all flex items-center justify-center space-x-2"
+                    className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-md active:scale-95 transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <CheckCircle2 className="w-5 h-5" />
-                    <span>Confirm Sale & Collect {cur}{finalTotal.toFixed(2)}</span>
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>Processing Sale...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-5 h-5" />
+                        <span>Confirm Sale & Collect {cur}{finalTotal.toFixed(2)}</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </>

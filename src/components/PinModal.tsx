@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Lock, X, KeyRound, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Lock, X, KeyRound, AlertCircle, ScanFace, Fingerprint, Loader2 } from 'lucide-react';
+import { checkBiometricSupport, authenticateWithBiometrics, BiometricCapability } from '../services/biometricService';
 
 interface PinModalProps {
   isOpen: boolean;
@@ -20,6 +21,40 @@ export const PinModal: React.FC<PinModalProps> = ({
 }) => {
   const [pinInput, setPinInput] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [biometricInfo, setBiometricInfo] = useState<BiometricCapability>({
+    isAvailable: false,
+    hasEnrolled: false,
+    deviceLabel: '',
+    isIframeSandbox: false,
+  });
+  const [isVerifyingBio, setIsVerifyingBio] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      checkBiometricSupport().then((info) => {
+        setBiometricInfo(info);
+      });
+    }
+  }, [isOpen]);
+
+  const handleBiometricAuth = async () => {
+    setIsVerifyingBio(true);
+    setErrorMsg('');
+    try {
+      const res = await authenticateWithBiometrics();
+      if (res.success) {
+        onSuccess();
+        setPinInput('');
+        onClose();
+      } else if (res.error) {
+        setErrorMsg(res.error);
+      }
+    } catch (err: any) {
+      setErrorMsg('Biometric authentication unavailable');
+    } finally {
+      setIsVerifyingBio(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -74,6 +109,28 @@ export const PinModal: React.FC<PinModalProps> = ({
           </p>
         </div>
 
+        {/* Biometric Quick Unlock (Apple Face ID / Touch ID) */}
+        {biometricInfo.isAvailable && (
+          <button
+            type="button"
+            onClick={handleBiometricAuth}
+            disabled={isVerifyingBio}
+            className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-slate-900 to-emerald-950 hover:from-slate-800 hover:to-emerald-900 text-white text-xs font-black shadow-md flex items-center justify-center space-x-2 active:scale-95 transition-all cursor-pointer border border-emerald-500/30"
+          >
+            {isVerifyingBio ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                <span>Verifying Biometrics...</span>
+              </>
+            ) : (
+              <>
+                <ScanFace className="w-4 h-4 text-emerald-400" />
+                <span>Unlock with {biometricInfo.deviceLabel || 'Face ID'}</span>
+              </>
+            )}
+          </button>
+        )}
+
         {/* PIN Indicators Dots */}
         <div className="flex justify-center items-center space-x-3 py-1">
           {[0, 1, 2, 3].map((idx) => (
@@ -90,7 +147,7 @@ export const PinModal: React.FC<PinModalProps> = ({
 
         {errorMsg && (
           <p className="text-xs text-rose-600 font-bold flex items-center justify-center space-x-1 animate-pulse">
-            <AlertCircle className="w-3.5 h-3.5" />
+            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
             <span>{errorMsg}</span>
           </p>
         )}
@@ -117,3 +174,4 @@ export const PinModal: React.FC<PinModalProps> = ({
     </div>
   );
 };
+

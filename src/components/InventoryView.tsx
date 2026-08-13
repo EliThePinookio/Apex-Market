@@ -12,6 +12,7 @@ import {
   Flame,
   CheckCircle2,
   Boxes,
+  Loader2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Product, Category, BusinessProfile } from '../types';
@@ -42,11 +43,13 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   // Modal states
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Partial<Product> | null>(null);
+  const [isSavingProduct, setIsSavingProduct] = useState(false);
 
   const [isRefillModalOpen, setIsRefillModalOpen] = useState(false);
   const [refillProduct, setRefillProduct] = useState<Product | null>(null);
   const [refillQty, setRefillQty] = useState(10);
   const [refillCostPrice, setRefillCostPrice] = useState('');
+  const [isRefilling, setIsRefilling] = useState(false);
 
   const cur = profile.currencySymbol;
 
@@ -101,14 +104,22 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
 
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingProduct) return;
+    if (!editingProduct || isSavingProduct) return;
 
-    await saveProduct(editingProduct);
-    onNotification(
-      editingProduct.id ? 'Product updated successfully' : 'New product registered'
-    );
-    setIsProductModalOpen(false);
-    setEditingProduct(null);
+    setIsSavingProduct(true);
+    try {
+      await saveProduct(editingProduct);
+      onNotification(
+        editingProduct.id ? 'Product updated successfully' : 'New product registered'
+      );
+      setIsProductModalOpen(false);
+      setEditingProduct(null);
+    } catch (err: any) {
+      console.error('Error saving product:', err);
+      alert('Failed to save product');
+    } finally {
+      setIsSavingProduct(false);
+    }
   };
 
   const handleDeleteProduct = async (id: string, name: string) => {
@@ -128,17 +139,25 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
 
   const handleConfirmRefill = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!refillProduct) return;
+    if (!refillProduct || isRefilling) return;
 
-    await recordStockRefill({
-      productId: refillProduct.id,
-      quantityToAdd: Number(refillQty),
-      costPerUnit: Number(refillCostPrice) || refillProduct.buyPrice,
-    });
+    setIsRefilling(true);
+    try {
+      await recordStockRefill({
+        productId: refillProduct.id,
+        quantityToAdd: Number(refillQty),
+        costPerUnit: Number(refillCostPrice) || refillProduct.buyPrice,
+      });
 
-    onNotification(`Refilled +${refillQty} ${refillProduct.unit} for ${refillProduct.name}`);
-    setIsRefillModalOpen(false);
-    setRefillProduct(null);
+      onNotification(`Refilled +${refillQty} ${refillProduct.unit} for ${refillProduct.name}`);
+      setIsRefillModalOpen(false);
+      setRefillProduct(null);
+    } catch (err: any) {
+      console.error('Error refilling stock:', err);
+      alert('Failed to record stock refill');
+    } finally {
+      setIsRefilling(false);
+    }
   };
 
   // Profit margin calculation helper
@@ -583,16 +602,25 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                 <div className="pt-3 flex justify-end space-x-2">
                   <button
                     type="button"
+                    disabled={isSavingProduct}
                     onClick={() => setIsProductModalOpen(false)}
-                    className="px-4 py-2 rounded-xl text-slate-600 font-bold bg-slate-100 hover:bg-slate-200"
+                    className="px-4 py-2 rounded-xl text-slate-600 font-bold bg-slate-100 hover:bg-slate-200 disabled:opacity-50"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black shadow-md cursor-pointer"
+                    disabled={isSavingProduct}
+                    className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
                   >
-                    Save Catalog Item
+                    {isSavingProduct ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <span>Save Catalog Item</span>
+                    )}
                   </button>
                 </div>
               </form>
@@ -662,16 +690,25 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                 <div className="pt-2 flex justify-end space-x-2">
                   <button
                     type="button"
+                    disabled={isRefilling}
                     onClick={() => setIsRefillModalOpen(false)}
-                    className="px-4 py-2 rounded-xl text-slate-600 font-bold bg-slate-100 hover:bg-slate-200"
+                    className="px-4 py-2 rounded-xl text-slate-600 font-bold bg-slate-100 hover:bg-slate-200 disabled:opacity-50"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black shadow-md cursor-pointer"
+                    disabled={isRefilling}
+                    className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
                   >
-                    Confirm Refill
+                    {isRefilling ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Refilling...</span>
+                      </>
+                    ) : (
+                      <span>Confirm Refill</span>
+                    )}
                   </button>
                 </div>
               </form>

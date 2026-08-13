@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Settings,
   Store,
@@ -14,9 +14,17 @@ import {
   Shield,
   Bell,
   RefreshCw,
+  ScanFace,
+  Fingerprint,
 } from 'lucide-react';
 import { BusinessProfile } from '../types';
 import { saveBusinessProfile, resetDatabaseToDemo, clearAllBusinessData } from '../services/dbService';
+import {
+  checkBiometricSupport,
+  registerBiometric,
+  removeBiometricCredential,
+  BiometricCapability,
+} from '../services/biometricService';
 import { PinModal } from './PinModal';
 
 import { DataBackupSection } from './DataBackupSection';
@@ -49,13 +57,46 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [currencySymbol, setCurrencySymbol] = useState(profile.currencySymbol);
   const [receiptHeaderMsg, setReceiptHeaderMsg] = useState(profile.receiptHeaderMsg || '');
   const [isPinLocked, setIsPinLocked] = useState(profile.isPinLocked);
+  const [biometricEnabled, setBiometricEnabled] = useState(profile.biometricEnabled ?? true);
   const [newPin, setNewPin] = useState(profile.ownerPin || '1234');
   const [lowStockAlertEnabled, setLowStockAlertEnabled] = useState(profile.lowStockAlertEnabled);
   const [allowNegativeStock, setAllowNegativeStock] = useState(profile.allowNegativeStock);
   const [isProcessingData, setIsProcessingData] = useState(false);
   const [securityAction, setSecurityAction] = useState<'wipe' | 'reload' | null>(null);
 
+  const [biometricInfo, setBiometricInfo] = useState<BiometricCapability>({
+    isAvailable: false,
+    hasEnrolled: false,
+    deviceLabel: 'Device Biometrics',
+    isIframeSandbox: false,
+  });
+  const [isEnrollingBio, setIsEnrollingBio] = useState(false);
+
+  useEffect(() => {
+    checkBiometricSupport().then((info) => {
+      setBiometricInfo(info);
+    });
+  }, []);
+
   const cur = profile.currencySymbol;
+
+  const handleEnrollBiometric = async () => {
+    setIsEnrollingBio(true);
+    try {
+      const res = await registerBiometric(ownerName || 'Owner');
+      if (res.success) {
+        onNotification(res.message);
+        const updatedInfo = await checkBiometricSupport();
+        setBiometricInfo(updatedInfo);
+      } else {
+        onNotification(res.message);
+      }
+    } catch (err: any) {
+      onNotification('Biometric enrollment canceled or unavailable');
+    } finally {
+      setIsEnrollingBio(false);
+    }
+  };
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +111,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       currencySymbol,
       receiptHeaderMsg,
       isPinLocked,
+      biometricEnabled,
       ownerPin: newPin,
       lowStockAlertEnabled,
       allowNegativeStock,
@@ -237,7 +279,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-4">
               <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-2">
                 <Lock className="w-4 h-4 text-emerald-600" />
-                <span>Owner Security & PIN Lock</span>
+                <span>Owner Security & Biometrics</span>
               </h3>
 
               <div className="space-y-3 text-xs">
@@ -270,6 +312,48 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     />
                   </div>
                 )}
+
+                {/* Apple Face ID / Touch ID / WebAuthn Device Biometrics */}
+                <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200/80 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <ScanFace className="w-4 h-4 text-emerald-700" />
+                      <div>
+                        <p className="font-bold text-emerald-950">
+                          {biometricInfo.deviceLabel || 'Apple Face ID / Touch ID'}
+                        </p>
+                        <p className="text-[10px] text-emerald-800">
+                          {biometricInfo.isAvailable
+                            ? 'Device hardware supports instant biometric unlock'
+                            : 'Biometrics supported when using a biometric-equipped device'}
+                        </p>
+                      </div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={biometricEnabled}
+                      onChange={(e) => setBiometricEnabled(e.target.checked)}
+                      className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
+                    />
+                  </div>
+
+                  {biometricInfo.isAvailable && biometricEnabled && (
+                    <div className="pt-1 flex items-center justify-between border-t border-emerald-200/60">
+                      <span className="text-[11px] text-emerald-900 font-medium">
+                        {biometricInfo.hasEnrolled ? '✓ Biometric Passkey Enrolled' : 'Ready to register'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleEnrollBiometric}
+                        disabled={isEnrollingBio}
+                        className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-2xs active:scale-95 transition-all cursor-pointer flex items-center space-x-1"
+                      >
+                        <Fingerprint className="w-3.5 h-3.5" />
+                        <span>{isEnrollingBio ? 'Enrolling...' : biometricInfo.hasEnrolled ? 'Re-enroll Face ID' : 'Enroll Face ID'}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 

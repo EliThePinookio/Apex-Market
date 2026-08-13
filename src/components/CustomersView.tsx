@@ -18,6 +18,7 @@ import {
   UserCheck,
   CheckCircle2,
   Trash2,
+  Loader2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Product, Transaction, BusinessProfile, Customer } from '../types';
@@ -45,6 +46,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
   const [selectedTier, setSelectedTier] = useState<string>('all');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAddingCustomer, setIsAddingCustomer] = useState(false);
 
   // New Customer Form state
   const [newName, setNewName] = useState('');
@@ -71,24 +73,32 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
 
   const handleAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName.trim()) return;
+    if (!newName.trim() || isAddingCustomer) return;
 
-    await saveCustomer({
-      name: newName.trim(),
-      phone: newPhone.trim() || 'N/A',
-      email: newEmail.trim() || 'N/A',
-      loyaltyPoints: 50, // Welcome points
-      debtBalance: parseFloat(initialDebt) || 0,
-      tier: 'Bronze',
-      lastVisit: 'Just created',
-    });
+    setIsAddingCustomer(true);
+    try {
+      await saveCustomer({
+        name: newName.trim(),
+        phone: newPhone.trim() || 'N/A',
+        email: newEmail.trim() || 'N/A',
+        loyaltyPoints: 50, // Welcome points
+        debtBalance: parseFloat(initialDebt) || 0,
+        tier: 'Bronze',
+        lastVisit: 'Just created',
+      });
 
-    setIsAddModalOpen(false);
-    setNewName('');
-    setNewPhone('');
-    setNewEmail('');
-    setInitialDebt('');
-    onNotification(`Added customer "${newName.trim()}" (+50 welcome points)`);
+      setIsAddModalOpen(false);
+      setNewName('');
+      setNewPhone('');
+      setNewEmail('');
+      setInitialDebt('');
+      onNotification(`Added customer "${newName.trim()}" (+50 welcome points)`);
+    } catch (err: any) {
+      console.error('Error adding customer:', err);
+      alert('Failed to add customer');
+    } finally {
+      setIsAddingCustomer(false);
+    }
   };
 
   const handleSettleDebt = async (custId: string) => {
@@ -497,16 +507,25 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
                 <div className="pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
                   <button
                     type="button"
+                    disabled={isAddingCustomer}
                     onClick={() => setIsAddModalOpen(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-50"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 rounded-xl text-xs font-black bg-teal-600 hover:bg-teal-700 text-white shadow-xs"
+                    disabled={isAddingCustomer}
+                    className="px-5 py-2 rounded-xl text-xs font-black bg-teal-600 hover:bg-teal-700 text-white shadow-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
                   >
-                    Create Customer
+                    {isAddingCustomer ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Creating...</span>
+                      </>
+                    ) : (
+                      <span>Create Customer</span>
+                    )}
                   </button>
                 </div>
               </form>
