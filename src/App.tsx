@@ -170,7 +170,7 @@ export default function App() {
   };
 
   return (
-    <div className="relative min-h-screen bg-transparent text-slate-900 flex font-sans selection:bg-emerald-500 selection:text-white overflow-x-hidden">
+    <div className="relative h-screen w-full bg-transparent text-slate-900 flex font-sans selection:bg-emerald-500 selection:text-white overflow-hidden">
       {/* Background Active Light Canvas */}
       <BackgroundCanvas activeTab={activeTab} />
 
@@ -194,7 +194,7 @@ export default function App() {
       />
 
       {/* Main Layout Container */}
-      <div className="relative z-10 flex-1 flex flex-col min-h-screen min-w-0">
+      <div className="relative z-10 flex-1 flex flex-col h-full min-w-0 overflow-y-auto overflow-x-hidden custom-scrollbar">
         {/* App Header Bar */}
         <Header
           profile={profile}

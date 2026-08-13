@@ -89,7 +89,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside
-      className={`hidden md:flex flex-col justify-between sticky top-0 h-screen z-30 bg-white/95 backdrop-blur-xl border-r border-slate-200/80 shadow-sm transition-all duration-300 ${
+      className={`hidden md:flex flex-col justify-between h-full shrink-0 z-30 overflow-y-auto bg-white/95 backdrop-blur-xl border-r border-slate-200/80 shadow-sm transition-all duration-300 custom-scrollbar ${
         isCollapsed ? 'w-18 px-2.5 py-4' : 'w-64 px-4 py-4'
       }`}
     >

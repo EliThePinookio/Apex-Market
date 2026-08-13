@@ -373,7 +373,7 @@ export async function restoreFromBackup(bundle: BackupBundle): Promise<void> {
  * Performs double-confirmed destructive wipe, saving a pre-wipe safety backup first
  */
 export async function performDestructiveDataWipe(): Promise<void> {
-  // 1. Create pre-wipe safety backup
+  // 1. Create local pre-wipe safety backup first
   try {
     const safetyBundle = generateBackupBundle();
     localStorage.setItem('app_pre_wipe_safety_backup_v1', JSON.stringify(safetyBundle));
@@ -381,7 +381,12 @@ export async function performDestructiveDataWipe(): Promise<void> {
       const now = new Date();
       const dateStr = now.toISOString().slice(0, 10);
       const timeStr = now.toTimeString().slice(0, 8).replace(/:/g, '');
-      await uploadBackupToDrive(`PRE_WIPE_SAFETY_BACKUP_${dateStr}_${timeStr}.json`, safetyBundle).catch(() => {});
+      const uploadPromise = uploadBackupToDrive(`PRE_WIPE_SAFETY_BACKUP_${dateStr}_${timeStr}.json`, safetyBundle);
+      // Timeout after 4 seconds to never block wipe execution
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Drive backup timed out')), 4000));
+      await Promise.race([uploadPromise, timeoutPromise]).catch((e) => {
+        console.warn('Pre-wipe drive upload skipped or timed out:', e);
+      });
     }
   } catch (e) {
     console.warn('Pre-wipe safety backup notice:', e);
@@ -399,6 +404,8 @@ export async function performDestructiveDataWipe(): Promise<void> {
         wipedAt: new Date().toISOString(),
         schemaVersion: '1.0.0',
       });
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Metadata mark error:', e);
+    }
   }
 }

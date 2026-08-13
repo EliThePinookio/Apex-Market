@@ -484,14 +484,30 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               </div>
 
               {/* Scenario Growth Multiplier */}
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider flex items-center justify-between">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-[10px] font-black text-slate-500 uppercase tracking-wider">
                   <span>Scenario Multiplier:</span>
-                  <span className="font-mono text-emerald-700 font-bold">
+                  <span className="font-mono text-emerald-700 font-bold text-xs">
                     {Math.round(forecastConfig.growthMultiplier * 100)}%
                   </span>
-                </label>
-                <div className="flex items-center space-x-1">
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="200"
+                  step="1"
+                  value={Math.round(forecastConfig.growthMultiplier * 100)}
+                  onChange={(e) =>
+                    setForecastConfig({ ...forecastConfig, growthMultiplier: Number(e.target.value) / 100 })
+                  }
+                  className="w-full accent-emerald-600 cursor-pointer"
+                />
+                <div className="flex justify-between text-[9px] text-slate-400 font-mono">
+                  <span>0% (Halted)</span>
+                  <span>100% (Base)</span>
+                  <span>200% (2x Growth)</span>
+                </div>
+                <div className="flex items-center space-x-1 pt-0.5">
                   {[
                     { label: '85% (Bear)', val: 0.85 },
                     { label: '100% (Base)', val: 1.0 },
@@ -501,7 +517,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                       key={s.val}
                       type="button"
                       onClick={() => setForecastConfig({ ...forecastConfig, growthMultiplier: s.val })}
-                      className={`flex-1 py-1.5 text-[11px] font-bold rounded-lg border transition-all cursor-pointer ${
+                      className={`flex-1 py-1 text-[10px] font-bold rounded-lg border transition-all cursor-pointer ${
                         forecastConfig.growthMultiplier === s.val
                           ? 'bg-emerald-600 border-emerald-600 text-white shadow-2xs'
                           : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'

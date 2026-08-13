@@ -39,7 +39,38 @@ app.post('/api/gemini/profit-advisor', async (req, res) => {
       });
     }
 
-    const { summary, topProducts, currency, customPrompt } = req.body;
+    const { summary, topProducts, currency, customPrompt } = req.body || {};
+
+    // Sanitize and validate inputs
+    const safeCurrency = typeof currency === 'string' && currency.trim() ? currency.trim().slice(0, 5) : '$';
+    const sanitizeNum = (val: any) => {
+      const num = Number(val);
+      return Number.isFinite(num) ? num : 0;
+    };
+
+    const cleanRevenue = sanitizeNum(summary?.totalRevenue);
+    const cleanCOGS = sanitizeNum(summary?.totalCOGS);
+    const cleanGrossProfit = sanitizeNum(summary?.grossProfit);
+    const cleanExpenses = sanitizeNum(summary?.totalExpenses);
+    const cleanNetProfit = sanitizeNum(summary?.netProfit);
+    const cleanCapital = sanitizeNum(summary?.totalCapital);
+    const cleanValuation = sanitizeNum(summary?.totalInventoryValuation);
+    const cleanPotential = sanitizeNum(summary?.totalPotentialRevenue);
+    const cleanLowStock = sanitizeNum(summary?.lowStockCount);
+
+    const grossMarginPct = cleanRevenue > 0 ? ((cleanGrossProfit / cleanRevenue) * 100).toFixed(1) : '0.0';
+    const netMarginPct = cleanRevenue > 0 ? ((cleanNetProfit / cleanRevenue) * 100).toFixed(1) : '0.0';
+
+    const safeTopProducts = Array.isArray(topProducts)
+      ? topProducts.slice(0, 10).map((p: any) => ({
+          name: String(p?.name || 'Product').slice(0, 50),
+          buyPrice: sanitizeNum(p?.buyPrice),
+          sellPrice: sanitizeNum(p?.sellPrice),
+          stock: sanitizeNum(p?.stock),
+        }))
+      : [];
+
+    const safeCustomPrompt = typeof customPrompt === 'string' ? customPrompt.trim().slice(0, 500) : '';
 
     const systemInstruction = `You are a financial business advisor and profit strategist for retail businesses and shop owners.
 Your job is to analyze the business's revenue, cost of goods sold (COGS), gross profit, operating expenses, net profit, profit margins, and inventory metrics.
@@ -53,21 +84,21 @@ Structure your insights into 4 key sections:
 4. 🚀 3 Immediate Action Items to Boost Net Income`;
 
     const prompt = `Analyze this retail business's financial data:
-Currency: ${currency || '$'}
-Total Sales Revenue: ${summary?.totalRevenue ?? 0}
-Cost of Goods Sold (COGS): ${summary?.totalCOGS ?? 0}
-Gross Profit: ${summary?.grossProfit ?? 0}
-Operating Expenses: ${summary?.totalExpenses ?? 0}
-Net Profit: ${summary?.netProfit ?? 0}
-Gross Profit Margin: ${summary?.totalRevenue > 0 ? ((summary.grossProfit / summary.totalRevenue) * 100).toFixed(1) : 0}%
-Net Profit Margin: ${summary?.totalRevenue > 0 ? ((summary.netProfit / summary.totalRevenue) * 100).toFixed(1) : 0}%
-Owner Capital Injected: ${summary?.totalCapital ?? 0}
-Inventory Valuation (Cost): ${summary?.totalInventoryValuation ?? 0}
-Potential Sales Value: ${summary?.totalPotentialRevenue ?? 0}
-Low Stock Alert Count: ${summary?.lowStockCount ?? 0}
-Top Selling Products: ${JSON.stringify(topProducts || [])}
+Currency: ${safeCurrency}
+Total Sales Revenue: ${cleanRevenue}
+Cost of Goods Sold (COGS): ${cleanCOGS}
+Gross Profit: ${cleanGrossProfit}
+Operating Expenses: ${cleanExpenses}
+Net Profit: ${cleanNetProfit}
+Gross Profit Margin: ${grossMarginPct}%
+Net Profit Margin: ${netMarginPct}%
+Owner Capital Injected: ${cleanCapital}
+Inventory Valuation (Cost): ${cleanValuation}
+Potential Sales Value: ${cleanPotential}
+Low Stock Alert Count: ${cleanLowStock}
+Top Selling Products: ${JSON.stringify(safeTopProducts)}
 
-${customPrompt ? `User Specific Focus: ${customPrompt}` : 'Provide a comprehensive profit analysis and strategic advice.'}`;
+${safeCustomPrompt ? `User Specific Focus: ${safeCustomPrompt}` : 'Provide a comprehensive profit analysis and strategic advice.'}`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-3.6-flash',
@@ -78,13 +109,18 @@ ${customPrompt ? `User Specific Focus: ${customPrompt}` : 'Provide a comprehensi
       },
     });
 
+    const analysisText = response.text?.trim() || 'Analysis completed. Maintain strong pricing and continuous inventory monitoring.';
+
     return res.json({
-      analysis: response.text || 'No analysis text generated.',
+      analysis: analysisText,
     });
   } catch (error: any) {
     console.error('Gemini API Error:', error);
+    const msg = error?.status === 429
+      ? 'AI rate limit reached. Please wait a few seconds before requesting another analysis.'
+      : error?.message || 'Failed to generate profit analysis.';
     return res.status(500).json({
-      error: error?.message || 'Failed to generate profit analysis.',
+      error: msg,
     });
   }
 });

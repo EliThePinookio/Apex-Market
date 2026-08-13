@@ -31,31 +31,56 @@ export const GeminiProfitAdvisor: React.FC<GeminiProfitAdvisorProps> = ({
     setError(null);
 
     const promptToUse = overridePrompt !== undefined ? overridePrompt : customPrompt;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
 
     try {
+      const sanitizedSummary = {
+        totalRevenue: Number(summary.totalRevenue) || 0,
+        totalCOGS: Number(summary.totalCOGS) || 0,
+        grossProfit: Number(summary.grossProfit) || 0,
+        totalExpenses: Number(summary.totalExpenses) || 0,
+        netProfit: Number(summary.netProfit) || 0,
+        totalCapital: Number(summary.totalCapital) || 0,
+        totalInventoryValuation: Number(summary.totalInventoryValuation) || 0,
+        totalPotentialRevenue: Number(summary.totalPotentialRevenue) || 0,
+        lowStockCount: Number(summary.lowStockCount) || 0,
+      };
+
       const response = await fetch('/api/gemini/profit-advisor', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        signal: controller.signal,
         body: JSON.stringify({
-          summary,
+          summary: sanitizedSummary,
           topProducts,
           currency: cur,
           customPrompt: promptToUse,
         }),
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        const errData = await response.json();
+        const errData = await response.json().catch(() => ({}));
         throw new Error(errData.error || 'Failed to generate AI profit insights.');
       }
 
       const data = await response.json();
+      if (!data?.analysis) {
+        throw new Error('Received empty response from AI Advisor.');
+      }
       setAnalysis(data.analysis);
     } catch (err: any) {
+      clearTimeout(timeoutId);
       console.error('AI Profit Advisor Error:', err);
-      setError(err?.message || 'Unable to connect to Gemini AI Profit Advisor.');
+      if (err.name === 'AbortError') {
+        setError('Request timed out. Please check your network connection and try again.');
+      } else {
+        setError(err?.message || 'Unable to connect to Gemini AI Profit Advisor.');
+      }
     } finally {
       setLoading(false);
     }

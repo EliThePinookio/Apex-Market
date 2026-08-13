@@ -230,9 +230,9 @@ export function generateForecast(
   const now = new Date();
   const historicalDays = Math.max(3, config.historicalDays);
   const forecastAheadDays = Math.max(1, config.forecastAheadDays);
-  const movingWindow = Math.min(historicalDays, Math.max(2, config.movingAverageWindow));
-  const alpha = Math.max(0.05, Math.min(0.95, config.smoothingAlpha));
-  const multiplier = Math.max(0.2, Math.min(3.0, config.growthMultiplier));
+  const movingWindow = Math.min(historicalDays, Math.max(1, config.movingAverageWindow));
+  const alpha = Math.max(0.01, Math.min(0.99, Number(config.smoothingAlpha) || 0.35));
+  const multiplier = Math.max(0, Math.min(5.0, Number(config.growthMultiplier) ?? 1.0));
 
   // 1. Build continuous daily buckets for the historical timeframe
   const daysMap: {
