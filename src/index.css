@@ -2,69 +2,90 @@
 
 @layer base {
   body {
-    background-color: #0B0F19;
-    color: #f1f5f9;
+    background-color: #f8fafc;
+    color: #0f172a;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 }
 
-/* Glassmorphism Surface Utilities */
-.glass-panel {
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+/* Custom Typography & Monospace Numbers */
+.font-mono {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-.glass-panel-interactive {
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+/* Apple/Linear/Revolut-inspired White & Emerald Surface Elevation Tokens */
+.glass-card {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
 }
 
-.glass-panel-interactive:hover {
-  transform: translateY(-2px) scale(1.01);
-  border-color: rgba(6, 182, 212, 0.4);
-  box-shadow: 0 12px 36px -10px rgba(6, 182, 212, 0.3);
+.glass-card-interactive {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 4px 18px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.glass-modal {
-  background: rgba(11, 15, 25, 0.88);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(139, 92, 246, 0.3);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+.glass-card-interactive:hover {
+  transform: translateY(-2px);
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow: 0 16px 32px -8px rgba(5, 150, 105, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
 }
 
-/* Neon Glow Accents */
-.glow-cyan {
-  box-shadow: 0 0 20px rgba(6, 182, 212, 0.35);
+.glass-modal-light {
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.16), 0 10px 20px -5px rgba(5, 150, 105, 0.08);
 }
 
-.glow-violet {
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.35);
+.glass-pill {
+  background: rgba(236, 253, 245, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
-.glow-emerald {
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.35);
+/* Tactile 3D Soft Shadows & Elevation */
+.shadow-tactile-sm {
+  box-shadow: 0 2px 5px 0 rgba(15, 23, 42, 0.04), 0 1px 2px 0 rgba(16, 185, 129, 0.06);
 }
 
-/* Custom Scrollbar */
+.shadow-tactile-emerald {
+  box-shadow: 0 12px 28px -6px rgba(5, 150, 105, 0.22), 0 4px 10px -2px rgba(16, 185, 129, 0.12);
+}
+
+.shadow-tactile-card {
+  box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.06), 0 4px 12px -2px rgba(5, 150, 105, 0.04);
+}
+
+/* Custom Subtle Scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(11, 15, 25, 0.6);
+  background: rgba(241, 245, 249, 0.8);
+  border-radius: 9999px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(6, 182, 212, 0.3);
+  background: rgba(16, 185, 129, 0.3);
   border-radius: 9999px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(6, 182, 212, 0.6);
+  background: rgba(5, 150, 105, 0.6);
 }
 
+/* Safe Area Padding for iOS Notches & Dynamic Island */
+.safe-area-top {
+  padding-top: max(1rem, env(safe-area-inset-top));
+}
+.safe-area-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}

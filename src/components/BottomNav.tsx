@@ -5,10 +5,11 @@ import {
   Package,
   Receipt,
   PieChart,
+  Users,
   Settings,
 } from 'lucide-react';
 
-export type NavTab = 'dashboard' | 'pos' | 'inventory' | 'transactions' | 'analytics' | 'settings';
+export type NavTab = 'dashboard' | 'pos' | 'inventory' | 'transactions' | 'analytics' | 'customers' | 'settings';
 
 interface BottomNavProps {
   activeTab: NavTab;
@@ -29,7 +30,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     },
     {
       id: 'pos',
-      label: 'New Sale',
+      label: 'POS',
       icon: <ShoppingCart className="w-5 h-5" />,
     },
     {
@@ -45,18 +46,23 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     },
     {
       id: 'analytics',
-      label: 'Profit',
+      label: 'Analytics',
       icon: <PieChart className="w-5 h-5" />,
     },
     {
+      id: 'customers',
+      label: 'CRM',
+      icon: <Users className="w-5 h-5" />,
+    },
+    {
       id: 'settings',
-      label: 'Owner',
+      label: 'Settings',
       icon: <Settings className="w-5 h-5" />,
     },
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-[#0B0F19]/85 backdrop-blur-xl border-t border-cyan-500/15 px-2 py-2 shadow-[0_-10px_30px_rgba(0,0,0,0.6)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-2 py-2 shadow-lg shadow-slate-900/5 safe-area-bottom md:hidden">
       <div className="max-w-md mx-auto flex items-center justify-around">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
@@ -65,16 +71,16 @@ export const BottomNav: React.FC<BottomNavProps> = ({
               key={tab.id}
               id={`nav-tab-${tab.id}`}
               onClick={() => onTabChange(tab.id)}
-              className={`relative flex flex-col items-center justify-center py-1.5 px-2.5 rounded-2xl transition-all duration-200 min-w-[54px] active:scale-95 ${
+              className={`relative flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all duration-200 min-w-[50px] active:scale-95 ${
                 isActive
-                  ? 'text-cyan-400 bg-cyan-500/15 border border-cyan-500/30 font-extrabold shadow-[0_0_15px_rgba(6,182,212,0.25)] scale-105'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                  ? 'text-emerald-700 bg-emerald-50 border border-emerald-200 font-extrabold shadow-2xs'
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100/60'
               }`}
             >
               <div className="relative">
                 {tab.icon}
                 {tab.badge && tab.badge > 0 ? (
-                  <span className="absolute -top-1.5 -right-2 bg-amber-400 text-slate-950 font-extrabold text-[10px] w-4 h-4 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(251,191,36,0.5)] animate-bounce">
+                  <span className="absolute -top-1.5 -right-2 bg-amber-600 text-white font-black text-[9px] min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center shadow-xs">
                     {tab.badge > 99 ? '99+' : tab.badge}
                   </span>
                 ) : null}
@@ -83,7 +89,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                 {tab.label}
               </span>
               {isActive && (
-                <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#06b6d4] mt-0.5" />
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 mt-0.5" />
               )}
             </button>
           );
@@ -92,3 +98,4 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     </nav>
   );
 };
+

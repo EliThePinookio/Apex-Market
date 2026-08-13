@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 
-// BeforeInstallPromptEvent interface for PWA prompt
 export interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
@@ -8,34 +7,44 @@ export interface BeforeInstallPromptEvent extends Event {
 
 let deferredPrompt: BeforeInstallPromptEvent | null = null;
 
-// Register service worker
 export function registerServiceWorker() {
-  if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+  if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker
         .register('/sw.js')
         .then((reg) => {
-          console.log('ServiceWorker registered with scope: ', reg.scope);
+          console.log('ServiceWorker registered with scope:', reg.scope);
         })
         .catch((err) => {
-          console.warn('ServiceWorker registration failed: ', err);
+          console.warn('ServiceWorker registration failed:', err);
         });
     });
   }
 }
 
-// Custom Hook to manage PWA Install Prompt & Online State
 export function usePWA() {
   const [canInstall, setCanInstall] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isIOS, setIsIOS] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
 
   useEffect(() => {
-    // Check if app is already running as standalone PWA
+    // Detect iOS
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const iosDevice = /iphone|ipad|ipod/.test(userAgent);
+    setIsIOS(iosDevice);
+
+    // Detect Android
+    const androidDevice = /android/.test(userAgent);
+    setIsAndroid(androidDevice);
+
+    // Check if app is running as standalone PWA
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true;
-    
+      (window.navigator as any).standalone === true ||
+      document.referrer.includes('android-app://');
+
     if (isStandalone) {
       setIsInstalled(true);
     }
@@ -84,5 +93,6 @@ export function usePWA() {
     return false;
   };
 
-  return { canInstall, isInstalled, isOnline, triggerInstall };
+  return { canInstall, isInstalled, isOnline, isIOS, isAndroid, triggerInstall };
 }
+

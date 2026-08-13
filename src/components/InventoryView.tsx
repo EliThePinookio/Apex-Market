@@ -3,18 +3,21 @@ import {
   Plus,
   Search,
   Package,
-  AlertTriangle,
   Edit2,
   Trash2,
   Download,
   PackagePlus,
   X,
+  AlertTriangle,
+  Flame,
   CheckCircle2,
-  Percent,
+  Boxes,
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Product, Category, BusinessProfile } from '../types';
 import { saveProduct, deleteProduct, recordStockRefill } from '../services/dbService';
 import { exportInventoryToCSV } from '../services/exportService';
+import { TiltCard } from './TiltCard';
 
 interface InventoryViewProps {
   products: Product[];
@@ -47,9 +50,9 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
 
   const cur = profile.currencySymbol;
 
-  // Filtered Products
+  // Intelligently Filter & Rank Products
   const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
+    const matched = products.filter((p) => {
       const matchesSearch =
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -63,6 +66,17 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       }
       return matchesSearch;
     });
+
+    // If filtering low or out of stock, rank by severity
+    if (stockStatusFilter !== 'all') {
+      return matched.sort((a, b) => {
+        const aRatio = a.stockQuantity / (a.minStockThreshold || 1);
+        const bRatio = b.stockQuantity / (b.minStockThreshold || 1);
+        return aRatio - bRatio;
+      });
+    }
+
+    return matched;
   }, [products, searchTerm, stockStatusFilter]);
 
   const openAddModal = () => {
@@ -106,7 +120,8 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
 
   const openRefillModal = (p: Product) => {
     setRefillProduct(p);
-    setRefillQty(10);
+    const suggestedAdd = Math.max(10, p.minStockThreshold * 2 - p.stockQuantity);
+    setRefillQty(suggestedAdd);
     setRefillCostPrice(p.buyPrice.toString());
     setIsRefillModalOpen(true);
   };
@@ -132,89 +147,198 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   const profitPerUnit = sellP - buyP;
   const marginPercent = sellP > 0 ? ((profitPerUnit / sellP) * 100).toFixed(1) : '0.0';
 
+  const totalValuation = products.reduce((acc, p) => acc + p.buyPrice * p.stockQuantity, 0);
+
   return (
-    <div className="pb-24 pt-4 px-4 max-w-lg mx-auto space-y-4">
-      {/* Top Header & Export Controls */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-base font-bold text-slate-100 flex items-center space-x-2">
-            <Package className="w-5 h-5 text-blue-400" />
-            <span>Inventory Stock Manager</span>
-          </h2>
-          <p className="text-xs text-slate-400">
-            {products.length} Products registered
-          </p>
-        </div>
+    <div className="max-w-7xl mx-auto space-y-5">
+      {/* 1. TOP FLOATING HERO BANNER */}
+      <TiltCard elevation="hero" glowColor="teal">
+        <div className="p-6 rounded-3xl bg-gradient-to-br from-slate-900 via-teal-950 to-emerald-950 text-white shadow-2xl border border-teal-800/40 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1 relative z-10">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-teal-500/20 border border-teal-400/30 text-teal-300 text-[11px] font-extrabold uppercase">
+              <Boxes className="w-3.5 h-3.5 text-teal-400" />
+              <span>Catalog & Inventory Engine</span>
+            </div>
+            <h2 className="text-2xl font-black tracking-tight text-white">
+              Stock Inventory Hub
+            </h2>
+            <p className="text-xs text-teal-200/80 font-medium">
+              {products.length} Registered Products • Total Asset Value: <strong className="font-mono text-white">{cur}{totalValuation.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong>
+            </p>
+          </div>
 
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => exportInventoryToCSV(products, cur)}
-            title="Export CSV for Excel"
-            className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            <Download className="w-4 h-4" />
-          </button>
-          <button
-            onClick={openAddModal}
-            id="add-new-product-btn"
-            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-extrabold text-xs shadow-[0_0_15px_rgba(6,182,212,0.3)] active:scale-95 transition-transform"
-          >
-            <Plus className="w-4 h-4 stroke-[3]" />
-            <span>Add Item</span>
-          </button>
+          <div className="flex items-center space-x-2.5 relative z-10">
+            <button
+              onClick={() => exportInventoryToCSV(products, cur)}
+              className="flex items-center space-x-1.5 px-4 py-2.5 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-200 text-xs font-bold transition-all shadow-md cursor-pointer"
+            >
+              <Download className="w-4 h-4 text-teal-400" />
+              <span>Export CSV</span>
+            </button>
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={openAddModal}
+              id="add-new-product-btn"
+              className="flex items-center space-x-1.5 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4 stroke-[3]" />
+              <span>Add New Item</span>
+            </motion.button>
+          </div>
         </div>
-      </div>
+      </TiltCard>
 
-      {/* Search & Status Filters */}
-      <div className="space-y-2">
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+      {/* 2. SEARCH & FILTER SURFACE */}
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch">
+        <div className="relative flex-1">
+          <Search className="w-4.5 h-4.5 absolute left-4 top-3 text-slate-400" />
           <input
             type="text"
-            placeholder="Search stock by name, SKU, or category..."
+            placeholder="Search catalog by product name, SKU code, or category..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-900/80 border border-slate-800 rounded-2xl pl-10 pr-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+            className="w-full bg-white border border-slate-200/90 rounded-2xl pl-11 pr-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 shadow-sm"
           />
         </div>
 
-        {/* Status Pills */}
-        <div className="grid grid-cols-3 gap-1.5 p-1.5 glass-panel rounded-2xl border border-slate-800/80 text-xs">
+        {/* Status Filter Tabs */}
+        <div className="flex items-center space-x-1.5 p-1.5 bg-white rounded-2xl border border-slate-200/80 text-xs shrink-0 shadow-sm">
           <button
             onClick={() => setStockStatusFilter('all')}
-            className={`py-1.5 rounded-xl font-bold transition-all active:scale-95 ${
+            className={`px-3.5 py-1.5 rounded-xl font-black transition-all active:scale-95 cursor-pointer ${
               stockStatusFilter === 'all'
-                ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.3)] font-black'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            All ({products.length})
+            All Catalog ({products.length})
           </button>
           <button
             onClick={() => setStockStatusFilter('low')}
-            className={`py-1.5 rounded-xl font-bold transition-all active:scale-95 ${
+            className={`px-3.5 py-1.5 rounded-xl font-black transition-all active:scale-95 cursor-pointer ${
               stockStatusFilter === 'low'
-                ? 'bg-amber-500 text-slate-950 shadow-[0_0_12px_rgba(245,158,11,0.3)] font-black'
-                : 'text-amber-400/80 hover:text-amber-300'
+                ? 'bg-amber-500 text-slate-950 shadow-xs'
+                : 'text-amber-700 hover:text-amber-800'
             }`}
           >
-            Low ({products.filter((p) => p.stockQuantity <= p.minStockThreshold && p.stockQuantity > 0).length})
+            Low Stock ({products.filter((p) => p.stockQuantity <= p.minStockThreshold && p.stockQuantity > 0).length})
           </button>
           <button
             onClick={() => setStockStatusFilter('out')}
-            className={`py-1.5 rounded-xl font-bold transition-all active:scale-95 ${
+            className={`px-3.5 py-1.5 rounded-xl font-black transition-all active:scale-95 cursor-pointer ${
               stockStatusFilter === 'out'
-                ? 'bg-rose-500 text-slate-950 shadow-[0_0_12px_rgba(244,63,94,0.3)] font-black'
-                : 'text-rose-400/80 hover:text-rose-300'
+                ? 'bg-rose-600 text-white shadow-xs'
+                : 'text-rose-700 hover:text-rose-800'
             }`}
           >
-            Out ({products.filter((p) => p.stockQuantity <= 0).length})
+            Out of Stock ({products.filter((p) => p.stockQuantity <= 0).length})
           </button>
         </div>
       </div>
 
-      {/* Product List Cards */}
-      <div className="space-y-2.5">
+      {/* 3. DESKTOP DATA TABLE IN FLOATING CONTAINER */}
+      <div className="hidden md:block bg-white rounded-3xl border border-slate-200/90 shadow-[0_15px_35px_-8px_rgba(15,23,42,0.06)] overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs text-slate-700">
+            <thead className="bg-slate-50/90 text-[10px] uppercase font-black text-slate-500 border-b border-slate-200/80">
+              <tr>
+                <th className="py-4 px-5">SKU / Item Name</th>
+                <th className="py-4 px-4">Category</th>
+                <th className="py-4 px-4 text-center">Stock Level</th>
+                <th className="py-4 px-4 text-right">Cost Price</th>
+                <th className="py-4 px-4 text-right">Selling Price</th>
+                <th className="py-4 px-4 text-right">Profit Margin</th>
+                <th className="py-4 px-5 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredProducts.map((p) => {
+                const isLow = p.stockQuantity <= p.minStockThreshold && p.stockQuantity > 0;
+                const isOut = p.stockQuantity <= 0;
+                const unitProfit = p.sellPrice - p.buyPrice;
+                const margin = p.sellPrice > 0 ? ((unitProfit / p.sellPrice) * 100).toFixed(0) : '0';
+
+                return (
+                  <tr
+                    key={p.id}
+                    className="hover:bg-slate-50/80 transition-colors group"
+                  >
+                    <td className="py-3.5 px-5">
+                      <div className="font-extrabold text-slate-900 group-hover:text-emerald-700 transition-colors">
+                        {p.name}
+                      </div>
+                      <span className="font-mono text-[10px] text-slate-400">{p.sku}</span>
+                    </td>
+
+                    <td className="py-3.5 px-4">
+                      <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 text-[10px] font-extrabold border border-emerald-200">
+                        {p.category}
+                      </span>
+                    </td>
+
+                    <td className="py-3.5 px-4 text-center">
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-black font-mono ${
+                          isOut
+                            ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                            : isLow
+                            ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                            : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                        }`}
+                      >
+                        {isOut ? 'Out of Stock' : `${p.stockQuantity} ${p.unit}`}
+                      </span>
+                    </td>
+
+                    <td className="py-3.5 px-4 text-right font-mono tabular-nums font-semibold text-slate-600">
+                      {cur}{p.buyPrice.toFixed(2)}
+                    </td>
+
+                    <td className="py-3.5 px-4 text-right font-mono tabular-nums font-black text-emerald-700">
+                      {cur}{p.sellPrice.toFixed(2)}
+                    </td>
+
+                    <td className="py-3.5 px-4 text-right font-mono tabular-nums font-extrabold text-emerald-800">
+                      +{margin}%
+                    </td>
+
+                    <td className="py-3.5 px-5 text-center">
+                      <div className="flex items-center justify-center space-x-2">
+                        <button
+                          onClick={() => openRefillModal(p)}
+                          className="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-extrabold active:scale-95 transition-all text-[11px] cursor-pointer"
+                          title="Refill Stock"
+                        >
+                          <PackagePlus className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Refill</span>
+                        </button>
+                        <button
+                          onClick={() => openEditModal(p)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                          title="Edit Product"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(p.id, p.name)}
+                          className="p-1.5 rounded-lg text-rose-400 hover:text-rose-700 hover:bg-rose-50 transition-colors cursor-pointer"
+                          title="Delete Product"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 4. MOBILE FLOATING CARDS LIST */}
+      <div className="space-y-3 md:hidden">
         {filteredProducts.map((p) => {
           const isLow = p.stockQuantity <= p.minStockThreshold && p.stockQuantity > 0;
           const isOut = p.stockQuantity <= 0;
@@ -222,331 +346,339 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
           const margin = p.sellPrice > 0 ? ((unitProfit / p.sellPrice) * 100).toFixed(0) : '0';
 
           return (
-            <div
-              key={p.id}
-              className="p-3.5 rounded-2xl glass-panel-interactive border border-slate-800/80 shadow-md flex flex-col justify-between space-y-3"
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span className="px-2 py-0.5 rounded-md bg-slate-800/80 text-cyan-300 text-[10px] font-bold border border-cyan-500/20">
-                      {p.category}
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-mono">
-                      {p.sku}
+            <TiltCard key={p.id} elevation="normal" className="rounded-2xl">
+              <div className="p-4 rounded-2xl bg-white border border-slate-200/90 space-y-3">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="flex items-center space-x-2 mb-1">
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 text-[10px] font-bold border border-emerald-200">
+                        {p.category}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {p.sku}
+                      </span>
+                    </div>
+                    <h3 className="text-sm font-black text-slate-900">{p.name}</h3>
+                  </div>
+
+                  {/* Stock Status Badge */}
+                  <div className="text-right">
+                    <span
+                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black ${
+                        isOut
+                          ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                          : isLow
+                          ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                          : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                      }`}
+                    >
+                      {isOut ? 'Out of Stock' : `${p.stockQuantity} ${p.unit}`}
                     </span>
                   </div>
-                  <h3 className="text-sm font-bold text-slate-100">{p.name}</h3>
                 </div>
 
-                {/* Stock Status Badge */}
-                <div className="text-right">
-                  <span
-                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black ${
-                      isOut
-                        ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40 shadow-[0_0_10px_rgba(244,63,94,0.2)]'
-                        : isLow
-                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]'
-                        : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.2)]'
-                    }`}
-                  >
-                    {isOut ? 'Out of Stock' : `${p.stockQuantity} ${p.unit}`}
-                  </span>
-                  {isLow && (
-                    <span className="block text-[10px] text-amber-400 mt-0.5 font-semibold">
-                      Low threshold ({p.minStockThreshold})
-                    </span>
-                  )}
+                {/* Price Details Grid */}
+                <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono tabular-nums">
+                  <div>
+                    <span className="block text-[10px] text-slate-400 uppercase font-bold font-sans">Cost</span>
+                    <span className="font-bold text-slate-700">{cur}{p.buyPrice.toFixed(2)}</span>
+                  </div>
+                  <div>
+                    <span className="block text-[10px] text-slate-400 uppercase font-bold font-sans">Sell</span>
+                    <span className="font-bold text-emerald-700">{cur}{p.sellPrice.toFixed(2)}</span>
+                  </div>
+                  <div>
+                    <span className="block text-[10px] text-slate-400 uppercase font-bold font-sans">Margin</span>
+                    <span className="font-bold text-emerald-800">+{margin}%</span>
+                  </div>
                 </div>
-              </div>
 
-              {/* Price Details Grid */}
-              <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-slate-950/70 border border-slate-800/80 text-xs">
-                <div>
-                  <span className="block text-[10px] text-slate-400 uppercase font-bold">Cost</span>
-                  <span className="font-bold text-slate-300">{cur}{p.buyPrice.toFixed(2)}</span>
-                </div>
-                <div>
-                  <span className="block text-[10px] text-slate-400 uppercase font-bold">Sell</span>
-                  <span className="font-bold text-emerald-400">{cur}{p.sellPrice.toFixed(2)}</span>
-                </div>
-                <div>
-                  <span className="block text-[10px] text-slate-400 uppercase font-bold">Margin</span>
-                  <span className="font-bold text-cyan-400">+{margin}%</span>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center justify-between pt-1 text-xs border-t border-slate-800/60">
-                <button
-                  onClick={() => openRefillModal(p)}
-                  className="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/30 border border-cyan-500/30 text-cyan-300 font-bold active:scale-95 transition-all"
-                >
-                  <PackagePlus className="w-3.5 h-3.5" />
-                  <span>Refill Stock</span>
-                </button>
-
-                <div className="flex items-center space-x-2">
+                {/* Action Buttons */}
+                <div className="flex items-center justify-between pt-1 text-xs border-t border-slate-100">
                   <button
-                    onClick={() => openEditModal(p)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-cyan-300 hover:bg-cyan-500/10 transition-colors"
-                    title="Edit Product"
+                    onClick={() => openRefillModal(p)}
+                    className="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-bold active:scale-95 transition-all"
                   >
-                    <Edit2 className="w-4 h-4" />
+                    <PackagePlus className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Refill Stock</span>
                   </button>
-                  <button
-                    onClick={() => handleDeleteProduct(p.id, p.name)}
-                    className="p-1.5 rounded-lg text-rose-400/80 hover:text-rose-300 hover:bg-rose-500/15 transition-colors"
-                    title="Delete Product"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => openEditModal(p)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-700 hover:bg-slate-100 transition-colors"
+                      title="Edit Product"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteProduct(p.id, p.name)}
+                      className="p-1.5 rounded-lg text-rose-400 hover:text-rose-700 hover:bg-rose-50 transition-colors"
+                      title="Delete Product"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            </TiltCard>
           );
         })}
       </div>
 
       {filteredProducts.length === 0 && (
-        <div className="py-12 text-center text-slate-500 space-y-2">
-          <Package className="w-10 h-10 mx-auto opacity-40" />
-          <p className="text-xs">No matching inventory items.</p>
+        <div className="py-12 text-center text-slate-400 space-y-2 bg-white rounded-3xl border border-slate-200">
+          <Package className="w-10 h-10 mx-auto opacity-40 text-slate-400" />
+          <p className="text-xs text-slate-500 font-medium">No matching inventory items found.</p>
         </div>
       )}
 
       {/* ADD / EDIT PRODUCT MODAL */}
-      {isProductModalOpen && editingProduct && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="glass-modal border border-cyan-500/30 w-full max-w-md rounded-3xl p-5 shadow-[0_0_50px_rgba(6,182,212,0.15)] max-h-[90vh] overflow-y-auto space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-extrabold text-slate-100 flex items-center space-x-2">
-                <Package className="w-5 h-5 text-cyan-400" />
-                <span>{editingProduct.id ? 'Edit Product' : 'Register New Product'}</span>
-              </h3>
-              <button
-                onClick={() => setIsProductModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveProduct} className="space-y-3 text-xs">
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">
-                  Product Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Wireless Headphones"
-                  value={editingProduct.name || ''}
-                  onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-cyan-500"
-                />
+      <AnimatePresence>
+        {isProductModalOpen && editingProduct && (
+          <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white border border-slate-200 w-full max-w-md rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto space-y-4"
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 className="text-base font-black text-slate-900 flex items-center space-x-2">
+                  <Package className="w-5 h-5 text-emerald-600" />
+                  <span>{editingProduct.id ? 'Edit Product SKU' : 'Register New Catalog Item'}</span>
+                </h3>
+                <button
+                  onClick={() => setIsProductModalOpen(false)}
+                  className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <form onSubmit={handleSaveProduct} className="space-y-3 text-xs">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">
-                    Category
-                  </label>
-                  <select
-                    value={editingProduct.category || ''}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-cyan-500"
-                  >
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.name}>
-                        {c.name}
-                      </option>
-                    ))}
-                    <option value="General">General</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">
-                    SKU Code
+                  <label className="block text-slate-700 font-bold mb-1">
+                    Product Name *
                   </label>
                   <input
                     type="text"
-                    value={editingProduct.sku || ''}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, sku: e.target.value })}
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-cyan-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">
-                    Buy / Cost Price ({cur}) *
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
                     required
-                    placeholder="0.00"
-                    value={editingProduct.buyPrice === 0 ? '' : editingProduct.buyPrice ?? ''}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, buyPrice: parseFloat(e.target.value) || 0 })}
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-cyan-500"
+                    placeholder="e.g. Organic Dark Roast Coffee Beans"
+                    value={editingProduct.name || ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 focus:outline-none focus:border-emerald-500 font-medium"
                   />
                 </div>
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">
-                    Sell Price ({cur}) *
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    placeholder="0.00"
-                    value={editingProduct.sellPrice === 0 ? '' : editingProduct.sellPrice ?? ''}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, sellPrice: parseFloat(e.target.value) || 0 })}
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-cyan-500"
-                  />
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">
+                      Category
+                    </label>
+                    <select
+                      value={editingProduct.category || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 focus:outline-none focus:border-emerald-500 font-medium"
+                    >
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.name}>
+                          {c.name}
+                        </option>
+                      ))}
+                      <option value="General">General</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">
+                      SKU Code
+                    </label>
+                    <input
+                      type="text"
+                      value={editingProduct.sku || ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, sku: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 font-mono focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">
+                      Cost Price ({cur}) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      placeholder="0.00"
+                      value={editingProduct.buyPrice === 0 ? '' : editingProduct.buyPrice ?? ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, buyPrice: parseFloat(e.target.value) || 0 })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 focus:outline-none focus:border-emerald-500 font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">
+                      Selling Price ({cur}) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      placeholder="0.00"
+                      value={editingProduct.sellPrice === 0 ? '' : editingProduct.sellPrice ?? ''}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, sellPrice: parseFloat(e.target.value) || 0 })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 focus:outline-none focus:border-emerald-500 font-mono"
+                    />
+                  </div>
+                </div>
+
+                {/* Instant Margin Preview */}
+                <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 flex justify-between items-center text-emerald-900 font-medium">
+                  <span>Margin Profit Per Unit:</span>
+                  <span className="font-black text-emerald-700 font-mono">
+                    {cur}{profitPerUnit.toFixed(2)} (+{marginPercent}%)
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">
+                      Initial Qty
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={editingProduct.stockQuantity ?? 10}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, stockQuantity: Number(e.target.value) })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">
+                      Min Alert Threshold
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={editingProduct.minStockThreshold ?? 5}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, minStockThreshold: Number(e.target.value) })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">
+                      Unit
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="pcs, kg"
+                      value={editingProduct.unit || 'pcs'}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, unit: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-3 flex justify-end space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsProductModalOpen(false)}
+                    className="px-4 py-2 rounded-xl text-slate-600 font-bold bg-slate-100 hover:bg-slate-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black shadow-md cursor-pointer"
+                  >
+                    Save Catalog Item
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* REFILL STOCK MODAL */}
+      <AnimatePresence>
+        {isRefillModalOpen && refillProduct && (
+          <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white border border-slate-200 w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4"
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 className="text-base font-black text-slate-900">
+                  Refill Stock: {refillProduct.name}
+                </h3>
+                <button
+                  onClick={() => setIsRefillModalOpen(false)}
+                  className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              {/* Instant Profit Preview */}
-              <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 flex justify-between items-center text-slate-300">
-                <span>Calculated Profit:</span>
-                <span className="font-extrabold text-emerald-400">
-                  {cur}{profitPerUnit.toFixed(2)} ({marginPercent}% margin)
-                </span>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">
-                    Stock Qty
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={editingProduct.stockQuantity ?? 10}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, stockQuantity: Number(e.target.value) })}
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-cyan-500"
-                  />
+              <form onSubmit={handleConfirmRefill} className="space-y-3 text-xs">
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex justify-between font-mono">
+                  <span className="text-slate-500">Current Stock:</span>
+                  <span className="font-extrabold text-slate-800">
+                    {refillProduct.stockQuantity} {refillProduct.unit}
+                  </span>
                 </div>
+
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">
-                    Min Alert Qty
+                  <label className="block text-slate-700 font-bold mb-1">
+                    Quantity to Add
                   </label>
                   <input
                     type="number"
                     min="1"
-                    value={editingProduct.minStockThreshold ?? 5}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, minStockThreshold: Number(e.target.value) })}
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-cyan-500"
+                    required
+                    value={refillQty}
+                    onChange={(e) => setRefillQty(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 font-bold text-sm focus:outline-none focus:border-emerald-500 font-mono"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">
-                    Unit
+                  <label className="block text-slate-700 font-bold mb-1">
+                    Cost Price Per Unit ({cur})
                   </label>
                   <input
-                    type="text"
-                    placeholder="pcs, kg"
-                    value={editingProduct.unit || 'pcs'}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, unit: e.target.value })}
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-cyan-500"
+                    type="number"
+                    step="0.01"
+                    required
+                    value={refillCostPrice}
+                    onChange={(e) => setRefillCostPrice(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 focus:outline-none focus:border-emerald-500 font-mono"
                   />
                 </div>
-              </div>
 
-              <div className="pt-3 flex justify-end space-x-2">
-                <button
-                  type="button"
-                  onClick={() => setIsProductModalOpen(false)}
-                  className="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 font-semibold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black shadow-[0_0_15px_rgba(6,182,212,0.3)] active:scale-95 transition-all"
-                >
-                  Save Item
-                </button>
-              </div>
-            </form>
+                <div className="pt-2 flex justify-end space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsRefillModalOpen(false)}
+                    className="px-4 py-2 rounded-xl text-slate-600 font-bold bg-slate-100 hover:bg-slate-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black shadow-md cursor-pointer"
+                  >
+                    Confirm Refill
+                  </button>
+                </div>
+              </form>
+            </motion.div>
           </div>
-        </div>
-      )}
-
-      {/* REFILL STOCK MODAL */}
-      {isRefillModalOpen && refillProduct && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="glass-modal border border-cyan-500/30 w-full max-w-sm rounded-3xl p-5 shadow-[0_0_50px_rgba(6,182,212,0.15)] space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-extrabold text-slate-100">
-                Refill Stock: {refillProduct.name}
-              </h3>
-              <button
-                onClick={() => setIsRefillModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-100"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleConfirmRefill} className="space-y-3 text-xs">
-              <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 flex justify-between">
-                <span className="text-slate-400">Current Stock:</span>
-                <span className="font-extrabold text-slate-200">
-                  {refillProduct.stockQuantity} {refillProduct.unit}
-                </span>
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">
-                  Quantity to Add
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  required
-                  value={refillQty}
-                  onChange={(e) => setRefillQty(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-cyan-500 text-sm font-bold"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">
-                  Cost Price Per Unit ({cur})
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  required
-                  value={refillCostPrice}
-                  onChange={(e) => setRefillCostPrice(e.target.value)}
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-cyan-500"
-                />
-              </div>
-
-              <div className="pt-2 flex justify-end space-x-2">
-                <button
-                  type="button"
-                  onClick={() => setIsRefillModalOpen(false)}
-                  className="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 font-semibold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black shadow-[0_0_15px_rgba(6,182,212,0.3)] active:scale-95 transition-all"
-                >
-                  Confirm Refill
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 };

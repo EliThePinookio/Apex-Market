@@ -2,20 +2,17 @@ import React, { useState, useMemo } from 'react';
 import {
   Receipt,
   Search,
-  Filter,
   Download,
   Trash2,
   Eye,
   Printer,
   X,
-  Calendar,
   FileSpreadsheet,
 } from 'lucide-react';
 import { Transaction, Product, BusinessProfile, FinancialSummary } from '../types';
 import { deleteTransaction } from '../services/dbService';
 import {
   exportSalesToCSV,
-  exportExpensesToCSV,
   exportFullBusinessReportCSV,
   printReceipt,
 } from '../services/exportService';
@@ -83,56 +80,56 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   };
 
   return (
-    <div className="pb-24 pt-4 px-4 max-w-lg mx-auto space-y-4">
+    <div className="max-w-7xl mx-auto space-y-4">
       {/* Header & CSV Export Actions */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-bold text-slate-100 flex items-center space-x-2">
-            <Receipt className="w-5 h-5 text-blue-400" />
-            <span>Transaction Ledger</span>
+          <h2 className="text-lg font-extrabold text-slate-900 flex items-center space-x-2">
+            <Receipt className="w-5 h-5 text-emerald-600" />
+            <span>Transaction Ledger & History</span>
           </h2>
-          <p className="text-xs text-slate-400">
-            {filteredTransactions.length} Logged records
+          <p className="text-xs text-slate-500">
+            {filteredTransactions.length} Logged activity records in persistent database
           </p>
         </div>
 
         {/* CSV Export Dropdown / Buttons */}
-        <div className="flex items-center space-x-1.5">
+        <div className="flex items-center space-x-2">
           <button
             onClick={() => exportSalesToCSV(transactions, cur)}
             title="Export Sales CSV"
-            className="px-2.5 py-1.5 rounded-xl bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-600/30 font-bold text-xs flex items-center space-x-1"
+            className="px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 font-bold text-xs flex items-center space-x-1.5 transition-colors"
           >
-            <FileSpreadsheet className="w-3.5 h-3.5" />
-            <span className="hidden xs:inline">Sales</span>
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+            <span>Export Sales</span>
           </button>
 
           <button
             onClick={() => exportFullBusinessReportCSV(transactions, products, profile, summary)}
             title="Export Full Master Excel Report"
-            className="px-2.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center space-x-1 shadow-md"
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-extrabold text-xs flex items-center space-x-1.5 shadow-md shadow-emerald-600/20 active:scale-95 transition-all"
           >
-            <Download className="w-3.5 h-3.5" />
-            <span>Export CSV</span>
+            <Download className="w-4 h-4 stroke-[2.5]" />
+            <span>Master Excel Report</span>
           </button>
         </div>
       </div>
 
       {/* Search & Preset Filters */}
-      <div className="space-y-2">
-        <div className="relative">
+      <div className="flex flex-col md:flex-row gap-2.5 items-stretch">
+        <div className="relative flex-1">
           <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
           <input
             type="text"
             placeholder="Search by note, ID, customer..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-800 rounded-2xl pl-10 pr-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+            className="w-full bg-white border border-slate-200/90 rounded-2xl pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 shadow-2xs"
           />
         </div>
 
         {/* Type Filters */}
-        <div className="flex items-center space-x-1 overflow-x-auto no-scrollbar py-1">
+        <div className="flex items-center space-x-1 overflow-x-auto no-scrollbar py-1 shrink-0">
           {[
             { id: 'all', label: 'All Logs' },
             { id: 'sale', label: 'Sales' },
@@ -145,8 +142,8 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
               onClick={() => setTypeFilter(item.id as any)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 ${
                 typeFilter === item.id
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.3)] font-black scale-105'
-                  : 'bg-slate-900/80 text-slate-400 hover:text-slate-200 border border-slate-800'
+                  ? 'bg-emerald-600 text-white font-extrabold shadow-xs'
+                  : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
               }`}
             >
               {item.label}
@@ -155,7 +152,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
         </div>
 
         {/* Date Filter Bar */}
-        <div className="grid grid-cols-4 gap-1 p-1.5 glass-panel rounded-2xl border border-slate-800/80 text-[11px] font-bold text-center">
+        <div className="flex items-center space-x-1 p-1.5 bg-white rounded-2xl border border-slate-200/80 text-[11px] font-bold text-center shrink-0 shadow-2xs">
           {[
             { id: 'all', label: 'All Time' },
             { id: 'today', label: 'Today' },
@@ -165,10 +162,10 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
             <button
               key={d.id}
               onClick={() => setDatePreset(d.id as any)}
-              className={`py-1.5 rounded-xl transition-all active:scale-95 ${
+              className={`px-2.5 py-1.5 rounded-xl transition-all active:scale-95 ${
                 datePreset === d.id
-                  ? 'bg-cyan-500/20 text-cyan-300 font-black border border-cyan-500/30 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-emerald-50 text-emerald-800 font-extrabold border border-emerald-200 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               {d.label}
@@ -177,37 +174,132 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
         </div>
       </div>
 
-      {/* Transactions List */}
-      <div className="space-y-2">
+      {/* DESKTOP DATA TABLE (md:block) */}
+      <div className="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs text-slate-700">
+            <thead className="bg-slate-50 text-[10px] uppercase font-extrabold text-slate-500 border-b border-slate-200/80">
+              <tr>
+                <th className="py-3.5 px-4">Date / Ref ID</th>
+                <th className="py-3.5 px-4">Type</th>
+                <th className="py-3.5 px-4">Description</th>
+                <th className="py-3.5 px-4">Customer / Payment</th>
+                <th className="py-3.5 px-4 text-right">Net Amount</th>
+                <th className="py-3.5 px-4 text-right">Profit</th>
+                <th className="py-3.5 px-4 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredTransactions.map((tx) => {
+                const isSale = tx.type === 'sale';
+                const isExpense = tx.type === 'expense';
+
+                return (
+                  <tr
+                    key={tx.id}
+                    onClick={() => setSelectedTx(tx)}
+                    className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
+                  >
+                    <td className="py-3 px-4 font-mono text-[11px]">
+                      <div className="font-extrabold text-slate-900">{new Date(tx.date).toLocaleDateString()}</div>
+                      <div className="text-[10px] text-slate-400">
+                        {new Date(tx.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} &bull; #{tx.id.slice(0, 8)}
+                      </div>
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <span
+                        className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase ${
+                          isSale
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                            : isExpense
+                            ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                            : 'bg-amber-100 text-amber-800 border border-amber-200'
+                        }`}
+                      >
+                        {tx.type}
+                      </span>
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <div className="font-semibold text-slate-800 group-hover:text-emerald-700 transition-colors max-w-xs truncate">
+                        {tx.description}
+                      </div>
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <div className="text-slate-700 font-medium">{tx.customerName || 'Walk-in'}</div>
+                      <span className="text-[10px] uppercase text-slate-400 font-bold">{tx.paymentMethod || 'cash'}</span>
+                    </td>
+
+                    <td className="py-3 px-4 text-right font-mono tabular-nums font-black text-sm">
+                      <span
+                        className={
+                          isSale
+                            ? 'text-emerald-700'
+                            : isExpense
+                            ? 'text-rose-700'
+                            : 'text-amber-700'
+                        }
+                      >
+                        {isExpense ? '-' : '+'}{cur}{tx.amount.toFixed(2)}
+                      </span>
+                    </td>
+
+                    <td className="py-3 px-4 text-right font-mono tabular-nums font-extrabold text-emerald-800">
+                      {isSale && tx.grossProfit !== undefined ? `+${cur}${tx.grossProfit.toFixed(2)}` : '—'}
+                    </td>
+
+                    <td className="py-3 px-4 text-center">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedTx(tx);
+                        }}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-700 hover:bg-slate-100 transition-colors"
+                        title="View Details"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* MOBILE CARD LIST (md:hidden) */}
+      <div className="space-y-2 md:hidden">
         {filteredTransactions.map((tx) => {
           const isSale = tx.type === 'sale';
           const isExpense = tx.type === 'expense';
-          const isCapital = tx.type === 'capital';
 
           return (
             <div
               key={tx.id}
               onClick={() => setSelectedTx(tx)}
-              className="p-3.5 rounded-2xl glass-panel-interactive border border-slate-800/80 shadow-md hover:border-cyan-500/30 transition-all cursor-pointer flex items-center justify-between active:scale-[0.99]"
+              className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:border-emerald-300 transition-all cursor-pointer flex items-center justify-between active:scale-[0.99]"
             >
               <div className="flex items-start space-x-3">
                 <span
                   className={`mt-0.5 px-2 py-1 rounded-lg text-[10px] font-black uppercase ${
                     isSale
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-[0_0_8px_rgba(16,185,129,0.2)]'
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                       : isExpense
-                      ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40 shadow-[0_0_8px_rgba(244,63,94,0.2)]'
-                      : 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_8px_rgba(245,158,11,0.2)]'
+                      ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                      : 'bg-amber-100 text-amber-800 border border-amber-200'
                   }`}
                 >
                   {tx.type}
                 </span>
 
                 <div>
-                  <h4 className="text-xs font-bold text-slate-100 line-clamp-1">
+                  <h4 className="text-xs font-bold text-slate-900 line-clamp-1">
                     {tx.description}
                   </h4>
-                  <p className="text-[10px] text-slate-400 mt-0.5">
+                  <p className="text-[10px] text-slate-400 mt-0.5 font-mono">
                     {new Date(tx.date).toLocaleDateString()} &bull;{' '}
                     {new Date(tx.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     {tx.customerName && ` &bull; ${tx.customerName}`}
@@ -215,20 +307,20 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                 </div>
               </div>
 
-              <div className="text-right">
+              <div className="text-right font-mono tabular-nums">
                 <p
                   className={`text-sm font-black ${
                     isSale
-                      ? 'text-emerald-400'
+                      ? 'text-emerald-700'
                       : isExpense
-                      ? 'text-rose-400'
-                      : 'text-amber-400'
+                      ? 'text-rose-700'
+                      : 'text-amber-700'
                   }`}
                 >
                   {isExpense ? '-' : '+'}{cur}{tx.amount.toFixed(2)}
                 </p>
                 {isSale && tx.grossProfit !== undefined && (
-                  <p className="text-[10px] text-cyan-400/90 font-bold">
+                  <p className="text-[10px] text-emerald-800 font-bold">
                     Profit: +{cur}{tx.grossProfit.toFixed(2)}
                   </p>
                 )}
@@ -239,52 +331,52 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
       </div>
 
       {filteredTransactions.length === 0 && (
-        <div className="py-12 text-center text-slate-500 space-y-2">
-          <Receipt className="w-10 h-10 mx-auto opacity-40" />
-          <p className="text-xs">No transactions match your search filter.</p>
+        <div className="py-12 text-center text-slate-400 space-y-2">
+          <Receipt className="w-10 h-10 mx-auto opacity-40 text-slate-400" />
+          <p className="text-xs text-slate-500">No transactions match your search filter.</p>
         </div>
       )}
 
       {/* Transaction Details Modal */}
       {selectedTx && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 w-full max-w-md rounded-2xl p-5 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <span className="text-[10px] uppercase font-bold text-slate-400">
                   Transaction Details
                 </span>
-                <h3 className="text-sm font-extrabold text-slate-100">#{selectedTx.id}</h3>
+                <h3 className="text-sm font-extrabold text-slate-900">#{selectedTx.id}</h3>
               </div>
               <button
                 onClick={() => setSelectedTx(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-100"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
               <div className="flex justify-between">
-                <span className="text-slate-400">Type:</span>
-                <span className="font-bold uppercase text-slate-200">{selectedTx.type}</span>
+                <span className="text-slate-500">Type:</span>
+                <span className="font-bold uppercase text-slate-800">{selectedTx.type}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Date & Time:</span>
-                <span className="font-semibold text-slate-200">
+                <span className="text-slate-500">Date & Time:</span>
+                <span className="font-semibold text-slate-800">
                   {new Date(selectedTx.date).toLocaleString()}
                 </span>
               </div>
               {selectedTx.customerName && (
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Customer:</span>
-                  <span className="font-semibold text-slate-200">{selectedTx.customerName}</span>
+                  <span className="text-slate-500">Customer:</span>
+                  <span className="font-semibold text-slate-800">{selectedTx.customerName}</span>
                 </div>
               )}
               {selectedTx.paymentMethod && (
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Payment Method:</span>
-                  <span className="font-semibold uppercase text-slate-200">
+                  <span className="text-slate-500">Payment Method:</span>
+                  <span className="font-semibold uppercase text-slate-800">
                     {selectedTx.paymentMethod}
                   </span>
                 </div>
@@ -294,20 +386,20 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
             {/* Items Breakdown if Sale */}
             {selectedTx.items && selectedTx.items.length > 0 && (
               <div className="space-y-2">
-                <h4 className="text-xs font-bold text-slate-300">Items Sold</h4>
+                <h4 className="text-xs font-bold text-slate-700">Items Sold</h4>
                 <div className="space-y-1.5 max-h-40 overflow-y-auto">
                   {selectedTx.items.map((i, idx) => (
                     <div
                       key={idx}
-                      className="p-2 rounded-lg bg-slate-950 border border-slate-800 text-xs flex justify-between"
+                      className="p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs flex justify-between"
                     >
                       <div>
-                        <p className="font-semibold text-slate-200">{i.productName}</p>
+                        <p className="font-semibold text-slate-800">{i.productName}</p>
                         <p className="text-[10px] text-slate-400">
                           {i.quantity} x {cur}{i.unitSellPrice.toFixed(2)}
                         </p>
                       </div>
-                      <span className="font-bold text-emerald-400">
+                      <span className="font-bold text-emerald-700 font-mono">
                         {cur}{i.totalSellPrice.toFixed(2)}
                       </span>
                     </div>
@@ -317,23 +409,23 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
             )}
 
             {/* Financial Summary Breakdown */}
-            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5 text-xs">
-              <div className="flex justify-between font-bold text-slate-200">
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 text-xs">
+              <div className="flex justify-between font-bold text-slate-800">
                 <span>Total Amount:</span>
-                <span className="text-emerald-400 text-sm">
+                <span className="text-emerald-700 font-mono text-sm">
                   {cur}{selectedTx.amount.toFixed(2)}
                 </span>
               </div>
 
               {selectedTx.cogs !== undefined && (
-                <div className="flex justify-between text-slate-400">
+                <div className="flex justify-between text-slate-500 font-mono">
                   <span>COGS (Cost):</span>
                   <span>{cur}{selectedTx.cogs.toFixed(2)}</span>
                 </div>
               )}
 
               {selectedTx.grossProfit !== undefined && (
-                <div className="flex justify-between text-blue-400 font-bold pt-1 border-t border-slate-800">
+                <div className="flex justify-between text-emerald-800 font-bold pt-1 border-t border-slate-200 font-mono">
                   <span>Net Gross Profit:</span>
                   <span>+{cur}{selectedTx.grossProfit.toFixed(2)}</span>
                 </div>
@@ -343,7 +435,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
             <div className="pt-2 flex items-center justify-between">
               <button
                 onClick={() => handleDelete(selectedTx.id)}
-                className="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold flex items-center space-x-1"
+                className="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold flex items-center space-x-1"
               >
                 <Trash2 className="w-4 h-4" />
                 <span>Delete</span>
@@ -353,7 +445,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                 {selectedTx.type === 'sale' && (
                   <button
                     onClick={() => printReceipt(selectedTx, profile)}
-                    className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center space-x-1"
+                    className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center space-x-1"
                   >
                     <Printer className="w-4 h-4" />
                     <span>Print Receipt</span>
@@ -361,7 +453,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                 )}
                 <button
                   onClick={() => setSelectedTx(null)}
-                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold"
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold"
                 >
                   Close
                 </button>
@@ -373,3 +465,4 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
     </div>
   );
 };
+

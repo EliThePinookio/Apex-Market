@@ -9,15 +9,18 @@ import {
 import { usePWA, registerServiceWorker } from './services/pwaService';
 import { BackgroundCanvas } from './components/BackgroundCanvas';
 import { Header } from './components/Header';
+import { Sidebar } from './components/Sidebar';
 import { BottomNav, NavTab } from './components/BottomNav';
 import { DashboardView } from './components/DashboardView';
 import { POSView } from './components/POSView';
 import { InventoryView } from './components/InventoryView';
 import { TransactionsView } from './components/TransactionsView';
 import { AnalyticsView } from './components/AnalyticsView';
+import { CustomersView } from './components/CustomersView';
 import { SettingsView } from './components/SettingsView';
 import { QuickActionModal } from './components/QuickActionModal';
 import { PinModal } from './components/PinModal';
+import { CommandPalette } from './components/CommandPalette';
 import { CheckCircle2 } from 'lucide-react';
 
 export default function App() {
@@ -39,11 +42,25 @@ export default function App() {
   const [isOwnerUnlocked, setIsOwnerUnlocked] = useState(false);
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [isQuickActionOpen, setIsQuickActionOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [inventoryLowStockFilter, setInventoryLowStockFilter] = useState(false);
   const [notificationMsg, setNotificationMsg] = useState<string | null>(null);
 
+  // Global CMD+K shortcut listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // PWA Hook & SW registration
-  const { canInstall, isInstalled, isOnline, triggerInstall } = usePWA();
+  const { canInstall, isInstalled, isOnline, isIOS, isAndroid, triggerInstall } = usePWA();
 
   useEffect(() => {
     registerServiceWorker();
@@ -147,12 +164,31 @@ export default function App() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#0B0F19] text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-black pb-16 overflow-x-hidden">
-      {/* Background Active Floating Light Orbs Canvas */}
+    <div className="relative min-h-screen bg-slate-50 text-slate-900 flex font-sans selection:bg-emerald-500 selection:text-white overflow-x-hidden">
+      {/* Background Active Light Canvas */}
       <BackgroundCanvas />
 
-      {/* Main Container Content */}
-      <div className="relative z-10 flex flex-col min-h-screen">
+      {/* Desktop Sidebar */}
+      <Sidebar
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        profile={profile}
+        isOnline={isOnline}
+        lowStockCount={summary.lowStockCount}
+        isOwnerUnlocked={isOwnerUnlocked}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
+        onOpenQuickAction={() => setIsQuickActionOpen(true)}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+        onToggleOwnerLock={() => {
+          if (isOwnerUnlocked) setIsOwnerUnlocked(false);
+          else setIsPinModalOpen(true);
+        }}
+        onNavigateToLowStock={handleNavigateToLowStock}
+      />
+
+      {/* Main Layout Container */}
+      <div className="relative z-10 flex-1 flex flex-col min-h-screen min-w-0">
         {/* App Header Bar */}
         <Header
           profile={profile}
@@ -165,10 +201,11 @@ export default function App() {
           }}
           onOpenQuickAction={() => setIsQuickActionOpen(true)}
           onNavigateToLowStock={handleNavigateToLowStock}
+          onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         />
 
         {/* Main View Area */}
-        <main className="flex-1 max-w-xl w-full mx-auto">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-4 md:py-6 pb-24 md:pb-12">
           {activeTab === 'dashboard' && (
             <DashboardView
               summary={summary}
@@ -224,6 +261,16 @@ export default function App() {
             />
           )}
 
+          {activeTab === 'customers' && (
+            <CustomersView
+              transactions={transactions}
+              products={products}
+              profile={profile}
+              onNavigateToPOS={() => setActiveTab('pos')}
+              onNotification={(msg) => showNotification(msg)}
+            />
+          )}
+
           {activeTab === 'settings' && (
             <SettingsView
               profile={profile}
@@ -232,13 +279,15 @@ export default function App() {
               onUnlockOwnerRequest={() => setIsPinModalOpen(true)}
               canInstallPwa={canInstall}
               isPwaInstalled={isInstalled}
+              isIOS={isIOS}
+              isAndroid={isAndroid}
               onInstallPwa={triggerInstall}
               onNotification={(msg) => showNotification(msg)}
             />
           )}
         </main>
 
-        {/* Floating Bottom Navigation */}
+        {/* Mobile Bottom Navigation */}
         <BottomNav
           activeTab={activeTab}
           onTabChange={handleTabChange}
@@ -246,6 +295,20 @@ export default function App() {
         />
 
         {/* Modals & Toasts */}
+        <CommandPalette
+          isOpen={isCommandPaletteOpen}
+          onClose={() => setIsCommandPaletteOpen(false)}
+          products={products}
+          profile={profile}
+          isOwnerUnlocked={isOwnerUnlocked}
+          onSelectTab={handleTabChange}
+          onOpenQuickAction={() => setIsQuickActionOpen(true)}
+          onToggleOwnerLock={() => {
+            if (isOwnerUnlocked) setIsOwnerUnlocked(false);
+            else setIsPinModalOpen(true);
+          }}
+        />
+
         <QuickActionModal
           isOpen={isQuickActionOpen}
           onClose={() => setIsQuickActionOpen(false)}
@@ -266,8 +329,8 @@ export default function App() {
 
         {/* Floating Notification Toast */}
         {notificationMsg && (
-          <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[#0F172A]/90 border border-emerald-400/50 text-emerald-300 px-5 py-3 rounded-2xl shadow-[0_10px_30px_rgba(16,185,129,0.3)] backdrop-blur-xl flex items-center space-x-2.5 text-xs font-bold animate-in fade-in slide-in-from-top duration-300">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-white/95 border border-emerald-300 text-emerald-900 px-5 py-3 rounded-2xl shadow-xl shadow-emerald-500/10 backdrop-blur-md flex items-center space-x-2.5 text-xs font-bold animate-in fade-in slide-in-from-top duration-300">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>{notificationMsg}</span>
           </div>
         )}
@@ -275,4 +338,5 @@ export default function App() {
     </div>
   );
 }
+
 

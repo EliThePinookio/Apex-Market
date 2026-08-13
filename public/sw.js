@@ -1,8 +1,9 @@
-const CACHE_NAME = 'biz-manager-v1';
+const CACHE_NAME = 'apex-retail-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  '/manifest.json'
+  '/manifest.json',
+  '/favicon.svg'
 ];
 
 self.addEventListener('install', (event) => {
@@ -30,15 +31,20 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Network first strategy with offline cache fallback
   if (event.request.method === 'GET') {
+    // Skip caching chrome-extension or external api requests
+    const url = new URL(event.request.url);
+    if (!url.protocol.startsWith('http')) return;
+
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          const resClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, resClone);
-          });
+          if (response && response.status === 200 && response.type === 'basic') {
+            const resClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, resClone);
+            });
+          }
           return response;
         })
         .catch(() => {
@@ -46,7 +52,7 @@ self.addEventListener('fetch', (event) => {
             if (cachedResponse) {
               return cachedResponse;
             }
-            if (event.request.headers.get('accept').includes('text/html')) {
+            if (event.request.headers.get('accept')?.includes('text/html')) {
               return caches.match('/index.html');
             }
           });
@@ -54,3 +60,4 @@ self.addEventListener('fetch', (event) => {
     );
   }
 });
+

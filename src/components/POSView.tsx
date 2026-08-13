@@ -4,7 +4,6 @@ import {
   ShoppingCart,
   Plus,
   Minus,
-  Trash2,
   CheckCircle2,
   Printer,
   X,
@@ -12,7 +11,6 @@ import {
   Banknote,
   Smartphone,
   User,
-  AlertCircle,
   Tag,
 } from 'lucide-react';
 import { Product, TransactionItem, BusinessProfile, Category } from '../types';
@@ -164,7 +162,7 @@ export const POSView: React.FC<POSViewProps> = ({
   const changeDue = tenderedNum > finalTotal ? tenderedNum - finalTotal : 0;
 
   return (
-    <div className="pb-24 pt-4 px-4 max-w-lg mx-auto space-y-4">
+    <div className="max-w-7xl mx-auto space-y-4">
       {/* Search & Category Filter Bar */}
       <div className="space-y-2.5">
         <div className="relative">
@@ -174,12 +172,12 @@ export const POSView: React.FC<POSViewProps> = ({
             placeholder="Search product, SKU, barcode..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-800 rounded-2xl pl-10 pr-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+            className="w-full bg-white border border-slate-200/90 rounded-2xl pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 shadow-2xs transition-colors"
           />
           {searchTerm && (
             <button
               onClick={() => setSearchTerm('')}
-              className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-slate-200"
+              className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-slate-700"
             >
               Clear
             </button>
@@ -190,22 +188,22 @@ export const POSView: React.FC<POSViewProps> = ({
         <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-1">
           <button
             onClick={() => setSelectedCategory('All')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap transition-all active:scale-95 ${
               selectedCategory === 'All'
-                ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_15px_rgba(6,182,212,0.3)] scale-105'
-                : 'bg-slate-900/80 text-slate-400 hover:text-slate-200 border border-slate-800'
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-md shadow-emerald-600/20'
+                : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200/80 shadow-2xs'
             }`}
           >
-            All Items
+            All Items ({products.length})
           </button>
           {categories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.name)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap transition-all active:scale-95 ${
                 selectedCategory === cat.name
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_15px_rgba(6,182,212,0.3)] scale-105'
-                  : 'bg-slate-900/80 text-slate-400 hover:text-slate-200 border border-slate-800'
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-md shadow-emerald-600/20'
+                  : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200/80 shadow-2xs'
               }`}
             >
               {cat.name}
@@ -214,123 +212,214 @@ export const POSView: React.FC<POSViewProps> = ({
         </div>
       </div>
 
-      {/* Cart Summary Header / Bar */}
-      {cartItemsList.length > 0 && (
-        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-cyan-950/80 via-blue-950/80 to-purple-950/80 border border-cyan-500/30 flex items-center justify-between shadow-[0_8px_32px_rgba(6,182,212,0.2)] backdrop-blur-xl animate-in slide-in-from-bottom duration-200">
-          <div className="flex items-center space-x-3">
-            <div className="relative p-2.5 rounded-xl bg-cyan-500 text-slate-950 font-black shadow-[0_0_15px_rgba(6,182,212,0.4)]">
-              <ShoppingCart className="w-5 h-5" />
-              <span className="absolute -top-1.5 -right-1.5 bg-amber-400 text-slate-950 text-[10px] font-extrabold w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-md animate-bounce">
-                {totalItemsCount}
-              </span>
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-200">
-                {cartItemsList.length} unique item(s) selected
-              </p>
-              <p className="text-sm font-extrabold text-emerald-400">
-                Total: {cur}{subtotalSell.toFixed(2)}
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={() => setIsCheckoutOpen(true)}
-            id="pos-proceed-checkout-btn"
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black text-xs shadow-[0_0_20px_rgba(16,185,129,0.35)] active:scale-95 transition-all"
-          >
-            Checkout ({cur}{subtotalSell.toFixed(2)})
-          </button>
-        </div>
-      )}
-
-      {/* Product Grid / Touch list */}
-      <div className="grid grid-cols-2 gap-2.5">
-        {filteredProducts.map((p) => {
-          const inCartQty = cart[p.id]?.quantity || 0;
-          const isLowStock = p.stockQuantity <= p.minStockThreshold;
-          const isOutOfStock = p.stockQuantity <= 0;
-
-          return (
-            <div
-              key={p.id}
-              onClick={() => !isOutOfStock && addToCart(p)}
-              className={`p-3 rounded-2xl transition-all cursor-pointer relative flex flex-col justify-between active:scale-[0.98] ${
-                isOutOfStock
-                  ? 'bg-slate-950/40 border border-slate-800/40 opacity-50'
-                  : inCartQty > 0
-                  ? 'glass-panel border-cyan-400/80 ring-2 ring-cyan-500/40 shadow-[0_0_20px_rgba(6,182,212,0.25)] scale-[1.01]'
-                  : 'glass-panel-interactive border-slate-800/80 hover:border-cyan-500/40'
-              }`}
-            >
-              {inCartQty > 0 && (
-                <span className="absolute -top-2 -right-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-extrabold text-xs px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(6,182,212,0.4)]">
-                  {inCartQty}x
-                </span>
-              )}
-
-              <div>
-                <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
-                  <span className="truncate max-w-[80px] font-semibold">{p.category}</span>
-                  <span
-                    className={`font-bold px-1.5 py-0.2 rounded-md ${
-                      isOutOfStock
-                        ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                        : isLowStock
-                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                        : 'bg-slate-800/80 text-slate-300'
-                    }`}
-                  >
-                    {p.stockQuantity} {p.unit}
+      {/* Main Grid: Left = Products, Right = Sticky Cart (Desktop) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left: Product Catalog Grid */}
+        <div className="lg:col-span-7 xl:col-span-8 space-y-4">
+          {/* Mobile Cart Bar (Visible on mobile only) */}
+          {cartItemsList.length > 0 && (
+            <div className="lg:hidden p-3.5 rounded-2xl bg-emerald-900 text-white border border-emerald-700 flex items-center justify-between shadow-lg">
+              <div className="flex items-center space-x-3">
+                <div className="relative p-2.5 rounded-xl bg-white text-emerald-900 font-black shadow-xs">
+                  <ShoppingCart className="w-5 h-5 text-emerald-700" />
+                  <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-white text-[10px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-xs">
+                    {totalItemsCount}
                   </span>
                 </div>
-
-                <h4 className="text-xs font-bold text-slate-100 line-clamp-2 mb-2 leading-snug">
-                  {p.name}
-                </h4>
+                <div>
+                  <p className="text-xs font-bold text-emerald-100">
+                    {cartItemsList.length} item(s) selected
+                  </p>
+                  <p className="text-sm font-black font-mono tabular-nums text-white">
+                    Total: {cur}{subtotalSell.toFixed(2)}
+                  </p>
+                </div>
               </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 mt-1">
-                <span className="text-sm font-black text-emerald-400">
-                  {cur}{p.sellPrice.toFixed(2)}
-                </span>
-                <button
-                  disabled={isOutOfStock}
-                  className={`p-1.5 rounded-xl text-xs font-bold transition-all ${
+              <button
+                onClick={() => setIsCheckoutOpen(true)}
+                id="pos-proceed-checkout-btn-mobile"
+                className="px-4 py-2.5 rounded-xl bg-white hover:bg-emerald-50 text-emerald-900 font-extrabold text-xs shadow-md active:scale-95 transition-all"
+              >
+                Checkout ({cur}{subtotalSell.toFixed(2)})
+              </button>
+            </div>
+          )}
+
+          {/* Product Cards Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
+            {filteredProducts.map((p) => {
+              const inCartQty = cart[p.id]?.quantity || 0;
+              const isLowStock = p.stockQuantity <= p.minStockThreshold;
+              const isOutOfStock = p.stockQuantity <= 0;
+
+              return (
+                <div
+                  key={p.id}
+                  onClick={() => !isOutOfStock && addToCart(p)}
+                  className={`p-3.5 rounded-2xl transition-all cursor-pointer relative flex flex-col justify-between active:scale-[0.98] ${
                     isOutOfStock
-                      ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                      : 'bg-cyan-500/20 hover:bg-cyan-500 border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 hover:text-slate-950 active:scale-95 shadow-sm'
+                      ? 'bg-slate-100/60 border border-slate-200/60 opacity-50'
+                      : inCartQty > 0
+                      ? 'bg-emerald-50/90 border-2 border-emerald-500 shadow-md shadow-emerald-500/10'
+                      : 'bg-white border border-slate-200/80 hover:border-emerald-300 shadow-2xs'
                   }`}
                 >
-                  <Plus className="w-3.5 h-3.5" />
+                  {inCartQty > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-emerald-600 text-white font-black text-xs px-2.5 py-0.5 rounded-full shadow-xs">
+                      {inCartQty}x
+                    </span>
+                  )}
+
+                  <div>
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 mb-1">
+                      <span className="truncate max-w-[80px] font-semibold">{p.category}</span>
+                      <span
+                        className={`font-bold px-1.5 py-0.2 rounded-md ${
+                          isOutOfStock
+                            ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                            : isLowStock
+                            ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                            : 'bg-slate-100 text-slate-700'
+                        }`}
+                      >
+                        {p.stockQuantity} {p.unit}
+                      </span>
+                    </div>
+
+                    <h4 className="text-xs font-extrabold text-slate-900 line-clamp-2 mb-2 leading-snug">
+                      {p.name}
+                    </h4>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 mt-1">
+                    <span className="text-sm font-black text-emerald-700 font-mono tabular-nums">
+                      {cur}{p.sellPrice.toFixed(2)}
+                    </span>
+                    <button
+                      disabled={isOutOfStock}
+                      className={`p-1.5 rounded-xl text-xs font-bold transition-all ${
+                        isOutOfStock
+                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                          : 'bg-emerald-50 hover:bg-emerald-600 border border-emerald-200 hover:border-emerald-600 text-emerald-700 hover:text-white active:scale-95 shadow-2xs'
+                      }`}
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {filteredProducts.length === 0 && (
+            <div className="py-16 text-center text-slate-400 space-y-2 bg-white rounded-2xl border border-slate-200">
+              <Tag className="w-8 h-8 mx-auto opacity-40 text-slate-400" />
+              <p className="text-xs font-medium text-slate-600">No matching catalog items found.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Right: Desktop Built-in Cart Panel */}
+        <div className="hidden lg:block lg:col-span-5 xl:col-span-4 sticky top-20 p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 className="text-sm font-extrabold text-slate-900 flex items-center space-x-2">
+              <ShoppingCart className="w-4 h-4 text-emerald-600" />
+              <span>Current Cart Panel</span>
+            </h3>
+            {cartItemsList.length > 0 && (
+              <button
+                onClick={() => setCart({})}
+                className="text-[11px] text-rose-600 hover:text-rose-800 font-bold hover:underline"
+              >
+                Clear Cart
+              </button>
+            )}
+          </div>
+
+          {cartItemsList.length > 0 ? (
+            <div className="space-y-3">
+              <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+                {cartItemsList.map((item) => (
+                  <div
+                    key={item.productId}
+                    className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs"
+                  >
+                    <div className="min-w-0 flex-1 mr-2">
+                      <p className="font-bold text-slate-900 truncate">{item.productName}</p>
+                      <p className="text-slate-500 text-[10px] font-mono">
+                        {cur}{item.unitSellPrice.toFixed(2)} ea
+                      </p>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0">
+                      <div className="flex items-center space-x-1 bg-white border border-slate-200 rounded-lg p-0.5">
+                        <button
+                          onClick={() => updateCartQuantity(item.productId, -1)}
+                          className="p-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <span className="px-2 font-extrabold text-slate-900 font-mono">{item.quantity}</span>
+                        <button
+                          onClick={() => updateCartQuantity(item.productId, 1)}
+                          className="p-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                      </div>
+                      <span className="font-extrabold text-emerald-700 w-16 text-right font-mono tabular-nums">
+                        {cur}{item.totalSellPrice.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 space-y-2 text-xs">
+                <div className="flex justify-between font-medium text-slate-500">
+                  <span>Subtotal:</span>
+                  <span className="text-slate-800 font-mono">{cur}{subtotalSell.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between font-bold text-slate-900 text-sm">
+                  <span>Order Total:</span>
+                  <span className="text-emerald-700 font-black font-mono text-base">{cur}{subtotalSell.toFixed(2)}</span>
+                </div>
+
+                <button
+                  onClick={() => setIsCheckoutOpen(true)}
+                  id="pos-proceed-checkout-btn-desktop"
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all flex items-center justify-center space-x-2"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Proceed to Payment ({cur}{subtotalSell.toFixed(2)})</span>
                 </button>
               </div>
             </div>
-          );
-        })}
-      </div>
-
-      {filteredProducts.length === 0 && (
-        <div className="py-12 text-center text-slate-500 space-y-2">
-          <Tag className="w-8 h-8 mx-auto opacity-50" />
-          <p className="text-xs">No matching products found.</p>
+          ) : (
+            <div className="py-12 text-center text-slate-400 space-y-2">
+              <ShoppingCart className="w-8 h-8 mx-auto opacity-30 text-emerald-600" />
+              <p className="text-xs font-medium text-slate-600">Cart is currently empty.</p>
+              <p className="text-[10px] text-slate-400">Click on catalog items to add to cart</p>
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Checkout Drawer / Modal */}
       {isCheckoutOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 max-h-[90vh] overflow-y-auto space-y-4 shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white border border-slate-200 w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 max-h-[90vh] overflow-y-auto space-y-4 shadow-xl">
             {!completedTx ? (
               <>
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <h3 className="text-base font-bold text-slate-100 flex items-center space-x-2">
-                    <ShoppingCart className="w-5 h-5 text-blue-400" />
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <h3 className="text-base font-extrabold text-slate-900 flex items-center space-x-2">
+                    <ShoppingCart className="w-5 h-5 text-emerald-600" />
                     <span>Complete Order Checkout</span>
                   </h3>
                   <button
                     onClick={() => setIsCheckoutOpen(false)}
-                    className="p-1 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800"
+                    className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -341,32 +430,32 @@ export const POSView: React.FC<POSViewProps> = ({
                   {cartItemsList.map((item) => (
                     <div
                       key={item.productId}
-                      className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs"
+                      className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs"
                     >
                       <div>
-                        <p className="font-bold text-slate-200">{item.productName}</p>
-                        <p className="text-slate-400 text-[10px]">
+                        <p className="font-bold text-slate-900">{item.productName}</p>
+                        <p className="text-slate-500 text-[10px]">
                           {cur}{item.unitSellPrice.toFixed(2)} each
                         </p>
                       </div>
 
                       <div className="flex items-center space-x-3">
-                        <div className="flex items-center space-x-1 bg-slate-900 border border-slate-800 rounded-lg p-0.5">
+                        <div className="flex items-center space-x-1 bg-white border border-slate-200 rounded-lg p-0.5">
                           <button
                             onClick={() => updateCartQuantity(item.productId, -1)}
-                            className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200"
+                            className="p-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700"
                           >
                             <Minus className="w-3 h-3" />
                           </button>
-                          <span className="px-2 font-bold text-slate-100">{item.quantity}</span>
+                          <span className="px-2 font-bold text-slate-900">{item.quantity}</span>
                           <button
                             onClick={() => updateCartQuantity(item.productId, 1)}
-                            className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200"
+                            className="p-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700"
                           >
                             <Plus className="w-3 h-3" />
                           </button>
                         </div>
-                        <span className="font-bold text-emerald-400 w-16 text-right">
+                        <span className="font-extrabold text-emerald-700 w-16 text-right font-mono">
                           {cur}{item.totalSellPrice.toFixed(2)}
                         </span>
                       </div>
@@ -378,7 +467,7 @@ export const POSView: React.FC<POSViewProps> = ({
                 <div className="space-y-3 pt-2">
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                      <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                         Customer Name
                       </label>
                       <input
@@ -386,11 +475,11 @@ export const POSView: React.FC<POSViewProps> = ({
                         placeholder="e.g. John / Walk-in"
                         value={customerName}
                         onChange={(e) => setCustomerName(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-500"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                      <label className="block text-[11px] font-semibold text-slate-600 mb-1">
                         Discount ({cur})
                       </label>
                       <input
@@ -399,13 +488,13 @@ export const POSView: React.FC<POSViewProps> = ({
                         placeholder="0.00"
                         value={discountAmount || ''}
                         onChange={(e) => setDiscountAmount(Number(e.target.value) || 0)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-500"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 mb-1.5">
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1.5">
                       Payment Option
                     </label>
                     <div className="grid grid-cols-4 gap-1.5 text-xs">
@@ -421,8 +510,8 @@ export const POSView: React.FC<POSViewProps> = ({
                           onClick={() => setPaymentMethod(m.id as any)}
                           className={`flex flex-col items-center py-2 px-1 rounded-xl border text-[11px] font-semibold transition-all ${
                             paymentMethod === m.id
-                              ? 'bg-blue-600 border-blue-500 text-white shadow-md'
-                              : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                              ? 'bg-emerald-600 border-emerald-600 text-white shadow-2xs'
+                              : 'bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900'
                           }`}
                         >
                           {m.icon}
@@ -433,20 +522,20 @@ export const POSView: React.FC<POSViewProps> = ({
                   </div>
 
                   {paymentMethod === 'cash' && (
-                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 grid grid-cols-2 gap-2 text-xs">
+                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <label className="block text-[10px] text-slate-400 mb-1">Cash Tendered</label>
+                        <label className="block text-[10px] text-slate-500 mb-1">Cash Tendered</label>
                         <input
                           type="number"
                           placeholder={finalTotal.toFixed(2)}
                           value={cashTendered}
                           onChange={(e) => setCashTendered(e.target.value)}
-                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 font-bold text-emerald-400 text-sm focus:outline-none"
+                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 font-bold text-emerald-800 text-sm focus:outline-none"
                         />
                       </div>
                       <div className="flex flex-col justify-end">
-                        <span className="text-[10px] text-slate-400">Change Due:</span>
-                        <span className="text-sm font-extrabold text-amber-400">
+                        <span className="text-[10px] text-slate-500">Change Due:</span>
+                        <span className="text-sm font-extrabold text-amber-700 font-mono">
                           {cur}{changeDue.toFixed(2)}
                         </span>
                       </div>
@@ -455,10 +544,10 @@ export const POSView: React.FC<POSViewProps> = ({
                 </div>
 
                 {/* Total & Action Buttons */}
-                <div className="pt-3 border-t border-slate-800 space-y-2">
+                <div className="pt-3 border-t border-slate-100 space-y-2">
                   <div className="flex justify-between items-center text-sm font-bold">
-                    <span className="text-slate-300">Final Order Total:</span>
-                    <span className="text-lg font-extrabold text-emerald-400">
+                    <span className="text-slate-700">Final Order Total:</span>
+                    <span className="text-lg font-black text-emerald-700 font-mono">
                       {cur}{finalTotal.toFixed(2)}
                     </span>
                   </div>
@@ -466,7 +555,7 @@ export const POSView: React.FC<POSViewProps> = ({
                   <button
                     onClick={handleCheckout}
                     id="pos-confirm-payment-btn"
-                    className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-900/30 active:scale-95 transition-all flex items-center justify-center space-x-2"
+                    className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-md active:scale-95 transition-all flex items-center justify-center space-x-2"
                   >
                     <CheckCircle2 className="w-5 h-5" />
                     <span>Confirm Sale & Collect {cur}{finalTotal.toFixed(2)}</span>
@@ -476,22 +565,22 @@ export const POSView: React.FC<POSViewProps> = ({
             ) : (
               /* Success Screen */
               <div className="py-6 text-center space-y-4">
-                <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/40">
+                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto border border-emerald-200">
                   <CheckCircle2 className="w-10 h-10 animate-bounce" />
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-extrabold text-slate-100">
+                  <h3 className="text-lg font-extrabold text-slate-900">
                     Payment Successful!
                   </h3>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-500">
                     Receipt #{completedTx.id} recorded in persistent cloud storage.
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-1">
-                  <p className="text-slate-400">Amount Paid:</p>
-                  <p className="text-xl font-extrabold text-emerald-400">
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1">
+                  <p className="text-slate-500 font-medium">Amount Paid:</p>
+                  <p className="text-2xl font-black text-emerald-700 font-mono">
                     {cur}{completedTx.amount.toFixed(2)}
                   </p>
                 </div>
@@ -499,14 +588,14 @@ export const POSView: React.FC<POSViewProps> = ({
                 <div className="flex items-center space-x-2 pt-2">
                   <button
                     onClick={() => printReceipt(completedTx, profile)}
-                    className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center justify-center space-x-1.5"
+                    className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center justify-center space-x-1.5"
                   >
                     <Printer className="w-4 h-4" />
                     <span>Print Receipt</span>
                   </button>
                   <button
                     onClick={resetPosState}
-                    className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold"
+                    className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold"
                   >
                     Next Sale &rarr;
                   </button>
@@ -519,3 +608,4 @@ export const POSView: React.FC<POSViewProps> = ({
     </div>
   );
 };
+
