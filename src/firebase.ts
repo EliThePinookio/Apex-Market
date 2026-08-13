@@ -41,8 +41,8 @@ export const db: Firestore | null = (() => {
     });
   } catch (e) {
     try {
-      return config.firestoreDatabaseId
-        ? getFirestore(app, config.firestoreDatabaseId)
+      return (config as any).firestoreDatabaseId
+        ? getFirestore(app, (config as any).firestoreDatabaseId)
         : getFirestore(app);
     } catch (err) {
       return null;

@@ -52,7 +52,7 @@ const customerSubscribers = new Set<(customers: Customer[]) => void>();
 const profileSubscribers = new Set<(profile: BusinessProfile) => void>();
 
 // Helper for local storage read
-function getLocalCache<T>(key: string, defaultValue: T): T {
+export function getLocalCache<T>(key: string, defaultValue: T): T {
   try {
     const raw = localStorage.getItem(key);
     return raw ? JSON.parse(raw) : defaultValue;
@@ -62,7 +62,7 @@ function getLocalCache<T>(key: string, defaultValue: T): T {
 }
 
 // Helper for local storage write
-function setLocalCache<T>(key: string, data: T): void {
+export function setLocalCache<T>(key: string, data: T): void {
   try {
     localStorage.setItem(key, JSON.stringify(data));
   } catch (e) {
@@ -70,12 +70,12 @@ function setLocalCache<T>(key: string, data: T): void {
   }
 }
 
-function getProductsCache(): Product[] {
+export function getProductsCache(): Product[] {
   const hasInit = localStorage.getItem('app_has_initialized_v1');
   return getLocalCache<Product[]>(CACHE_KEYS.PRODUCTS, hasInit ? [] : INITIAL_PRODUCTS);
 }
 
-function getTransactionsCache(): Transaction[] {
+export function getTransactionsCache(): Transaction[] {
   const hasInit = localStorage.getItem('app_has_initialized_v1');
   return getLocalCache<Transaction[]>(CACHE_KEYS.TRANSACTIONS, hasInit ? [] : INITIAL_TRANSACTIONS);
 }
@@ -337,30 +337,64 @@ export function subscribeCustomers(callback: (customers: Customer[]) => void): (
 
 // Seed initial database
 export async function seedInitialData(force = false): Promise<void> {
+  const hasInitialized = localStorage.getItem('app_has_initialized_v1') === 'true';
+
+  // If not forcing demo reload and app is already initialized, never auto-seed demo data
+  if (!force && hasInitialized) {
+    return;
+  }
+
   localStorage.setItem('app_has_initialized_v1', 'true');
+
   if (!db) {
-    setLocalCache(CACHE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
-    setLocalCache(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
-    setLocalCache(CACHE_KEYS.TRANSACTIONS, INITIAL_TRANSACTIONS);
-    setLocalCache(CACHE_KEYS.CUSTOMERS, INITIAL_CUSTOMERS);
-    setLocalCache(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
-    notifyProducts();
-    notifyCategories();
-    notifyTransactions();
-    notifyCustomers();
-    notifyProfile();
+    if (force) {
+      setLocalCache(CACHE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
+      setLocalCache(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
+      setLocalCache(CACHE_KEYS.TRANSACTIONS, INITIAL_TRANSACTIONS);
+      setLocalCache(CACHE_KEYS.CUSTOMERS, INITIAL_CUSTOMERS);
+      setLocalCache(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
+      notifyProducts();
+      notifyCategories();
+      notifyTransactions();
+      notifyCustomers();
+      notifyProfile();
+    }
     return;
   }
 
   try {
+    const metaRef = doc(db, 'system', 'metadata');
+    let isAlreadyInited = false;
+
     if (!force) {
-      const pSnap = await getDocs(collection(db, 'products'));
-      if (!pSnap.empty) return;
+      try {
+        const metaSnap = await getDoc(metaRef);
+        if (metaSnap.exists() && metaSnap.data()?.isInitialized) {
+          isAlreadyInited = true;
+        }
+      } catch (offlineErr) {
+        // Client is offline or document not yet cached - rely on local state flag
+      }
+
+      if (isAlreadyInited) {
+        return;
+      }
+
+      try {
+        const pSnap = await getDocs(collection(db, 'products'));
+        if (!pSnap.empty) {
+          setDoc(metaRef, { isInitialized: true, schemaVersion: '1.0.0' }, { merge: true }).catch(() => {});
+          return;
+        }
+      } catch (offlineErr) {
+        // Client is offline, keep existing local state
+        return;
+      }
     } else {
-      await clearFirestoreCollection('products');
-      await clearFirestoreCollection('transactions');
-      await clearFirestoreCollection('categories');
-      await clearFirestoreCollection('customers');
+      await clearFirestoreCollection('products').catch(() => {});
+      await clearFirestoreCollection('transactions').catch(() => {});
+      await clearFirestoreCollection('categories').catch(() => {});
+      await clearFirestoreCollection('customers').catch(() => {});
     }
 
     const batch = writeBatch(db);
@@ -393,7 +427,12 @@ export async function seedInitialData(force = false): Promise<void> {
     const profRef = doc(db, 'profile', 'business_info');
     batch.set(profRef, INITIAL_BUSINESS_PROFILE);
 
-    await batch.commit();
+    // Metadata
+    batch.set(metaRef, { isInitialized: true, schemaVersion: '1.0.0', seededAt: new Date().toISOString() });
+
+    await batch.commit().catch((err) => {
+      console.warn('Firestore write queued for offline sync:', err);
+    });
 
     setLocalCache(CACHE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
     setLocalCache(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
@@ -406,20 +445,21 @@ export async function seedInitialData(force = false): Promise<void> {
     notifyTransactions();
     notifyCustomers();
     notifyProfile();
-  } catch (e) {
-    console.error('Error seeding database:', e);
-    // Ensure offline local cache is set regardless
-    setLocalCache(CACHE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
-    setLocalCache(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
-    setLocalCache(CACHE_KEYS.TRANSACTIONS, INITIAL_TRANSACTIONS);
-    setLocalCache(CACHE_KEYS.CUSTOMERS, INITIAL_CUSTOMERS);
-    setLocalCache(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
+  } catch (e: any) {
+    console.warn('Database initialization note (offline mode fallback):', e?.message || e);
+    if (force) {
+      setLocalCache(CACHE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
+      setLocalCache(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
+      setLocalCache(CACHE_KEYS.TRANSACTIONS, INITIAL_TRANSACTIONS);
+      setLocalCache(CACHE_KEYS.CUSTOMERS, INITIAL_CUSTOMERS);
+      setLocalCache(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
 
-    notifyProducts();
-    notifyCategories();
-    notifyTransactions();
-    notifyCustomers();
-    notifyProfile();
+      notifyProducts();
+      notifyCategories();
+      notifyTransactions();
+      notifyCustomers();
+      notifyProfile();
+    }
   }
 }
 

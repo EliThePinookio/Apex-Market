@@ -19,6 +19,8 @@ import { BusinessProfile } from '../types';
 import { saveBusinessProfile, resetDatabaseToDemo, clearAllBusinessData } from '../services/dbService';
 import { PinModal } from './PinModal';
 
+import { DataBackupSection } from './DataBackupSection';
+
 interface SettingsViewProps {
   profile: BusinessProfile;
   isOwnerUnlocked: boolean;
@@ -323,46 +325,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </button>
       </form>
 
-      {/* Data Management Options */}
-      <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-3">
-        <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-2">
-          <Database className="w-4 h-4 text-emerald-600" />
-          <span>Business Data & Records Management</span>
-        </h3>
-        <p className="text-xs text-slate-500">
-          Wipe all sample data to start completely fresh, or reload default catalog entries if needed. Protected by your owner security passcode.
-        </p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-          <button
-            type="button"
-            onClick={handleClearAllData}
-            disabled={isProcessingData}
-            className="py-3 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-bold text-xs flex items-center justify-center space-x-2 transition-all disabled:opacity-50 active:scale-95 cursor-pointer"
-          >
-            {isProcessingData ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
-            ) : (
-              <Trash2 className="w-4 h-4" />
-            )}
-            <span>{isProcessingData ? 'Clearing...' : 'Wipe All Data (Protected)'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleReloadSampleData}
-            disabled={isProcessingData}
-            className="py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center space-x-2 transition-all disabled:opacity-50 active:scale-95 cursor-pointer"
-          >
-            {isProcessingData ? (
-              <RefreshCw className="w-4 h-4 animate-spin text-emerald-600" />
-            ) : (
-              <RotateCcw className="w-4 h-4 text-slate-500" />
-            )}
-            <span>{isProcessingData ? 'Loading...' : 'Load Sample Catalog (Protected)'}</span>
-          </button>
-        </div>
-      </div>
+      {/* Primary Data Architecture & Google Drive Backup Section */}
+      <DataBackupSection onNotification={onNotification} isOwnerUnlocked={isOwnerUnlocked} />
 
       {/* Security Check Passcode Modal for Reset Actions */}
       <PinModal
