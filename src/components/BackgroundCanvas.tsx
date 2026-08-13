@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useTheme } from '../hooks/useTheme';
 
 export interface BackgroundCanvasProps {
   activeTab?: string;
@@ -13,7 +14,7 @@ interface SectionTheme {
   cursorGlow: string;
 }
 
-const SECTION_THEMES: Record<string, SectionTheme> = {
+const LIGHT_SECTION_THEMES: Record<string, SectionTheme> = {
   dashboard: {
     baseBg: '#f7f9f5',
     orb1: 'rgba(16, 185, 129, 0.15)', // Emerald
@@ -72,6 +73,65 @@ const SECTION_THEMES: Record<string, SectionTheme> = {
   },
 };
 
+const DARK_SECTION_THEMES: Record<string, SectionTheme> = {
+  dashboard: {
+    baseBg: '#090d16',
+    orb1: 'rgba(5, 150, 105, 0.25)', // Emerald Neon Glow
+    orb2: 'rgba(16, 185, 129, 0.18)', // Mint
+    orb3: 'rgba(14, 116, 144, 0.18)', // Dark Cyan
+    orb4: 'rgba(30, 41, 59, 0.5)', // Slate Deep
+    cursorGlow: 'rgba(16, 185, 129, 0.2)',
+  },
+  pos: {
+    baseBg: '#071018',
+    orb1: 'rgba(16, 185, 129, 0.28)',
+    orb2: 'rgba(5, 150, 105, 0.22)',
+    orb3: 'rgba(217, 119, 6, 0.16)',
+    orb4: 'rgba(15, 23, 42, 0.6)',
+    cursorGlow: 'rgba(16, 185, 129, 0.22)',
+  },
+  inventory: {
+    baseBg: '#091114',
+    orb1: 'rgba(101, 163, 13, 0.22)',
+    orb2: 'rgba(16, 185, 129, 0.2)',
+    orb3: 'rgba(202, 138, 4, 0.15)',
+    orb4: 'rgba(15, 23, 42, 0.6)',
+    cursorGlow: 'rgba(101, 163, 13, 0.18)',
+  },
+  transactions: {
+    baseBg: '#090f1a',
+    orb1: 'rgba(4, 120, 87, 0.25)',
+    orb2: 'rgba(16, 185, 129, 0.2)',
+    orb3: 'rgba(217, 119, 6, 0.18)',
+    orb4: 'rgba(15, 23, 42, 0.6)',
+    cursorGlow: 'rgba(4, 120, 87, 0.2)',
+  },
+  analytics: {
+    baseBg: '#0a0e1c',
+    orb1: 'rgba(13, 148, 136, 0.25)',
+    orb2: 'rgba(99, 102, 241, 0.2)',
+    orb3: 'rgba(16, 185, 129, 0.18)',
+    orb4: 'rgba(15, 23, 42, 0.6)',
+    cursorGlow: 'rgba(13, 148, 136, 0.2)',
+  },
+  customers: {
+    baseBg: '#091118',
+    orb1: 'rgba(45, 212, 191, 0.22)',
+    orb2: 'rgba(16, 185, 129, 0.2)',
+    orb3: 'rgba(14, 165, 233, 0.16)',
+    orb4: 'rgba(15, 23, 42, 0.6)',
+    cursorGlow: 'rgba(45, 212, 191, 0.18)',
+  },
+  settings: {
+    baseBg: '#080d16',
+    orb1: 'rgba(16, 185, 129, 0.2)',
+    orb2: 'rgba(51, 65, 85, 0.35)',
+    orb3: 'rgba(30, 41, 59, 0.5)',
+    orb4: 'rgba(15, 23, 42, 0.6)',
+    cursorGlow: 'rgba(16, 185, 129, 0.15)',
+  },
+};
+
 interface ParticleSparkle {
   id: number;
   x: number;
@@ -95,7 +155,9 @@ export const triggerCelebration = (x?: number, y?: number) => {
 };
 
 export const BackgroundCanvas: React.FC<BackgroundCanvasProps> = ({ activeTab = 'dashboard' }) => {
-  const theme = SECTION_THEMES[activeTab] || SECTION_THEMES.dashboard;
+  const { isDark } = useTheme();
+  const themes = isDark ? DARK_SECTION_THEMES : LIGHT_SECTION_THEMES;
+  const theme = themes[activeTab] || themes.dashboard;
 
   // Desktop Mouse tracking
   const [cursorPos, setCursorPos] = useState({ x: -500, y: -500 });

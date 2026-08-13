@@ -62,7 +62,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-2 py-2 shadow-lg shadow-slate-900/5 safe-area-bottom md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800/80 px-2 py-2 shadow-lg shadow-slate-900/5 dark:shadow-slate-950/40 safe-area-bottom md:hidden transition-colors duration-200">
       <div className="max-w-md mx-auto flex items-center justify-around">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
@@ -71,10 +71,10 @@ export const BottomNav: React.FC<BottomNavProps> = ({
               key={tab.id}
               id={`nav-tab-${tab.id}`}
               onClick={() => onTabChange(tab.id)}
-              className={`relative flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all duration-200 min-w-[50px] active:scale-95 ${
+              className={`relative flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all duration-200 min-w-[50px] active:scale-95 cursor-pointer ${
                 isActive
-                  ? 'text-emerald-700 bg-emerald-50 border border-emerald-200 font-extrabold shadow-2xs'
-                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100/60'
+                  ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800/80 font-extrabold shadow-2xs'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100/60 dark:hover:bg-slate-800/60'
               }`}
             >
               <div className="relative">
@@ -89,7 +89,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                 {tab.label}
               </span>
               {isActive && (
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 mt-0.5" />
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 mt-0.5" />
               )}
             </button>
           );

@@ -1,11 +1,18 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   body {
     background-color: #f7f9f5;
     color: #0f172a;
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    transition: background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  body.dark, html.dark body {
+    background-color: #090d16;
+    color: #f8fafc;
   }
 }
 
@@ -111,6 +118,11 @@
   border: 1px solid rgba(226, 232, 240, 0.8);
   box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
 }
+.dark .glass-card {
+  background: rgba(15, 23, 42, 0.75);
+  border-color: rgba(51, 65, 85, 0.6);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4), 0 2px 6px -1px rgba(0, 0, 0, 0.2);
+}
 
 .glass-card-interactive {
   background: rgba(255, 255, 255, 0.92);
@@ -120,11 +132,20 @@
   box-shadow: 0 4px 18px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
+.dark .glass-card-interactive {
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(51, 65, 85, 0.7);
+  box-shadow: 0 4px 18px -2px rgba(0, 0, 0, 0.4), 0 2px 6px -1px rgba(0, 0, 0, 0.2);
+}
 
 .glass-card-interactive:hover {
   transform: translateY(-2px);
   border-color: rgba(16, 185, 129, 0.35);
   box-shadow: 0 16px 32px -8px rgba(5, 150, 105, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+}
+.dark .glass-card-interactive:hover {
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 16px 32px -8px rgba(16, 185, 129, 0.2), 0 4px 12px -2px rgba(0, 0, 0, 0.5);
 }
 
 .glass-modal-light {
@@ -134,6 +155,11 @@
   border: 1px solid rgba(226, 232, 240, 0.9);
   box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.16), 0 10px 20px -5px rgba(5, 150, 105, 0.08);
 }
+.dark .glass-modal-light {
+  background: rgba(15, 23, 42, 0.96);
+  border-color: rgba(51, 65, 85, 0.8);
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6), 0 10px 20px -5px rgba(16, 185, 129, 0.1);
+}
 
 .glass-pill {
   background: rgba(236, 253, 245, 0.85);
@@ -141,10 +167,17 @@
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(16, 185, 129, 0.25);
 }
+.dark .glass-pill {
+  background: rgba(6, 78, 59, 0.4);
+  border-color: rgba(16, 185, 129, 0.4);
+}
 
 /* Tactile 3D Soft Shadows & Elevation */
 .shadow-tactile-sm {
   box-shadow: 0 2px 5px 0 rgba(15, 23, 42, 0.04), 0 1px 2px 0 rgba(16, 185, 129, 0.06);
+}
+.dark .shadow-tactile-sm {
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(16, 185, 129, 0.1);
 }
 
 .shadow-tactile-emerald {
@@ -153,6 +186,9 @@
 
 .shadow-tactile-card {
   box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.06), 0 4px 12px -2px rgba(5, 150, 105, 0.04);
+}
+.dark .shadow-tactile-card {
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.45), 0 4px 12px -2px rgba(16, 185, 129, 0.06);
 }
 
 /* Custom Subtle Scrollbar */
@@ -164,12 +200,21 @@
   background: rgba(241, 245, 249, 0.8);
   border-radius: 9999px;
 }
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.8);
+}
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(16, 185, 129, 0.3);
   border-radius: 9999px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(5, 150, 105, 0.6);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.4);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(52, 211, 153, 0.8);
 }
 
 /* Safe Area Padding for iOS Notches & Dynamic Island */

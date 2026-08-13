@@ -89,20 +89,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside
-      className={`hidden md:flex flex-col justify-between h-full shrink-0 z-30 overflow-y-auto bg-white/95 backdrop-blur-xl border-r border-slate-200/80 shadow-sm transition-all duration-300 custom-scrollbar ${
+      className={`hidden md:flex flex-col justify-between h-full shrink-0 z-30 overflow-y-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200/80 dark:border-slate-800/80 shadow-sm dark:shadow-slate-950/40 transition-all duration-300 custom-scrollbar ${
         isCollapsed ? 'w-18 px-2.5 py-4' : 'w-64 px-4 py-4'
       }`}
     >
       {/* Top Header & Branding */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-200/80">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-200/80 dark:border-slate-800/80">
           <div className="flex items-center space-x-3 overflow-hidden">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 text-white flex items-center justify-center font-bold shrink-0 shadow-md shadow-emerald-500/20">
               <Store className="w-4.5 h-4.5" />
             </div>
             {!isCollapsed && (
               <div className="min-w-0">
-                <h1 className="text-sm font-extrabold text-slate-900 truncate tracking-tight">
+                <h1 className="text-sm font-extrabold text-slate-900 dark:text-white truncate tracking-tight">
                   {profile.businessName}
                 </h1>
                 <div className="flex items-center space-x-1.5 mt-0.5">
@@ -111,7 +111,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       isOnline ? 'bg-emerald-500' : 'bg-amber-500'
                     }`}
                   />
-                  <span className="text-[10px] font-semibold text-slate-500">
+                  <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                     {isOnline ? 'Online Synced' : 'Offline Mode'}
                   </span>
                 </div>
@@ -121,7 +121,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           <button
             onClick={onToggleCollapse}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
           >
             {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -131,17 +131,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Command Search Bar Trigger */}
         <button
           onClick={onOpenCommandPalette}
-          className={`w-full flex items-center justify-between p-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-600 transition-all text-xs active:scale-[0.98] ${
+          className={`w-full flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-slate-600 dark:text-slate-300 transition-all text-xs active:scale-[0.98] cursor-pointer ${
             isCollapsed ? 'justify-center px-0' : 'px-3'
           }`}
           title="Search actions (⌘K)"
         >
           <div className="flex items-center space-x-2.5">
-            <Command className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            {!isCollapsed && <span className="font-medium text-slate-700">Command Search</span>}
+            <Command className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            {!isCollapsed && <span className="font-medium text-slate-700 dark:text-slate-300">Command Search</span>}
           </div>
           {!isCollapsed && (
-            <kbd className="text-[10px] font-mono font-medium text-slate-500 bg-white px-1.5 py-0.5 rounded border border-slate-200 shadow-2xs">
+            <kbd className="text-[10px] font-mono font-medium text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 shadow-2xs">
               ⌘K
             </kbd>
           )}
@@ -150,7 +150,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Quick Action Entry Button */}
         <button
           onClick={onOpenQuickAction}
-          className={`w-full flex items-center justify-center space-x-2 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all ${
+          className={`w-full flex items-center justify-center space-x-2 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer ${
             isCollapsed ? 'px-0' : 'px-3'
           }`}
           title="Quick Record Entry"
@@ -167,17 +167,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 key={item.id}
                 onClick={() => onTabChange(item.id)}
-                className={`w-full flex items-center justify-between py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] ${
+                className={`w-full flex items-center justify-between py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer ${
                   isCollapsed ? 'justify-center px-0' : 'px-3'
                 } ${
                   isActive
-                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold shadow-2xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80 font-bold shadow-2xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60'
                 }`}
                 title={item.label}
               >
                 <div className="flex items-center space-x-3 min-w-0">
-                  <span className={isActive ? 'text-emerald-600' : 'text-slate-500'}>
+                  <span className={isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'}>
                     {item.icon}
                   </span>
                   {!isCollapsed && <span className="truncate">{item.label}</span>}
@@ -201,14 +201,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Bottom Footer Section */}
-      <div className="space-y-2 pt-3 border-t border-slate-200/80">
+      <div className="space-y-2 pt-3 border-t border-slate-200/80 dark:border-slate-800/80">
         {lowStockCount > 0 && !isCollapsed && (
           <button
             onClick={onNavigateToLowStock}
-            className="w-full p-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 text-[11px] font-bold flex items-center justify-between transition-all"
+            className="w-full p-2 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/70 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-[11px] font-bold flex items-center justify-between transition-all cursor-pointer"
           >
             <div className="flex items-center space-x-2">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 animate-pulse" />
               <span>Low Stock Alerts</span>
             </div>
             <span className="bg-amber-600 text-white px-1.5 py-0.2 rounded-full text-[10px] font-black">
@@ -221,17 +221,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {profile.isPinLocked && (
           <button
             onClick={onToggleOwnerLock}
-            className={`w-full flex items-center justify-between p-2 rounded-xl border text-xs font-bold transition-all ${
+            className={`w-full flex items-center justify-between p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
               isCollapsed ? 'justify-center px-0' : 'px-3'
             } ${
               isOwnerUnlocked
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100'
-                : 'bg-rose-50 border-rose-200 text-rose-800 hover:bg-rose-100'
+                ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60'
+                : 'bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60'
             }`}
             title={isOwnerUnlocked ? 'Owner Mode Unlocked' : 'Owner Mode Locked'}
           >
             <div className="flex items-center space-x-2.5">
-              {isOwnerUnlocked ? <Unlock className="w-4 h-4 shrink-0 text-emerald-600" /> : <Lock className="w-4 h-4 shrink-0 text-rose-600" />}
+              {isOwnerUnlocked ? <Unlock className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" /> : <Lock className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />}
               {!isCollapsed && (
                 <span>{isOwnerUnlocked ? 'Owner Unlocked' : 'Locked Mode'}</span>
               )}

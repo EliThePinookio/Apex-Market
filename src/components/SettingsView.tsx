@@ -16,6 +16,10 @@ import {
   RefreshCw,
   ScanFace,
   Fingerprint,
+  Moon,
+  Sun,
+  Laptop,
+  Sparkles,
 } from 'lucide-react';
 import { BusinessProfile } from '../types';
 import { saveBusinessProfile, resetDatabaseToDemo, clearAllBusinessData } from '../services/dbService';
@@ -25,6 +29,8 @@ import {
   removeBiometricCredential,
   BiometricCapability,
 } from '../services/biometricService';
+import { useTheme } from '../hooks/useTheme';
+import { ThemeMode } from '../services/themeService';
 import { PinModal } from './PinModal';
 
 import { DataBackupSection } from './DataBackupSection';
@@ -52,6 +58,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onInstallPwa,
   onNotification,
 }) => {
+  const { mode, effectiveTheme, isDark, systemTheme, setThemeMode } = useTheme();
+
   const [businessName, setBusinessName] = useState(profile.businessName);
   const [ownerName, setOwnerName] = useState(profile.ownerName);
   const [currencySymbol, setCurrencySymbol] = useState(profile.currencySymbol);
@@ -78,7 +86,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     });
   }, []);
 
-  const cur = profile.currencySymbol;
+  const handleThemeSelection = (selectedMode: ThemeMode) => {
+    setThemeMode(selectedMode);
+    if (selectedMode === 'system') {
+      onNotification(`Device Sync Enabled • Theme matches OS (${systemTheme === 'dark' ? 'Dark' : 'Light'})`);
+    } else if (selectedMode === 'dark') {
+      onNotification('Dark Theme Enabled');
+    } else {
+      onNotification('Light Theme Enabled');
+    }
+  };
 
   const handleEnrollBiometric = async () => {
     setIsEnrollingBio(true);
@@ -153,27 +170,140 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {/* Settings Title Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-extrabold text-slate-900 flex items-center space-x-2">
-            <Settings className="w-5 h-5 text-emerald-600" />
+          <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center space-x-2">
+            <Settings className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             <span>Owner & App Preferences</span>
           </h2>
-          <p className="text-xs text-slate-500">
-            Configure business identity, PIN security protection, currency, and data management
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Configure business identity, PIN security, device dark mode sync, and data management
           </p>
         </div>
 
         {profile.isPinLocked && (
           <button
             onClick={isOwnerUnlocked ? onLockOwner : onUnlockOwnerRequest}
-            className={`px-3.5 py-2 rounded-xl border text-xs font-bold transition-all active:scale-95 ${
+            className={`px-3.5 py-2 rounded-xl border text-xs font-bold transition-all active:scale-95 cursor-pointer ${
               isOwnerUnlocked
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-700 shadow-xs hover:bg-emerald-100'
-                : 'bg-rose-50 border-rose-200 text-rose-700 shadow-xs hover:bg-rose-100'
+                ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 shadow-xs hover:bg-emerald-100 dark:hover:bg-emerald-900/60'
+                : 'bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 shadow-xs hover:bg-rose-100 dark:hover:bg-rose-900/60'
             }`}
           >
             {isOwnerUnlocked ? 'Lock Security Session' : 'Unlock PIN Access'}
           </button>
         )}
+      </div>
+
+      {/* Dedicated Appearance & Device Dark Mode Synchronization Section */}
+      <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800/90 shadow-xs space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60">
+              {isDark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
+                Appearance & Device Dark Mode Sync
+              </h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Synchronize theme automatically with your operating system or choose a custom mode
+              </p>
+            </div>
+          </div>
+
+          <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+            {mode === 'system' ? (
+              <>
+                <Laptop className="w-3 h-3 mr-1 text-emerald-600 dark:text-emerald-400" />
+                Device Sync ({systemTheme === 'dark' ? 'Dark' : 'Light'})
+              </>
+            ) : isDark ? (
+              <>
+                <Moon className="w-3 h-3 mr-1 text-emerald-400" />
+                Dark Theme
+              </>
+            ) : (
+              <>
+                <Sun className="w-3 h-3 mr-1 text-amber-500" />
+                Light Theme
+              </>
+            )}
+          </span>
+        </div>
+
+        {/* 3 Interactive Mode Selectors */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Option 1: Device Sync (System) */}
+          <button
+            type="button"
+            onClick={() => handleThemeSelection('system')}
+            className={`p-3.5 rounded-xl border text-left transition-all active:scale-[0.98] cursor-pointer flex flex-col justify-between ${
+              mode === 'system'
+                ? 'bg-emerald-50/80 dark:bg-emerald-950/60 border-emerald-400 dark:border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs'
+                : 'bg-slate-50/70 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <Laptop className={`w-4 h-4 ${mode === 'system' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500'}`} />
+                <span className="text-xs font-bold text-slate-900 dark:text-white">Sync with Device</span>
+              </div>
+              {mode === 'system' && (
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              )}
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+              Auto-adapts to your device settings in real time. (OS is currently <strong className="text-slate-700 dark:text-slate-200">{systemTheme}</strong>).
+            </p>
+          </button>
+
+          {/* Option 2: Light Mode */}
+          <button
+            type="button"
+            onClick={() => handleThemeSelection('light')}
+            className={`p-3.5 rounded-xl border text-left transition-all active:scale-[0.98] cursor-pointer flex flex-col justify-between ${
+              mode === 'light'
+                ? 'bg-amber-50/80 dark:bg-amber-950/40 border-amber-400 dark:border-amber-500 ring-2 ring-amber-500/20 shadow-xs'
+                : 'bg-slate-50/70 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <Sun className={`w-4 h-4 ${mode === 'light' ? 'text-amber-500' : 'text-slate-500'}`} />
+                <span className="text-xs font-bold text-slate-900 dark:text-white">Light Mode</span>
+              </div>
+              {mode === 'light' && (
+                <span className="w-2 h-2 rounded-full bg-amber-500" />
+              )}
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+              Clean, high-contrast daylight theme with crisp off-white canvas and emerald accents.
+            </p>
+          </button>
+
+          {/* Option 3: Dark Mode */}
+          <button
+            type="button"
+            onClick={() => handleThemeSelection('dark')}
+            className={`p-3.5 rounded-xl border text-left transition-all active:scale-[0.98] cursor-pointer flex flex-col justify-between ${
+              mode === 'dark'
+                ? 'bg-slate-900 dark:bg-slate-950 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs text-white'
+                : 'bg-slate-50/70 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <Moon className={`w-4 h-4 ${mode === 'dark' ? 'text-emerald-400' : 'text-slate-500'}`} />
+                <span className="text-xs font-bold text-slate-900 dark:text-white">Dark Mode</span>
+              </div>
+              {mode === 'dark' && (
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              )}
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+              Atmospheric dark obsidian theme designed for low-light environments and reduced eye strain.
+            </p>
+          </button>
+        </div>
       </div>
 
       {/* PWA App Install Promotion Card */}
@@ -192,7 +322,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
           <button
             onClick={onInstallPwa}
-            className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs whitespace-nowrap shadow-xs active:scale-95 transition-all"
+            className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs whitespace-nowrap shadow-xs active:scale-95 transition-all cursor-pointer"
           >
             Install PWA
           </button>
@@ -202,15 +332,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       <form onSubmit={handleSaveSettings} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Business Information */}
-          <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-4">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-2">
-              <Store className="w-4 h-4 text-emerald-600" />
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800/90 shadow-xs space-y-4">
+            <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center space-x-2">
+              <Store className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>Business Profile</span>
             </h3>
 
             <div className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-600 font-semibold mb-1">
+                <label className="block text-slate-600 dark:text-slate-300 font-semibold mb-1">
                   Business Name
                 </label>
                 <input
@@ -218,31 +348,31 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   required
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 font-medium focus:bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white font-medium focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-slate-600 font-semibold mb-1">
+                  <label className="block text-slate-600 dark:text-slate-300 font-semibold mb-1">
                     Owner Name
                   </label>
                   <input
                     type="text"
                     value={ownerName}
                     onChange={(e) => setOwnerName(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 font-medium focus:bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                    className="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white font-medium focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-600 font-semibold mb-1">
+                  <label className="block text-slate-600 dark:text-slate-300 font-semibold mb-1">
                     Currency Symbol
                   </label>
                   <select
                     value={currencySymbol}
                     onChange={(e) => setCurrencySymbol(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 font-bold focus:bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                    className="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white font-bold focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                   >
                     <option value="$">$ (USD / AUD / CAD)</option>
                     <option value="€">€ (Euro)</option>
@@ -259,7 +389,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-slate-600 font-semibold mb-1">
+                <label className="block text-slate-600 dark:text-slate-300 font-semibold mb-1">
                   Receipt Footer / Header Note
                 </label>
                 <input
@@ -267,7 +397,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   value={receiptHeaderMsg}
                   placeholder="e.g. Thank you for shopping with us!"
                   onChange={(e) => setReceiptHeaderMsg(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 font-medium focus:bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white font-medium focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                 />
               </div>
             </div>
@@ -276,17 +406,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {/* Security & Rules Column */}
           <div className="space-y-6">
             {/* Security & Owner Lock */}
-            <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-4">
-              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-2">
-                <Lock className="w-4 h-4 text-emerald-600" />
+            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800/90 shadow-xs space-y-4">
+              <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center space-x-2">
+                <Lock className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 <span>Owner Security & Biometrics</span>
               </h3>
 
               <div className="space-y-3 text-xs">
-                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
                   <div>
-                    <p className="font-semibold text-slate-900">Require Owner Security PIN</p>
-                    <p className="text-[10px] text-slate-500">
+                    <p className="font-semibold text-slate-900 dark:text-white">Require Owner Security PIN</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">
                       Protect analytics, data resets, settings & profit figures
                     </p>
                   </div>
@@ -300,7 +430,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
                 {isPinLocked && (
                   <div>
-                    <label className="block text-slate-600 font-semibold mb-1">
+                    <label className="block text-slate-600 dark:text-slate-300 font-semibold mb-1">
                       Owner Passcode PIN (4 digits)
                     </label>
                     <input
@@ -308,21 +438,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       maxLength={6}
                       value={newPin}
                       onChange={(e) => setNewPin(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 font-bold tracking-widest text-base focus:bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                      className="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white font-bold tracking-widest text-base focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                 )}
 
                 {/* Apple Face ID / Touch ID / WebAuthn Device Biometrics */}
-                <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200/80 space-y-2.5">
+                <div className="p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/50 border border-emerald-200/80 dark:border-emerald-800/70 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <ScanFace className="w-4 h-4 text-emerald-700" />
+                      <ScanFace className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
                       <div>
-                        <p className="font-bold text-emerald-950">
+                        <p className="font-bold text-emerald-950 dark:text-emerald-200">
                           {biometricInfo.deviceLabel || 'Apple Face ID / Touch ID'}
                         </p>
-                        <p className="text-[10px] text-emerald-800">
+                        <p className="text-[10px] text-emerald-800 dark:text-emerald-400">
                           {biometricInfo.isAvailable
                             ? 'Device hardware supports instant biometric unlock'
                             : 'Biometrics supported when using a biometric-equipped device'}
@@ -338,8 +468,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   </div>
 
                   {biometricInfo.isAvailable && biometricEnabled && (
-                    <div className="pt-1 flex items-center justify-between border-t border-emerald-200/60">
-                      <span className="text-[11px] text-emerald-900 font-medium">
+                    <div className="pt-1 flex items-center justify-between border-t border-emerald-200/60 dark:border-emerald-800/60">
+                      <span className="text-[11px] text-emerald-900 dark:text-emerald-300 font-medium">
                         {biometricInfo.hasEnrolled ? '✓ Biometric Passkey Enrolled' : 'Ready to register'}
                       </span>
                       <button
@@ -358,17 +488,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
 
             {/* Inventory Rules */}
-            <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-4">
-              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-2">
+            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800/90 shadow-xs space-y-4">
+              <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center space-x-2">
                 <Bell className="w-4 h-4 text-amber-500" />
                 <span>Inventory Stock Rules</span>
               </h3>
 
               <div className="space-y-2.5 text-xs">
-                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
                   <div>
-                    <p className="font-semibold text-slate-900">Low Stock Alert Notifications</p>
-                    <p className="text-[10px] text-slate-500">
+                    <p className="font-semibold text-slate-900 dark:text-white">Low Stock Alert Notifications</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">
                       Highlight items below minimum threshold
                     </p>
                   </div>
@@ -380,10 +510,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
                   <div>
-                    <p className="font-semibold text-slate-900">Allow Negative Stock Sales</p>
-                    <p className="text-[10px] text-slate-500">
+                    <p className="font-semibold text-slate-900 dark:text-white">Allow Negative Stock Sales</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">
                       Allow POS sales even when stock quantity is 0
                     </p>
                   </div>
