@@ -62,6 +62,22 @@ export interface StockMovement {
   date: string;
 }
 
+export interface Customer {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  loyaltyPoints: number;
+  totalSpent: number;
+  orderCount: number;
+  debtBalance: number;
+  tier: 'Bronze' | 'Silver' | 'Gold' | 'VIP';
+  lastVisit: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface BusinessProfile {
   businessName: string;
   ownerName: string;

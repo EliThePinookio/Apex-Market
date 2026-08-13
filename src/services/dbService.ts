@@ -20,6 +20,7 @@ import {
   Category,
   Transaction,
   BusinessProfile,
+  Customer,
   StockMovement,
   FinancialSummary,
   TransactionItem,
@@ -29,6 +30,7 @@ import {
   INITIAL_CATEGORIES,
   INITIAL_TRANSACTIONS,
   INITIAL_BUSINESS_PROFILE,
+  INITIAL_CUSTOMERS,
 } from '../data/seedData';
 
 // Storage keys for local offline cache
@@ -36,6 +38,7 @@ const CACHE_KEYS = {
   PRODUCTS: 'app_products_v1',
   CATEGORIES: 'app_categories_v1',
   TRANSACTIONS: 'app_transactions_v1',
+  CUSTOMERS: 'app_customers_v1',
   PROFILE: 'app_profile_v1',
   MOVEMENTS: 'app_movements_v1',
   OFFLINE_QUEUE: 'app_offline_queue_v1',
@@ -45,6 +48,7 @@ const CACHE_KEYS = {
 const productSubscribers = new Set<(products: Product[]) => void>();
 const categorySubscribers = new Set<(categories: Category[]) => void>();
 const transactionSubscribers = new Set<(transactions: Transaction[]) => void>();
+const customerSubscribers = new Set<(customers: Customer[]) => void>();
 const profileSubscribers = new Set<(profile: BusinessProfile) => void>();
 
 // Helper for local storage read
@@ -76,6 +80,11 @@ function getTransactionsCache(): Transaction[] {
   return getLocalCache<Transaction[]>(CACHE_KEYS.TRANSACTIONS, hasInit ? [] : INITIAL_TRANSACTIONS);
 }
 
+export function getCustomersCache(): Customer[] {
+  const hasInit = localStorage.getItem('app_has_initialized_v1');
+  return getLocalCache<Customer[]>(CACHE_KEYS.CUSTOMERS, hasInit ? [] : INITIAL_CUSTOMERS);
+}
+
 export function notifyProducts(): void {
   const current = getProductsCache();
   productSubscribers.forEach((cb) => cb(current));
@@ -89,6 +98,11 @@ export function notifyCategories(): void {
 export function notifyTransactions(): void {
   const current = getTransactionsCache();
   transactionSubscribers.forEach((cb) => cb(current));
+}
+
+export function notifyCustomers(): void {
+  const current = getCustomersCache();
+  customerSubscribers.forEach((cb) => cb(current));
 }
 
 export function notifyProfile(): void {
@@ -275,6 +289,52 @@ export function subscribeProfile(callback: (profile: BusinessProfile) => void): 
   };
 }
 
+// Subscribe to Customers
+export function subscribeCustomers(callback: (customers: Customer[]) => void): () => void {
+  customerSubscribers.add(callback);
+  const local = getCustomersCache();
+  callback(local);
+
+  let unsubFirestore = () => {};
+
+  if (db) {
+    try {
+      unsubFirestore = onSnapshot(
+        collection(db, 'customers'),
+        (snapshot) => {
+          if (!snapshot.empty) {
+            const list: Customer[] = snapshot.docs.map((docSnap) => {
+              const data = docSnap.data() as Customer;
+              return { ...data, id: docSnap.id };
+            });
+            setLocalCache(CACHE_KEYS.CUSTOMERS, list);
+            notifyCustomers();
+          } else {
+            const hasInit = localStorage.getItem('app_has_initialized_v1');
+            if (hasInit) {
+              setLocalCache(CACHE_KEYS.CUSTOMERS, []);
+              notifyCustomers();
+            } else {
+              setLocalCache(CACHE_KEYS.CUSTOMERS, INITIAL_CUSTOMERS);
+              notifyCustomers();
+            }
+          }
+        },
+        (err) => {
+          console.warn('Firestore customers error, using local cache:', err);
+        }
+      );
+    } catch (e) {
+      console.warn('Firestore customers subscription failed');
+    }
+  }
+
+  return () => {
+    customerSubscribers.delete(callback);
+    unsubFirestore();
+  };
+}
+
 // Seed initial database
 export async function seedInitialData(force = false): Promise<void> {
   localStorage.setItem('app_has_initialized_v1', 'true');
@@ -282,10 +342,12 @@ export async function seedInitialData(force = false): Promise<void> {
     setLocalCache(CACHE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
     setLocalCache(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
     setLocalCache(CACHE_KEYS.TRANSACTIONS, INITIAL_TRANSACTIONS);
+    setLocalCache(CACHE_KEYS.CUSTOMERS, INITIAL_CUSTOMERS);
     setLocalCache(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
     notifyProducts();
     notifyCategories();
     notifyTransactions();
+    notifyCustomers();
     notifyProfile();
     return;
   }
@@ -298,6 +360,7 @@ export async function seedInitialData(force = false): Promise<void> {
       await clearFirestoreCollection('products');
       await clearFirestoreCollection('transactions');
       await clearFirestoreCollection('categories');
+      await clearFirestoreCollection('customers');
     }
 
     const batch = writeBatch(db);
@@ -320,6 +383,12 @@ export async function seedInitialData(force = false): Promise<void> {
       batch.set(tRef, t);
     });
 
+    // Customers
+    INITIAL_CUSTOMERS.forEach((cust) => {
+      const custRef = doc(db, 'customers', cust.id);
+      batch.set(custRef, cust);
+    });
+
     // Profile
     const profRef = doc(db, 'profile', 'business_info');
     batch.set(profRef, INITIAL_BUSINESS_PROFILE);
@@ -329,11 +398,13 @@ export async function seedInitialData(force = false): Promise<void> {
     setLocalCache(CACHE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
     setLocalCache(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
     setLocalCache(CACHE_KEYS.TRANSACTIONS, INITIAL_TRANSACTIONS);
+    setLocalCache(CACHE_KEYS.CUSTOMERS, INITIAL_CUSTOMERS);
     setLocalCache(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
 
     notifyProducts();
     notifyCategories();
     notifyTransactions();
+    notifyCustomers();
     notifyProfile();
   } catch (e) {
     console.error('Error seeding database:', e);
@@ -341,11 +412,13 @@ export async function seedInitialData(force = false): Promise<void> {
     setLocalCache(CACHE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
     setLocalCache(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
     setLocalCache(CACHE_KEYS.TRANSACTIONS, INITIAL_TRANSACTIONS);
+    setLocalCache(CACHE_KEYS.CUSTOMERS, INITIAL_CUSTOMERS);
     setLocalCache(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
 
     notifyProducts();
     notifyCategories();
     notifyTransactions();
+    notifyCustomers();
     notifyProfile();
   }
 }
@@ -470,6 +543,35 @@ export async function recordSale(saleData: {
     paymentMethod: saleData.paymentMethod || 'cash',
     createdAt: now,
   };
+
+  // If customer name was provided, update or create CRM record
+  if (saleData.customerName && saleData.customerName.trim() && saleData.customerName !== 'Walk-in Customer') {
+    const custNameClean = saleData.customerName.trim();
+    const customers = getCustomersCache();
+    const matched = customers.find(
+      (c) => c.name.toLowerCase() === custNameClean.toLowerCase() || c.id === custNameClean
+    );
+
+    if (matched) {
+      const addedPoints = Math.floor(netRevenue / 10);
+      const newSpent = matched.totalSpent + netRevenue;
+      saveCustomer({
+        ...matched,
+        totalSpent: newSpent,
+        orderCount: matched.orderCount + 1,
+        loyaltyPoints: matched.loyaltyPoints + addedPoints,
+        lastVisit: 'Just now',
+      });
+    } else {
+      saveCustomer({
+        name: custNameClean,
+        totalSpent: netRevenue,
+        orderCount: 1,
+        loyaltyPoints: Math.floor(netRevenue / 10),
+        lastVisit: 'Just now',
+      });
+    }
+  }
 
   // Update local caches
   setLocalCache(CACHE_KEYS.PRODUCTS, updatedProducts);
@@ -667,6 +769,93 @@ export async function deleteTransaction(txId: string): Promise<void> {
   }
 }
 
+// Add or Edit Customer
+export async function saveCustomer(customerData: Partial<Customer>): Promise<string> {
+  const id = customerData.id || `cust-${Date.now()}`;
+  const totalSpent = customerData.totalSpent ?? 0;
+
+  let tier: 'Bronze' | 'Silver' | 'Gold' | 'VIP' = customerData.tier || 'Bronze';
+  if (totalSpent >= 3000) tier = 'VIP';
+  else if (totalSpent >= 1000) tier = 'Gold';
+  else if (totalSpent >= 300) tier = 'Silver';
+
+  const customer: Customer = {
+    id,
+    name: customerData.name || 'New Customer',
+    phone: customerData.phone || '',
+    email: customerData.email || '',
+    loyaltyPoints: customerData.loyaltyPoints ?? Math.floor(totalSpent / 10),
+    totalSpent,
+    orderCount: customerData.orderCount ?? 0,
+    debtBalance: customerData.debtBalance ?? 0,
+    tier,
+    lastVisit: customerData.lastVisit || 'Just now',
+    notes: customerData.notes || '',
+    createdAt: customerData.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  const current = getCustomersCache();
+  const index = current.findIndex((c) => c.id === id);
+  let updatedList: Customer[];
+
+  if (index >= 0) {
+    updatedList = [...current];
+    updatedList[index] = customer;
+  } else {
+    updatedList = [customer, ...current];
+  }
+
+  setLocalCache(CACHE_KEYS.CUSTOMERS, updatedList);
+  notifyCustomers();
+
+  if (db) {
+    try {
+      await setDoc(doc(db, 'customers', id), customer);
+    } catch (e) {
+      console.warn('Saved customer offline:', e);
+    }
+  }
+
+  return id;
+}
+
+// Delete Customer
+export async function deleteCustomer(customerId: string): Promise<void> {
+  const current = getCustomersCache();
+  const updated = current.filter((c) => c.id !== customerId);
+  setLocalCache(CACHE_KEYS.CUSTOMERS, updated);
+  notifyCustomers();
+
+  if (db) {
+    try {
+      await deleteDoc(doc(db, 'customers', customerId));
+    } catch (e) {
+      console.warn('Deleted customer offline:', e);
+    }
+  }
+}
+
+// Settle Customer Debt
+export async function settleCustomerDebt(customerId: string): Promise<void> {
+  const current = getCustomersCache();
+  const index = current.findIndex((c) => c.id === customerId);
+  if (index >= 0) {
+    const updated = [...current];
+    updated[index] = { ...updated[index], debtBalance: 0 };
+    setLocalCache(CACHE_KEYS.CUSTOMERS, updated);
+    notifyCustomers();
+
+    if (db) {
+      try {
+        await updateDoc(doc(db, 'customers', customerId), { debtBalance: 0 });
+      } catch (e) {
+        console.warn('Settled debt offline:', e);
+      }
+    }
+  }
+}
+
 // Clear all business records and start completely fresh
 export async function clearAllBusinessData(): Promise<void> {
   localStorage.setItem('app_has_initialized_v1', 'true');
@@ -674,7 +863,9 @@ export async function clearAllBusinessData(): Promise<void> {
   setLocalCache(CACHE_KEYS.PRODUCTS, []);
   setLocalCache(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
   setLocalCache(CACHE_KEYS.TRANSACTIONS, []);
+  setLocalCache(CACHE_KEYS.CUSTOMERS, []);
   setLocalCache(CACHE_KEYS.MOVEMENTS, []);
+  setLocalCache(CACHE_KEYS.OFFLINE_QUEUE, []);
   
   const cleanProfile = {
     ...INITIAL_BUSINESS_PROFILE,
@@ -686,12 +877,14 @@ export async function clearAllBusinessData(): Promise<void> {
   notifyProducts();
   notifyCategories();
   notifyTransactions();
+  notifyCustomers();
   notifyProfile();
 
   if (db) {
     try {
       await clearFirestoreCollection('products');
       await clearFirestoreCollection('transactions');
+      await clearFirestoreCollection('customers');
       await clearFirestoreCollection('movements');
       await clearFirestoreCollection('categories');
 
@@ -714,11 +907,13 @@ export async function resetDatabaseToDemo(): Promise<void> {
   setLocalCache(CACHE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
   setLocalCache(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
   setLocalCache(CACHE_KEYS.TRANSACTIONS, INITIAL_TRANSACTIONS);
+  setLocalCache(CACHE_KEYS.CUSTOMERS, INITIAL_CUSTOMERS);
   setLocalCache(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
 
   notifyProducts();
   notifyCategories();
   notifyTransactions();
+  notifyCustomers();
   notifyProfile();
 
   await seedInitialData(true);

@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Product, Category, Transaction, BusinessProfile, FinancialSummary } from './types';
+import { Product, Category, Transaction, BusinessProfile, FinancialSummary, Customer } from './types';
 import {
   subscribeProducts,
   subscribeCategories,
   subscribeTransactions,
   subscribeProfile,
+  subscribeCustomers,
 } from './services/dbService';
 import { usePWA, registerServiceWorker } from './services/pwaService';
-import { BackgroundCanvas } from './components/BackgroundCanvas';
+import { BackgroundCanvas, triggerCelebration } from './components/BackgroundCanvas';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { BottomNav, NavTab } from './components/BottomNav';
@@ -22,11 +23,13 @@ import { QuickActionModal } from './components/QuickActionModal';
 import { PinModal } from './components/PinModal';
 import { CommandPalette } from './components/CommandPalette';
 import { CheckCircle2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [profile, setProfile] = useState<BusinessProfile>({
     businessName: 'Apex Retail & Supplies',
     ownerName: 'Alex Owner',
@@ -72,18 +75,21 @@ export default function App() {
     const unsubCat = subscribeCategories(setCategories);
     const unsubTx = subscribeTransactions(setTransactions);
     const unsubProf = subscribeProfile(setProfile);
+    const unsubCust = subscribeCustomers(setCustomers);
 
     return () => {
       unsubProd();
       unsubCat();
       unsubTx();
       unsubProf();
+      unsubCust();
     };
   }, []);
 
   // Auto hide notification toast after 3 seconds
   const showNotification = (msg: string) => {
     setNotificationMsg(msg);
+    triggerCelebration();
     setTimeout(() => {
       setNotificationMsg(null);
     }, 3200);
@@ -164,9 +170,9 @@ export default function App() {
   };
 
   return (
-    <div className="relative min-h-screen bg-slate-50 text-slate-900 flex font-sans selection:bg-emerald-500 selection:text-white overflow-x-hidden">
+    <div className="relative min-h-screen bg-transparent text-slate-900 flex font-sans selection:bg-emerald-500 selection:text-white overflow-x-hidden">
       {/* Background Active Light Canvas */}
-      <BackgroundCanvas />
+      <BackgroundCanvas activeTab={activeTab} />
 
       {/* Desktop Sidebar */}
       <Sidebar
@@ -205,86 +211,97 @@ export default function App() {
         />
 
         {/* Main View Area */}
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-4 md:py-6 pb-24 md:pb-12">
-          {activeTab === 'dashboard' && (
-            <DashboardView
-              summary={summary}
-              profile={profile}
-              products={products}
-              transactions={transactions}
-              onNavigateToPOS={() => setActiveTab('pos')}
-              onNavigateToInventory={(filterLow) => {
-                setInventoryLowStockFilter(!!filterLow);
-                setActiveTab('inventory');
-              }}
-              onNavigateToTransactions={() => setActiveTab('transactions')}
-              onNavigateToAnalytics={() => handleTabChange('analytics')}
-              onOpenQuickAction={() => setIsQuickActionOpen(true)}
-            />
-          )}
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-4 md:py-6 pb-24 md:pb-12 overflow-x-hidden">
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 6, scale: 0.994 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -4, scale: 0.994 }}
+              transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
+            >
+              {activeTab === 'dashboard' && (
+                <DashboardView
+                  summary={summary}
+                  profile={profile}
+                  products={products}
+                  transactions={transactions}
+                  onNavigateToPOS={() => setActiveTab('pos')}
+                  onNavigateToInventory={(filterLow) => {
+                    setInventoryLowStockFilter(!!filterLow);
+                    setActiveTab('inventory');
+                  }}
+                  onNavigateToTransactions={() => setActiveTab('transactions')}
+                  onNavigateToAnalytics={() => handleTabChange('analytics')}
+                  onOpenQuickAction={() => setIsQuickActionOpen(true)}
+                />
+              )}
 
-          {activeTab === 'pos' && (
-            <POSView
-              products={products}
-              categories={categories}
-              profile={profile}
-              onSaleComplete={(msg) => showNotification(msg)}
-            />
-          )}
+              {activeTab === 'pos' && (
+                <POSView
+                  products={products}
+                  categories={categories}
+                  profile={profile}
+                  onSaleComplete={(msg) => showNotification(msg)}
+                />
+              )}
 
-          {activeTab === 'inventory' && (
-            <InventoryView
-              products={products}
-              categories={categories}
-              profile={profile}
-              initialFilterLowStock={inventoryLowStockFilter}
-              onNotification={(msg) => showNotification(msg)}
-            />
-          )}
+              {activeTab === 'inventory' && (
+                <InventoryView
+                  products={products}
+                  categories={categories}
+                  profile={profile}
+                  initialFilterLowStock={inventoryLowStockFilter}
+                  onNotification={(msg) => showNotification(msg)}
+                />
+              )}
 
-          {activeTab === 'transactions' && (
-            <TransactionsView
-              transactions={transactions}
-              products={products}
-              profile={profile}
-              summary={summary}
-              onNotification={(msg) => showNotification(msg)}
-            />
-          )}
+              {activeTab === 'transactions' && (
+                <TransactionsView
+                  transactions={transactions}
+                  products={products}
+                  profile={profile}
+                  summary={summary}
+                  onNotification={(msg) => showNotification(msg)}
+                />
+              )}
 
-          {activeTab === 'analytics' && (
-            <AnalyticsView
-              transactions={transactions}
-              products={products}
-              profile={profile}
-              summary={summary}
-            />
-          )}
+              {activeTab === 'analytics' && (
+                <AnalyticsView
+                  transactions={transactions}
+                  products={products}
+                  profile={profile}
+                  summary={summary}
+                />
+              )}
 
-          {activeTab === 'customers' && (
-            <CustomersView
-              transactions={transactions}
-              products={products}
-              profile={profile}
-              onNavigateToPOS={() => setActiveTab('pos')}
-              onNotification={(msg) => showNotification(msg)}
-            />
-          )}
+              {activeTab === 'customers' && (
+                <CustomersView
+                  customers={customers}
+                  transactions={transactions}
+                  products={products}
+                  profile={profile}
+                  onNavigateToPOS={() => setActiveTab('pos')}
+                  onNotification={(msg) => showNotification(msg)}
+                />
+              )}
 
-          {activeTab === 'settings' && (
-            <SettingsView
-              profile={profile}
-              isOwnerUnlocked={isOwnerUnlocked}
-              onLockOwner={() => setIsOwnerUnlocked(false)}
-              onUnlockOwnerRequest={() => setIsPinModalOpen(true)}
-              canInstallPwa={canInstall}
-              isPwaInstalled={isInstalled}
-              isIOS={isIOS}
-              isAndroid={isAndroid}
-              onInstallPwa={triggerInstall}
-              onNotification={(msg) => showNotification(msg)}
-            />
-          )}
+              {activeTab === 'settings' && (
+                <SettingsView
+                  profile={profile}
+                  isOwnerUnlocked={isOwnerUnlocked}
+                  onLockOwner={() => setIsOwnerUnlocked(false)}
+                  onUnlockOwnerRequest={() => setIsPinModalOpen(true)}
+                  canInstallPwa={canInstall}
+                  isPwaInstalled={isInstalled}
+                  isIOS={isIOS}
+                  isAndroid={isAndroid}
+                  onInstallPwa={triggerInstall}
+                  onNotification={(msg) => showNotification(msg)}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
         </main>
 
         {/* Mobile Bottom Navigation */}

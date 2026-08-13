@@ -2,15 +2,105 @@
 
 @layer base {
   body {
-    background-color: #f8fafc;
+    background-color: #f7f9f5;
     color: #0f172a;
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    transition: background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
 
 /* Custom Typography & Monospace Numbers */
 .font-mono {
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Background Material Keyframes for Subconscious Drifting Orbs */
+@keyframes floatOrb1 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(40px, -35px, 0) scale(1.08);
+  }
+  66% {
+    transform: translate3d(-30px, 25px, 0) scale(0.94);
+  }
+}
+
+@keyframes floatOrb2 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-45px, -40px, 0) scale(1.12);
+  }
+}
+
+@keyframes floatOrb3 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  40% {
+    transform: translate3d(35px, 45px, 0) scale(0.92);
+  }
+  80% {
+    transform: translate3d(-20px, -20px, 0) scale(1.06);
+  }
+}
+
+@keyframes floatOrb4 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  45% {
+    transform: translate3d(-30px, 30px, 0) scale(1.1);
+  }
+}
+
+@keyframes subtleWave {
+  0%, 100% {
+    transform: rotate(0deg) scale(1);
+    opacity: 0.05;
+  }
+  50% {
+    transform: rotate(2.5deg) scale(1.04);
+    opacity: 0.08;
+  }
+}
+
+.animate-float-orb-1 {
+  animation: floatOrb1 26s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-float-orb-2 {
+  animation: floatOrb2 30s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-float-orb-3 {
+  animation: floatOrb3 24s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-float-orb-4 {
+  animation: floatOrb4 28s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-subtle-wave {
+  animation: subtleWave 32s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-orb-1,
+  .animate-float-orb-2,
+  .animate-float-orb-3,
+  .animate-float-orb-4,
+  .animate-subtle-wave {
+    animation: none !important;
+  }
 }
 
 /* Apple/Linear/Revolut-inspired White & Emerald Surface Elevation Tokens */

@@ -1,4 +1,55 @@
-import { Product, Category, Transaction, BusinessProfile } from '../types';
+import { Product, Category, Transaction, BusinessProfile, Customer } from '../types';
+
+export const INITIAL_CUSTOMERS: Customer[] = [
+  {
+    id: 'cust-1',
+    name: 'Sarah Jenkins',
+    phone: '+1 (555) 234-5678',
+    email: 'sarah.j@example.com',
+    loyaltyPoints: 340,
+    totalSpent: 1250.00,
+    orderCount: 14,
+    debtBalance: 0,
+    tier: 'Gold',
+    lastVisit: '2 hours ago',
+  },
+  {
+    id: 'cust-2',
+    name: 'Marcus Vance',
+    phone: '+1 (555) 876-5432',
+    email: 'marcus.v@example.com',
+    loyaltyPoints: 890,
+    totalSpent: 3400.50,
+    orderCount: 28,
+    debtBalance: 45.00,
+    tier: 'VIP',
+    lastVisit: 'Yesterday',
+  },
+  {
+    id: 'cust-3',
+    name: 'Elena Rostova',
+    phone: '+1 (555) 432-1098',
+    email: 'elena.rostova@example.com',
+    loyaltyPoints: 120,
+    totalSpent: 420.00,
+    orderCount: 5,
+    debtBalance: 0,
+    tier: 'Silver',
+    lastVisit: '3 days ago',
+  },
+  {
+    id: 'cust-4',
+    name: 'David Chen',
+    phone: '+1 (555) 987-6543',
+    email: 'david.chen@example.com',
+    loyaltyPoints: 45,
+    totalSpent: 110.00,
+    orderCount: 2,
+    debtBalance: 0,
+    tier: 'Bronze',
+    lastVisit: '1 week ago',
+  },
+];
 
 export const INITIAL_BUSINESS_PROFILE: BusinessProfile = {
   businessName: 'My Retail Store',

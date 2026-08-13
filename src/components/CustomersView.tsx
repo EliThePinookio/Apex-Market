@@ -17,26 +17,16 @@ import {
   Receipt,
   UserCheck,
   CheckCircle2,
+  Trash2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Product, Transaction, BusinessProfile } from '../types';
+import { Product, Transaction, BusinessProfile, Customer } from '../types';
 import { AnimatedNumber } from './AnimatedNumber';
 import { TiltCard } from './TiltCard';
-
-export interface Customer {
-  id: string;
-  name: string;
-  phone: string;
-  email: string;
-  loyaltyPoints: number;
-  totalSpent: number;
-  orderCount: number;
-  debtBalance: number;
-  tier: 'Bronze' | 'Silver' | 'Gold' | 'VIP';
-  lastVisit: string;
-}
+import { saveCustomer, deleteCustomer, settleCustomerDebt } from '../services/dbService';
 
 interface CustomersViewProps {
+  customers: Customer[];
   transactions: Transaction[];
   products: Product[];
   profile: BusinessProfile;
@@ -44,64 +34,13 @@ interface CustomersViewProps {
   onNotification: (msg: string) => void;
 }
 
-const INITIAL_CUSTOMERS: Customer[] = [
-  {
-    id: 'cust-1',
-    name: 'Sarah Jenkins',
-    phone: '+1 (555) 234-5678',
-    email: 'sarah.j@example.com',
-    loyaltyPoints: 340,
-    totalSpent: 1250.00,
-    orderCount: 14,
-    debtBalance: 0,
-    tier: 'Gold',
-    lastVisit: '2 hours ago',
-  },
-  {
-    id: 'cust-2',
-    name: 'Marcus Vance',
-    phone: '+1 (555) 876-5432',
-    email: 'marcus.v@example.com',
-    loyaltyPoints: 890,
-    totalSpent: 3400.50,
-    orderCount: 28,
-    debtBalance: 45.00,
-    tier: 'VIP',
-    lastVisit: 'Yesterday',
-  },
-  {
-    id: 'cust-3',
-    name: 'Elena Rostova',
-    phone: '+1 (555) 432-1098',
-    email: 'elena.rostova@example.com',
-    loyaltyPoints: 120,
-    totalSpent: 420.00,
-    orderCount: 5,
-    debtBalance: 0,
-    tier: 'Silver',
-    lastVisit: '3 days ago',
-  },
-  {
-    id: 'cust-4',
-    name: 'David Chen',
-    phone: '+1 (555) 987-6543',
-    email: 'david.chen@example.com',
-    loyaltyPoints: 45,
-    totalSpent: 110.00,
-    orderCount: 2,
-    debtBalance: 0,
-    tier: 'Bronze',
-    lastVisit: '1 week ago',
-  },
-];
-
 export const CustomersView: React.FC<CustomersViewProps> = ({
+  customers,
   transactions,
   profile,
   onNavigateToPOS,
   onNotification,
 }) => {
-  const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTier, setSelectedTier] = useState<string>('all');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -128,41 +67,44 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
   const totalSpentAll = customers.reduce((acc, c) => acc + c.totalSpent, 0);
   const totalDebtAll = customers.reduce((acc, c) => acc + c.debtBalance, 0);
   const vipCount = customers.filter((c) => c.tier === 'VIP' || c.tier === 'Gold').length;
+  const avgLoyaltyPoints = customers.length > 0 ? Math.round(customers.reduce((a, b) => a + b.loyaltyPoints, 0) / customers.length) : 0;
 
-  const handleAddCustomer = (e: React.FormEvent) => {
+  const handleAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim()) return;
 
-    const newCust: Customer = {
-      id: `cust-${Date.now()}`,
+    await saveCustomer({
       name: newName.trim(),
       phone: newPhone.trim() || 'N/A',
       email: newEmail.trim() || 'N/A',
       loyaltyPoints: 50, // Welcome points
-      totalSpent: 0,
-      orderCount: 0,
       debtBalance: parseFloat(initialDebt) || 0,
       tier: 'Bronze',
       lastVisit: 'Just created',
-    };
+    });
 
-    setCustomers((prev) => [newCust, ...prev]);
     setIsAddModalOpen(false);
     setNewName('');
     setNewPhone('');
     setNewEmail('');
     setInitialDebt('');
-    onNotification(`Added customer "${newCust.name}" (+50 welcome points)`);
+    onNotification(`Added customer "${newName.trim()}" (+50 welcome points)`);
   };
 
-  const handleSettleDebt = (custId: string) => {
-    setCustomers((prev) =>
-      prev.map((c) => (c.id === custId ? { ...c, debtBalance: 0 } : c))
-    );
+  const handleSettleDebt = async (custId: string) => {
+    await settleCustomerDebt(custId);
     if (selectedCustomer?.id === custId) {
       setSelectedCustomer((prev) => (prev ? { ...prev, debtBalance: 0 } : null));
     }
     onNotification('Customer debt balance cleared successfully');
+  };
+
+  const handleDeleteCustomer = async (custId: string, custName: string) => {
+    if (confirm(`Delete customer "${custName}" permanently?`)) {
+      await deleteCustomer(custId);
+      if (selectedCustomer?.id === custId) setSelectedCustomer(null);
+      onNotification(`Deleted customer "${custName}"`);
+    }
   };
 
   return (
@@ -245,7 +187,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
               <Award className="w-4 h-4 text-amber-600" />
             </div>
             <div className="text-2xl font-black text-amber-700 font-mono">
-              <AnimatedNumber value={Math.round(customers.reduce((a, b) => a + b.loyaltyPoints, 0) / customers.length)} format={(v) => Math.round(v).toString()} /> pts
+              <AnimatedNumber value={avgLoyaltyPoints} format={(v) => Math.round(v).toString()} /> pts
             </div>
             <p className="text-[10px] text-amber-700 font-bold mt-1">Active Rewards</p>
           </div>
@@ -282,84 +224,123 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
         </div>
       </div>
 
-      {/* Customer Directory Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredCustomers.map((cust) => (
-          <motion.div
-            key={cust.id}
-            whileHover={{ y: -3 }}
-            onClick={() => setSelectedCustomer(cust)}
-            className="p-5 rounded-2xl bg-white border border-slate-200/90 hover:border-teal-300 shadow-2xs transition-all cursor-pointer space-y-4 flex flex-col justify-between"
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 rounded-2xl bg-teal-100 text-teal-800 font-extrabold flex items-center justify-center text-base border border-teal-200 shadow-xs">
-                  {cust.name.split(' ').map((n) => n[0]).join('')}
+      {/* Customer Directory Cards Grid / Empty States */}
+      {filteredCustomers.length === 0 ? (
+        <div className="py-16 text-center space-y-4 bg-white rounded-3xl border border-slate-200/90 shadow-2xs p-8 max-w-md mx-auto">
+          <div className="w-16 h-16 rounded-2xl bg-teal-50 border border-teal-200 text-teal-600 flex items-center justify-center mx-auto shadow-xs">
+            <Users className="w-8 h-8" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-base font-black text-slate-900">
+              {customers.length === 0 ? 'Your CRM is ready' : 'No matching customers found'}
+            </h3>
+            <p className="text-xs text-slate-500 font-medium">
+              {customers.length === 0
+                ? 'No customers have been added yet.'
+                : 'Try adjusting your search query or tier filter.'}
+            </p>
+          </div>
+          {customers.length === 0 && (
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-black text-xs inline-flex items-center space-x-2 shadow-sm cursor-pointer"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>+ Add Customer</span>
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredCustomers.map((cust) => (
+            <motion.div
+              key={cust.id}
+              whileHover={{ y: -3 }}
+              onClick={() => setSelectedCustomer(cust)}
+              className="p-5 rounded-2xl bg-white border border-slate-200/90 hover:border-teal-300 shadow-2xs transition-all cursor-pointer space-y-4 flex flex-col justify-between group"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 rounded-2xl bg-teal-100 text-teal-800 font-extrabold flex items-center justify-center text-base border border-teal-200 shadow-xs">
+                    {cust.name.split(' ').map((n) => n[0]).join('')}
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-900">{cust.name}</h3>
+                    <p className="text-[11px] text-slate-500 flex items-center space-x-1 mt-0.5">
+                      <Phone className="w-3 h-3 text-slate-400" />
+                      <span>{cust.phone}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-1.5">
+                  <span
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                      cust.tier === 'VIP'
+                        ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                        : cust.tier === 'Gold'
+                        ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                        : cust.tier === 'Silver'
+                        ? 'bg-slate-100 text-slate-700 border border-slate-300'
+                        : 'bg-teal-50 text-teal-800 border border-teal-200'
+                    }`}
+                  >
+                    {cust.tier} Tier
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteCustomer(cust.id, cust.name);
+                    }}
+                    title="Delete Customer"
+                    className="p-1 rounded-lg text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 py-2 px-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
+                <div>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase block">Spent</span>
+                  <span className="text-xs font-black text-slate-900 font-mono">{cur}{cust.totalSpent.toFixed(0)}</span>
                 </div>
                 <div>
-                  <h3 className="text-sm font-extrabold text-slate-900">{cust.name}</h3>
-                  <p className="text-[11px] text-slate-500 flex items-center space-x-1 mt-0.5">
-                    <Phone className="w-3 h-3 text-slate-400" />
-                    <span>{cust.phone}</span>
-                  </p>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase block">Orders</span>
+                  <span className="text-xs font-black text-teal-700 font-mono">{cust.orderCount}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase block">Points</span>
+                  <span className="text-xs font-black text-amber-700 font-mono">{cust.loyaltyPoints}</span>
                 </div>
               </div>
 
-              <span
-                className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                  cust.tier === 'VIP'
-                    ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                    : cust.tier === 'Gold'
-                    ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                    : cust.tier === 'Silver'
-                    ? 'bg-slate-100 text-slate-700 border border-slate-300'
-                    : 'bg-teal-50 text-teal-800 border border-teal-200'
-                }`}
-              >
-                {cust.tier} Tier
-              </span>
-            </div>
+              {cust.debtBalance > 0 && (
+                <div className="p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center justify-between">
+                  <span>Tab Debt: {cur}{cust.debtBalance.toFixed(2)}</span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSettleDebt(cust.id);
+                    }}
+                    className="px-2 py-0.5 rounded-lg bg-rose-600 text-white font-black text-[10px] hover:bg-rose-700"
+                  >
+                    Clear Debt
+                  </button>
+                </div>
+              )}
 
-            <div className="grid grid-cols-3 gap-2 py-2 px-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
-              <div>
-                <span className="text-[10px] text-slate-400 font-bold uppercase block">Spent</span>
-                <span className="text-xs font-black text-slate-900 font-mono">{cur}{cust.totalSpent.toFixed(0)}</span>
+              <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-100">
+                <span>Last visit: {cust.lastVisit}</span>
+                <span className="text-teal-700 font-bold flex items-center space-x-1 group-hover:underline">
+                  <span>Profile & Logs</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </span>
               </div>
-              <div>
-                <span className="text-[10px] text-slate-400 font-bold uppercase block">Orders</span>
-                <span className="text-xs font-black text-teal-700 font-mono">{cust.orderCount}</span>
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-400 font-bold uppercase block">Points</span>
-                <span className="text-xs font-black text-amber-700 font-mono">{cust.loyaltyPoints}</span>
-              </div>
-            </div>
-
-            {cust.debtBalance > 0 && (
-              <div className="p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center justify-between">
-                <span>Tab Debt: {cur}{cust.debtBalance.toFixed(2)}</span>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSettleDebt(cust.id);
-                  }}
-                  className="px-2 py-0.5 rounded-lg bg-rose-600 text-white font-black text-[10px] hover:bg-rose-700"
-                >
-                  Clear Debt
-                </button>
-              </div>
-            )}
-
-            <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-100">
-              <span>Last visit: {cust.lastVisit}</span>
-              <span className="text-teal-700 font-bold flex items-center space-x-1 group-hover:underline">
-                <span>Profile & Logs</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </span>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
       {/* Customer Detail Drawer Modal */}
       <AnimatePresence>
