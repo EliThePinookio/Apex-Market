@@ -6,6 +6,7 @@ import {
   subscribeTransactions,
   subscribeProfile,
   subscribeCustomers,
+  loadAuthorizedBusinessData,
 } from './services/dbService';
 import { usePWA, registerServiceWorker } from './services/pwaService';
 import { BackgroundCanvas, triggerCelebration } from './components/BackgroundCanvas';
@@ -22,16 +23,20 @@ import { SettingsView } from './components/SettingsView';
 import { QuickActionModal } from './components/QuickActionModal';
 import { PinModal } from './components/PinModal';
 import { CommandPalette } from './components/CommandPalette';
-import { CheckCircle2 } from 'lucide-react';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthScreen } from './components/AuthScreen';
+import { CheckCircle2, Loader2, Store } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-export default function App() {
+function AppContent() {
+  const { user, isLoading } = useAuth();
+
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [profile, setProfile] = useState<BusinessProfile>({
-    businessName: 'Apex Retail & Supplies',
+    businessName: 'BEANNEL',
     ownerName: 'Alex Owner',
     currencySymbol: '$',
     ownerPin: '1234',
@@ -69,8 +74,11 @@ export default function App() {
     registerServiceWorker();
   }, []);
 
-  // Subscribe to realtime Firebase Firestore
+  // Subscribe to realtime Supabase PostgreSQL and local cache
   useEffect(() => {
+    if (user) {
+      loadAuthorizedBusinessData();
+    }
     const unsubProd = subscribeProducts(setProducts);
     const unsubCat = subscribeCategories(setCategories);
     const unsubTx = subscribeTransactions(setTransactions);
@@ -84,7 +92,7 @@ export default function App() {
       unsubProf();
       unsubCust();
     };
-  }, []);
+  }, [user]);
 
   // Auto hide notification toast after 3 seconds
   const showNotification = (msg: string) => {
@@ -102,35 +110,23 @@ export default function App() {
     let totalExpenses = 0;
     let totalCapital = 0;
 
-    transactions.forEach((t) => {
-      if (t.type === 'sale') {
-        totalRevenue += t.amount || 0;
-        totalCOGS += t.cogs || 0;
-      } else if (t.type === 'expense') {
-        totalExpenses += t.amount || 0;
-      } else if (t.type === 'capital') {
-        totalCapital += t.amount || 0;
+    transactions.forEach((tx) => {
+      if (tx.type === 'sale') {
+        totalRevenue += tx.amount || 0;
+        totalCOGS += tx.cogs || 0;
+      } else if (tx.type === 'expense') {
+        totalExpenses += tx.amount || 0;
+      } else if (tx.type === 'capital') {
+        totalCapital += tx.amount || 0;
       }
     });
 
     const grossProfit = totalRevenue - totalCOGS;
     const netProfit = grossProfit - totalExpenses;
-
-    let totalInventoryValuation = 0;
-    let totalPotentialRevenue = 0;
-    let lowStockCount = 0;
-    let outOfStockCount = 0;
-
-    products.forEach((p) => {
-      totalInventoryValuation += p.buyPrice * p.stockQuantity;
-      totalPotentialRevenue += p.sellPrice * p.stockQuantity;
-      if (p.stockQuantity <= p.minStockThreshold && p.stockQuantity > 0) {
-        lowStockCount++;
-      }
-      if (p.stockQuantity <= 0) {
-        outOfStockCount++;
-      }
-    });
+    const totalInventoryValuation = products.reduce((acc, p) => acc + p.buyPrice * p.stockQuantity, 0);
+    const totalPotentialRevenue = products.reduce((acc, p) => acc + p.sellPrice * p.stockQuantity, 0);
+    const lowStockCount = products.filter((p) => p.stockQuantity > 0 && p.stockQuantity <= p.minStockThreshold).length;
+    const outOfStockCount = products.filter((p) => p.stockQuantity <= 0).length;
 
     return {
       totalRevenue,
@@ -145,23 +141,16 @@ export default function App() {
       outOfStockCount,
       transactionCount: transactions.length,
     };
-  }, [products, transactions]);
+  }, [transactions, products]);
 
-  // Tab Navigation Guard (PIN Protection)
+  // Handle Tab change with security lock checks for owner-sensitive views
   const handleTabChange = (tab: NavTab) => {
-    if (
-      profile.isPinLocked &&
-      !isOwnerUnlocked &&
-      (tab === 'analytics' || tab === 'settings')
-    ) {
+    if ((tab === 'analytics' || tab === 'settings') && profile.isPinLocked && !isOwnerUnlocked) {
       setIsPinModalOpen(true);
       return;
     }
-    if (tab !== 'inventory') {
-      setInventoryLowStockFilter(false);
-    }
+    setInventoryLowStockFilter(false);
     setActiveTab(tab);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleNavigateToLowStock = () => {
@@ -169,12 +158,32 @@ export default function App() {
     setActiveTab('inventory');
   };
 
-  return (
-    <div className="relative h-screen w-full bg-transparent text-slate-900 flex font-sans selection:bg-emerald-500 selection:text-white overflow-hidden">
-      {/* Background Active Light Canvas */}
-      <BackgroundCanvas activeTab={activeTab} />
+  // If Supabase Auth is loading session
+  if (isLoading) {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-900 text-white space-y-4">
+        <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-xl shadow-emerald-500/20 animate-pulse">
+          <Store className="w-8 h-8 text-white" />
+        </div>
+        <div className="flex items-center space-x-2 text-sm text-slate-300 font-semibold">
+          <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+          <span>Connecting to Supabase Database...</span>
+        </div>
+      </div>
+    );
+  }
 
-      {/* Desktop Sidebar */}
+  // If unauthenticated, show Supabase Auth Screen
+  if (!user) {
+    return <AuthScreen />;
+  }
+
+  return (
+    <div className="relative min-h-screen w-full flex bg-slate-100/90 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-emerald-500 selection:text-white transition-colors duration-300">
+      {/* Visual Canvas Particle Effects */}
+      <BackgroundCanvas />
+
+      {/* Desktop Persistent Sidebar */}
       <Sidebar
         activeTab={activeTab}
         onTabChange={handleTabChange}
@@ -187,52 +196,61 @@ export default function App() {
         onOpenQuickAction={() => setIsQuickActionOpen(true)}
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         onToggleOwnerLock={() => {
-          if (isOwnerUnlocked) setIsOwnerUnlocked(false);
-          else setIsPinModalOpen(true);
+          if (isOwnerUnlocked) {
+            setIsOwnerUnlocked(false);
+            showNotification('Owner Mode Locked');
+          } else {
+            setIsPinModalOpen(true);
+          }
         }}
         onNavigateToLowStock={handleNavigateToLowStock}
       />
 
-      {/* Main Layout Container */}
-      <div className="relative z-10 flex-1 flex flex-col h-full min-w-0 overflow-y-auto overflow-x-hidden custom-scrollbar">
-        {/* App Header Bar */}
+      {/* Main App Layout */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden">
+        {/* Sticky App Header */}
         <Header
           profile={profile}
           isOnline={isOnline}
           lowStockCount={summary.lowStockCount}
           isOwnerUnlocked={isOwnerUnlocked}
           onToggleOwnerLock={() => {
-            if (isOwnerUnlocked) setIsOwnerUnlocked(false);
-            else setIsPinModalOpen(true);
+            if (isOwnerUnlocked) {
+              setIsOwnerUnlocked(false);
+              showNotification('Owner Mode Locked');
+            } else {
+              setIsPinModalOpen(true);
+            }
           }}
           onOpenQuickAction={() => setIsQuickActionOpen(true)}
           onNavigateToLowStock={handleNavigateToLowStock}
           onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         />
 
-        {/* Main View Area */}
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-4 md:py-6 pb-24 md:pb-12 overflow-x-hidden">
-          <AnimatePresence mode="popLayout" initial={false}>
+        {/* Dynamic Main Viewport with Smooth Motion Transitions */}
+        <main className="flex-1 overflow-y-auto">
+          <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, y: 6, scale: 0.994 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -4, scale: 0.994 }}
-              transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              className="h-full"
             >
               {activeTab === 'dashboard' && (
                 <DashboardView
-                  summary={summary}
-                  profile={profile}
                   products={products}
                   transactions={transactions}
+                  profile={profile}
+                  summary={summary}
                   onNavigateToPOS={() => setActiveTab('pos')}
-                  onNavigateToInventory={(filterLow) => {
-                    setInventoryLowStockFilter(!!filterLow);
+                  onNavigateToInventory={(filterLowStock) => {
+                    if (filterLowStock) setInventoryLowStockFilter(true);
                     setActiveTab('inventory');
                   }}
                   onNavigateToTransactions={() => setActiveTab('transactions')}
-                  onNavigateToAnalytics={() => handleTabChange('analytics')}
+                  onNavigateToAnalytics={() => setActiveTab('analytics')}
                   onOpenQuickAction={() => setIsQuickActionOpen(true)}
                 />
               )}
@@ -346,8 +364,8 @@ export default function App() {
 
         {/* Floating Notification Toast */}
         {notificationMsg && (
-          <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-white/95 border border-emerald-300 text-emerald-900 px-5 py-3 rounded-2xl shadow-xl shadow-emerald-500/10 backdrop-blur-md flex items-center space-x-2.5 text-xs font-bold animate-in fade-in slide-in-from-top duration-300">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-white/95 dark:bg-slate-900/95 border border-emerald-300 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200 px-5 py-3 rounded-2xl shadow-xl shadow-emerald-500/10 backdrop-blur-md flex items-center space-x-2.5 text-xs font-bold animate-in fade-in slide-in-from-top duration-300">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>{notificationMsg}</span>
           </div>
         )}
@@ -356,4 +374,10 @@ export default function App() {
   );
 }
 
-
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}

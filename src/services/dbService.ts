@@ -1,20 +1,4 @@
-import {
-  collection,
-  doc,
-  getDocs,
-  getDoc,
-  setDoc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  limit,
-  writeBatch,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../firebase';
+import { supabase, isSupabaseConfigured } from '../supabase';
 import {
   Product,
   Category,
@@ -33,7 +17,7 @@ import {
   INITIAL_CUSTOMERS,
 } from '../data/seedData';
 
-// Storage keys for local offline cache
+// Storage keys for local offline cache & fallback
 const CACHE_KEYS = {
   PRODUCTS: 'app_products_v1',
   CATEGORIES: 'app_categories_v1',
@@ -42,9 +26,18 @@ const CACHE_KEYS = {
   PROFILE: 'app_profile_v1',
   MOVEMENTS: 'app_movements_v1',
   OFFLINE_QUEUE: 'app_offline_queue_v1',
+  CURRENT_BIZ_ID: 'app_current_business_id_v1',
 };
 
-// Subscriber sets for real-time local + online reactivity
+// Default clean initial categories for new businesses
+const DEFAULT_CATEGORIES: Category[] = [
+  { id: 'cat-general', name: 'General', color: '#10b981' },
+  { id: 'cat-beverages', name: 'Beverages', color: '#06b6d4' },
+  { id: 'cat-snacks', name: 'Snacks', color: '#f59e0b' },
+  { id: 'cat-essentials', name: 'Essentials', color: '#8b5cf6' },
+];
+
+// Subscriber sets for local + online UI reactivity
 const productSubscribers = new Set<(products: Product[]) => void>();
 const categorySubscribers = new Set<(categories: Category[]) => void>();
 const transactionSubscribers = new Set<(transactions: Transaction[]) => void>();
@@ -71,18 +64,19 @@ export function setLocalCache<T>(key: string, data: T): void {
 }
 
 export function getProductsCache(): Product[] {
-  const hasInit = localStorage.getItem('app_has_initialized_v1');
-  return getLocalCache<Product[]>(CACHE_KEYS.PRODUCTS, hasInit ? [] : INITIAL_PRODUCTS);
+  return getLocalCache<Product[]>(CACHE_KEYS.PRODUCTS, []);
+}
+
+export function getCategoriesCache(): Category[] {
+  return getLocalCache<Category[]>(CACHE_KEYS.CATEGORIES, DEFAULT_CATEGORIES);
 }
 
 export function getTransactionsCache(): Transaction[] {
-  const hasInit = localStorage.getItem('app_has_initialized_v1');
-  return getLocalCache<Transaction[]>(CACHE_KEYS.TRANSACTIONS, hasInit ? [] : INITIAL_TRANSACTIONS);
+  return getLocalCache<Transaction[]>(CACHE_KEYS.TRANSACTIONS, []);
 }
 
 export function getCustomersCache(): Customer[] {
-  const hasInit = localStorage.getItem('app_has_initialized_v1');
-  return getLocalCache<Customer[]>(CACHE_KEYS.CUSTOMERS, hasInit ? [] : INITIAL_CUSTOMERS);
+  return getLocalCache<Customer[]>(CACHE_KEYS.CUSTOMERS, []);
 }
 
 export function notifyProducts(): void {
@@ -91,7 +85,7 @@ export function notifyProducts(): void {
 }
 
 export function notifyCategories(): void {
-  const current = getLocalCache<Category[]>(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
+  const current = getCategoriesCache();
   categorySubscribers.forEach((cb) => cb(current));
 }
 
@@ -110,360 +104,418 @@ export function notifyProfile(): void {
   profileSubscribers.forEach((cb) => cb(current));
 }
 
-async function clearFirestoreCollection(collectionName: string): Promise<void> {
-  if (!db) return;
+/**
+ * Get active business ID for multi-tenant data isolation
+ */
+export async function getActiveBusinessId(): Promise<string | null> {
+  if (!isSupabaseConfigured) {
+    return localStorage.getItem(CACHE_KEYS.CURRENT_BIZ_ID) || 'local-biz';
+  }
   try {
-    const snap = await getDocs(collection(db, collectionName));
-    if (snap.empty) return;
-    const docs = snap.docs;
-    for (let i = 0; i < docs.length; i += 400) {
-      const batch = writeBatch(db);
-      const chunk = docs.slice(i, i + 400);
-      chunk.forEach((d) => batch.delete(d.ref));
-      await batch.commit();
+    const { data } = await supabase.auth.getSession();
+    if (data?.session?.user) {
+      const uId = data.session.user.id;
+      // Fetch profile to get assigned business_id
+      const { data: prof, error } = await supabase
+        .from('profiles')
+        .select('business_id')
+        .eq('id', uId)
+        .maybeSingle();
+
+      if (!error && prof?.business_id) {
+        localStorage.setItem(CACHE_KEYS.CURRENT_BIZ_ID, prof.business_id);
+        return prof.business_id;
+      }
+      localStorage.setItem(CACHE_KEYS.CURRENT_BIZ_ID, uId);
+      return uId;
     }
   } catch (e) {
-    console.warn(`Error clearing Firestore collection ${collectionName}:`, e);
+    // In network disruption, fallback to cached ID
   }
+  return localStorage.getItem(CACHE_KEYS.CURRENT_BIZ_ID) || null;
 }
 
-// Subscribe to Products
-export function subscribeProducts(callback: (products: Product[]) => void): () => void {
-  productSubscribers.add(callback);
-  const local = getProductsCache();
-  callback(local);
+// Global consolidated Realtime channel reference
+let activeRealtimeChannel: any = null;
+let activeRealtimeBizId: string | null = null;
 
-  let unsubFirestore = () => {};
-  if (db) {
+/**
+ * Safe Realtime Subscription Manager
+ * Connects a single unified WebSocket channel only when authenticated.
+ * Gracefully handles errors, timeouts, and WebSocket closures without unhandled rejections.
+ */
+export function initSupabaseRealtime(bizId: string): void {
+  if (!isSupabaseConfigured || !bizId) return;
+  if (activeRealtimeChannel && activeRealtimeBizId === bizId) return;
+
+  // Clean up any existing channel
+  if (activeRealtimeChannel) {
     try {
-      const q = query(collection(db, 'products'), orderBy('updatedAt', 'desc'));
-      unsubFirestore = onSnapshot(
-        q,
-        (snapshot) => {
-          if (!snapshot.empty) {
-            const list: Product[] = snapshot.docs.map((d) => ({
-              id: d.id,
-              ...(d.data() as Omit<Product, 'id'>),
-            }));
-            setLocalCache(CACHE_KEYS.PRODUCTS, list);
-            notifyProducts();
-          } else {
-            const hasInit = localStorage.getItem('app_has_initialized_v1');
-            if (!hasInit) {
-              seedInitialData().then(() => {
-                notifyProducts();
-              });
-            } else {
-              setLocalCache(CACHE_KEYS.PRODUCTS, []);
-              notifyProducts();
-            }
-          }
-        },
-        (err) => {
-          console.warn('Firestore snapshot error for products (using local store):', err);
-        }
-      );
+      supabase.removeChannel(activeRealtimeChannel);
     } catch (e) {
-      console.warn('Firestore subscription failed, running local mode');
+      // Safe cleanup
     }
+    activeRealtimeChannel = null;
   }
 
-  return () => {
-    productSubscribers.delete(callback);
-    unsubFirestore();
-  };
-}
-
-// Subscribe to Categories
-export function subscribeCategories(callback: (categories: Category[]) => void): () => void {
-  categorySubscribers.add(callback);
-  const local = getLocalCache<Category[]>(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
-  callback(local);
-
-  let unsubFirestore = () => {};
-  if (db) {
-    try {
-      unsubFirestore = onSnapshot(
-        collection(db, 'categories'),
-        (snapshot) => {
-          if (!snapshot.empty) {
-            const list: Category[] = snapshot.docs.map((d) => ({
-              id: d.id,
-              ...(d.data() as Omit<Category, 'id'>),
-            }));
-            setLocalCache(CACHE_KEYS.CATEGORIES, list);
-            notifyCategories();
-          } else {
-            setLocalCache(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
-            notifyCategories();
-          }
-        },
-        (err) => {
-          console.warn('Firestore categories error:', err);
-        }
-      );
-    } catch (e) {
-      console.warn('Firestore categories subscription failed');
-    }
-  }
-
-  return () => {
-    categorySubscribers.delete(callback);
-    unsubFirestore();
-  };
-}
-
-// Subscribe to Transactions
-export function subscribeTransactions(callback: (transactions: Transaction[]) => void): () => void {
-  transactionSubscribers.add(callback);
-  const local = getTransactionsCache();
-  callback(local);
-
-  let unsubFirestore = () => {};
-  if (db) {
-    try {
-      const q = query(collection(db, 'transactions'), orderBy('date', 'desc'), limit(500));
-      unsubFirestore = onSnapshot(
-        q,
-        (snapshot) => {
-          if (!snapshot.empty) {
-            const list: Transaction[] = snapshot.docs.map((d) => ({
-              id: d.id,
-              ...(d.data() as Omit<Transaction, 'id'>),
-            }));
-            setLocalCache(CACHE_KEYS.TRANSACTIONS, list);
-            notifyTransactions();
-          } else {
-            setLocalCache(CACHE_KEYS.TRANSACTIONS, []);
-            notifyTransactions();
-          }
-        },
-        (err) => {
-          console.warn('Firestore transactions error:', err);
-        }
-      );
-    } catch (e) {
-      console.warn('Firestore transactions subscription failed');
-    }
-  }
-
-  return () => {
-    transactionSubscribers.delete(callback);
-    unsubFirestore();
-  };
-}
-
-// Subscribe to Business Profile
-export function subscribeProfile(callback: (profile: BusinessProfile) => void): () => void {
-  profileSubscribers.add(callback);
-  const local = getLocalCache<BusinessProfile>(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
-  callback(local);
-
-  let unsubFirestore = () => {};
-  if (db) {
-    try {
-      const docRef = doc(db, 'profile', 'business_info');
-      unsubFirestore = onSnapshot(
-        docRef,
-        (docSnap) => {
-          if (docSnap.exists()) {
-            const data = docSnap.data() as BusinessProfile;
-            setLocalCache(CACHE_KEYS.PROFILE, data);
-            notifyProfile();
-          } else {
-            setDoc(docRef, INITIAL_BUSINESS_PROFILE);
-          }
-        },
-        (err) => {
-          console.warn('Firestore profile error:', err);
-        }
-      );
-    } catch (e) {
-      console.warn('Firestore profile subscription failed');
-    }
-  }
-
-  return () => {
-    profileSubscribers.delete(callback);
-    unsubFirestore();
-  };
-}
-
-// Subscribe to Customers
-export function subscribeCustomers(callback: (customers: Customer[]) => void): () => void {
-  customerSubscribers.add(callback);
-  const local = getCustomersCache();
-  callback(local);
-
-  let unsubFirestore = () => {};
-
-  if (db) {
-    try {
-      unsubFirestore = onSnapshot(
-        collection(db, 'customers'),
-        (snapshot) => {
-          if (!snapshot.empty) {
-            const list: Customer[] = snapshot.docs.map((docSnap) => {
-              const data = docSnap.data() as Customer;
-              return { ...data, id: docSnap.id };
-            });
-            setLocalCache(CACHE_KEYS.CUSTOMERS, list);
-            notifyCustomers();
-          } else {
-            const hasInit = localStorage.getItem('app_has_initialized_v1');
-            if (hasInit) {
-              setLocalCache(CACHE_KEYS.CUSTOMERS, []);
-              notifyCustomers();
-            } else {
-              setLocalCache(CACHE_KEYS.CUSTOMERS, INITIAL_CUSTOMERS);
-              notifyCustomers();
-            }
-          }
-        },
-        (err) => {
-          console.warn('Firestore customers error, using local cache:', err);
-        }
-      );
-    } catch (e) {
-      console.warn('Firestore customers subscription failed');
-    }
-  }
-
-  return () => {
-    customerSubscribers.delete(callback);
-    unsubFirestore();
-  };
-}
-
-// Seed initial database
-export async function seedInitialData(force = false): Promise<void> {
-  const hasInitialized = localStorage.getItem('app_has_initialized_v1') === 'true';
-
-  // If not forcing demo reload and app is already initialized, never auto-seed demo data
-  if (!force && hasInitialized) {
-    return;
-  }
-
-  localStorage.setItem('app_has_initialized_v1', 'true');
-
-  if (!db) {
-    if (force) {
-      setLocalCache(CACHE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
-      setLocalCache(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
-      setLocalCache(CACHE_KEYS.TRANSACTIONS, INITIAL_TRANSACTIONS);
-      setLocalCache(CACHE_KEYS.CUSTOMERS, INITIAL_CUSTOMERS);
-      setLocalCache(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
-      notifyProducts();
-      notifyCategories();
-      notifyTransactions();
-      notifyCustomers();
-      notifyProfile();
-    }
-    return;
-  }
+  activeRealtimeBizId = bizId;
 
   try {
-    const metaRef = doc(db, 'system', 'metadata');
-    let isAlreadyInited = false;
-
-    if (!force) {
-      try {
-        const metaSnap = await getDoc(metaRef);
-        if (metaSnap.exists() && metaSnap.data()?.isInitialized) {
-          isAlreadyInited = true;
+    const channelName = `realtime:biz:${bizId.slice(0, 8)}`;
+    activeRealtimeChannel = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'products' },
+        () => {
+          fetchSupabaseProducts();
         }
-      } catch (offlineErr) {
-        // Client is offline or document not yet cached - rely on local state flag
-      }
-
-      if (isAlreadyInited) {
-        return;
-      }
-
-      try {
-        const pSnap = await getDocs(collection(db, 'products'));
-        if (!pSnap.empty) {
-          setDoc(metaRef, { isInitialized: true, schemaVersion: '1.0.0' }, { merge: true }).catch(() => {});
-          return;
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'categories' },
+        () => {
+          fetchSupabaseCategories();
         }
-      } catch (offlineErr) {
-        // Client is offline, keep existing local state
-        return;
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'transactions' },
+        () => {
+          fetchSupabaseTransactions();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'customers' },
+        () => {
+          fetchSupabaseCustomers();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'businesses' },
+        () => {
+          fetchSupabaseProfile();
+        }
+      );
+
+    // Subscribe with status callback to handle errors gracefully
+    activeRealtimeChannel.subscribe((status: string, err: any) => {
+      if (status === 'SUBSCRIBED') {
+        // Realtime stream active
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        if (err) {
+          // Graceful silent fallback to local state/polling without crashing
+        }
       }
-    } else {
-      await clearFirestoreCollection('products').catch(() => {});
-      await clearFirestoreCollection('transactions').catch(() => {});
-      await clearFirestoreCollection('categories').catch(() => {});
-      await clearFirestoreCollection('customers').catch(() => {});
-    }
-
-    const batch = writeBatch(db);
-
-    // Products
-    INITIAL_PRODUCTS.forEach((p) => {
-      const pRef = doc(db, 'products', p.id);
-      batch.set(pRef, p);
     });
-
-    // Categories
-    INITIAL_CATEGORIES.forEach((c) => {
-      const cRef = doc(db, 'categories', c.id);
-      batch.set(cRef, c);
-    });
-
-    // Transactions
-    INITIAL_TRANSACTIONS.forEach((t) => {
-      const tRef = doc(db, 'transactions', t.id);
-      batch.set(tRef, t);
-    });
-
-    // Customers
-    INITIAL_CUSTOMERS.forEach((cust) => {
-      const custRef = doc(db, 'customers', cust.id);
-      batch.set(custRef, cust);
-    });
-
-    // Profile
-    const profRef = doc(db, 'profile', 'business_info');
-    batch.set(profRef, INITIAL_BUSINESS_PROFILE);
-
-    // Metadata
-    batch.set(metaRef, { isInitialized: true, schemaVersion: '1.0.0', seededAt: new Date().toISOString() });
-
-    await batch.commit().catch((err) => {
-      console.warn('Firestore write queued for offline sync:', err);
-    });
-
-    setLocalCache(CACHE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
-    setLocalCache(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
-    setLocalCache(CACHE_KEYS.TRANSACTIONS, INITIAL_TRANSACTIONS);
-    setLocalCache(CACHE_KEYS.CUSTOMERS, INITIAL_CUSTOMERS);
-    setLocalCache(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
-
-    notifyProducts();
-    notifyCategories();
-    notifyTransactions();
-    notifyCustomers();
-    notifyProfile();
-  } catch (e: any) {
-    console.warn('Database initialization note (offline mode fallback):', e?.message || e);
-    if (force) {
-      setLocalCache(CACHE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
-      setLocalCache(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
-      setLocalCache(CACHE_KEYS.TRANSACTIONS, INITIAL_TRANSACTIONS);
-      setLocalCache(CACHE_KEYS.CUSTOMERS, INITIAL_CUSTOMERS);
-      setLocalCache(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
-
-      notifyProducts();
-      notifyCategories();
-      notifyTransactions();
-      notifyCustomers();
-      notifyProfile();
-    }
+  } catch (e) {
+    // Realtime not supported or blocked in environment - continue with direct queries
   }
 }
 
-// Add or Edit Product
+export function cleanupSupabaseRealtime(): void {
+  if (activeRealtimeChannel) {
+    try {
+      supabase.removeChannel(activeRealtimeChannel);
+    } catch (e) {
+      // Safe cleanup
+    }
+    activeRealtimeChannel = null;
+    activeRealtimeBizId = null;
+  }
+}
+
+/**
+ * Fetch and synchronize Products from Supabase PostgreSQL
+ */
+export async function fetchSupabaseProducts(): Promise<Product[]> {
+  if (!isSupabaseConfigured) return getProductsCache();
+  try {
+    const bizId = await getActiveBusinessId();
+    if (!bizId) return getProductsCache();
+
+    let query = supabase.from('products').select('*').order('updated_at', { ascending: false });
+    query = query.or(`business_id.eq.${bizId},business_id.is.null`);
+
+    const { data, error } = await query;
+    if (error) {
+      if (error.code === 'PGRST205' || error.message?.includes('schema cache')) {
+        // Table does not exist yet in Supabase DB
+        return getProductsCache();
+      }
+      return getProductsCache();
+    }
+
+    if (data) {
+      const list: Product[] = data.map((d: any) => ({
+        id: d.id,
+        name: d.name,
+        sku: d.sku,
+        category: d.category || 'General',
+        buyPrice: Number(d.buy_price) || 0,
+        sellPrice: Number(d.sell_price) || 0,
+        stockQuantity: Number(d.stock_quantity) || 0,
+        minStockThreshold: Number(d.min_stock_threshold) || 5,
+        unit: d.unit || 'pcs',
+        barcode: d.barcode || '',
+        notes: d.notes || '',
+        createdAt: d.created_at || new Date().toISOString(),
+        updatedAt: d.updated_at || new Date().toISOString(),
+      }));
+      setLocalCache(CACHE_KEYS.PRODUCTS, list);
+      notifyProducts();
+      return list;
+    }
+  } catch (e) {
+    // Fallback to cache
+  }
+  return getProductsCache();
+}
+
+/**
+ * Fetch and synchronize Categories from Supabase PostgreSQL
+ */
+export async function fetchSupabaseCategories(): Promise<Category[]> {
+  if (!isSupabaseConfigured) return getCategoriesCache();
+  try {
+    const bizId = await getActiveBusinessId();
+    if (!bizId) return getCategoriesCache();
+
+    let query = supabase.from('categories').select('*').order('name');
+    query = query.or(`business_id.eq.${bizId},business_id.is.null`);
+
+    const { data, error } = await query;
+    if (error) {
+      if (error.code === 'PGRST205' || error.message?.includes('schema cache')) {
+        return getCategoriesCache();
+      }
+      return getCategoriesCache();
+    }
+
+    if (data && data.length > 0) {
+      const list: Category[] = data.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        color: c.color || '#10b981',
+      }));
+      setLocalCache(CACHE_KEYS.CATEGORIES, list);
+      notifyCategories();
+      return list;
+    }
+  } catch (e) {
+    // Fallback
+  }
+  return getCategoriesCache();
+}
+
+/**
+ * Fetch and synchronize Transactions from Supabase PostgreSQL
+ */
+export async function fetchSupabaseTransactions(): Promise<Transaction[]> {
+  if (!isSupabaseConfigured) return getTransactionsCache();
+  try {
+    const bizId = await getActiveBusinessId();
+    if (!bizId) return getTransactionsCache();
+
+    let query = supabase
+      .from('transactions')
+      .select('*')
+      .order('date', { ascending: false })
+      .limit(1000);
+    query = query.or(`business_id.eq.${bizId},business_id.is.null`);
+
+    const { data, error } = await query;
+    if (error) {
+      if (error.code === 'PGRST205' || error.message?.includes('schema cache')) {
+        return getTransactionsCache();
+      }
+      return getTransactionsCache();
+    }
+
+    if (data) {
+      const list: Transaction[] = data.map((t: any) => ({
+        id: t.id,
+        type: t.type,
+        amount: Number(t.amount) || 0,
+        cogs: t.cogs != null ? Number(t.cogs) : undefined,
+        grossProfit: t.gross_profit != null ? Number(t.gross_profit) : undefined,
+        netProfit: t.net_profit != null ? Number(t.net_profit) : undefined,
+        date: t.date || new Date().toISOString(),
+        description: t.description || '',
+        category: t.category || '',
+        paymentMethod: t.payment_method,
+        referenceNo: t.reference_no,
+        customerName: t.customer_name,
+        customerId: t.customer_id,
+        items: t.items || [],
+        createdAt: t.created_at || new Date().toISOString(),
+      }));
+      setLocalCache(CACHE_KEYS.TRANSACTIONS, list);
+      notifyTransactions();
+      return list;
+    }
+  } catch (e) {
+    // Fallback
+  }
+  return getTransactionsCache();
+}
+
+/**
+ * Fetch and synchronize Business Profile from Supabase PostgreSQL
+ */
+export async function fetchSupabaseProfile(): Promise<BusinessProfile> {
+  const local = getLocalCache<BusinessProfile>(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
+  if (!isSupabaseConfigured) return local;
+
+  try {
+    const bizId = await getActiveBusinessId();
+    if (!bizId) return local;
+
+    const { data, error } = await supabase
+      .from('businesses')
+      .select('*')
+      .eq('id', bizId)
+      .maybeSingle();
+
+    if (error) {
+      return local;
+    }
+
+    if (data) {
+      const prof: BusinessProfile = {
+        businessName: data.name || local.businessName || 'BEANNEL',
+        ownerName: data.owner_name || local.ownerName || 'Store Owner',
+        currencySymbol: data.currency_symbol || local.currencySymbol || '$',
+        ownerPin: local.ownerPin || '1234',
+        isPinLocked: local.isPinLocked || false,
+        biometricEnabled: local.biometricEnabled ?? true,
+        taxRate: Number(data.tax_rate) || 0,
+        lowStockAlertEnabled: data.low_stock_alert_enabled ?? true,
+        allowNegativeStock: data.allow_negative_stock ?? false,
+        receiptHeaderMsg: data.receipt_header_msg || 'Thank you for shopping with us!',
+      };
+      setLocalCache(CACHE_KEYS.PROFILE, prof);
+      notifyProfile();
+      return prof;
+    }
+  } catch (e) {
+    // Fallback
+  }
+  return local;
+}
+
+/**
+ * Fetch and synchronize Customers from Supabase PostgreSQL
+ */
+export async function fetchSupabaseCustomers(): Promise<Customer[]> {
+  if (!isSupabaseConfigured) return getCustomersCache();
+  try {
+    const bizId = await getActiveBusinessId();
+    if (!bizId) return getCustomersCache();
+
+    let query = supabase.from('customers').select('*').order('updated_at', { ascending: false });
+    query = query.or(`business_id.eq.${bizId},business_id.is.null`);
+
+    const { data, error } = await query;
+    if (error) {
+      if (error.code === 'PGRST205' || error.message?.includes('schema cache')) {
+        return getCustomersCache();
+      }
+      return getCustomersCache();
+    }
+
+    if (data) {
+      const list: Customer[] = data.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        phone: c.phone || '',
+        email: c.email || '',
+        loyaltyPoints: Number(c.loyalty_points) || 0,
+        totalSpent: Number(c.total_spent) || 0,
+        orderCount: Number(c.order_count) || 0,
+        debtBalance: Number(c.debt_balance) || 0,
+        tier: c.tier || 'Bronze',
+        lastVisit: c.last_visit || 'Just now',
+        notes: c.notes || '',
+        createdAt: c.created_at || new Date().toISOString(),
+        updatedAt: c.updated_at || new Date().toISOString(),
+      }));
+      setLocalCache(CACHE_KEYS.CUSTOMERS, list);
+      notifyCustomers();
+      return list;
+    }
+  } catch (e) {
+    // Fallback
+  }
+  return getCustomersCache();
+}
+
+// React Hook Subscriptions
+export function subscribeProducts(callback: (products: Product[]) => void): () => void {
+  productSubscribers.add(callback);
+  callback(getProductsCache());
+  return () => {
+    productSubscribers.delete(callback);
+  };
+}
+
+export function subscribeCategories(callback: (categories: Category[]) => void): () => void {
+  categorySubscribers.add(callback);
+  callback(getCategoriesCache());
+  return () => {
+    categorySubscribers.delete(callback);
+  };
+}
+
+export function subscribeTransactions(callback: (transactions: Transaction[]) => void): () => void {
+  transactionSubscribers.add(callback);
+  callback(getTransactionsCache());
+  return () => {
+    transactionSubscribers.delete(callback);
+  };
+}
+
+export function subscribeProfile(callback: (profile: BusinessProfile) => void): () => void {
+  profileSubscribers.add(callback);
+  callback(getLocalCache<BusinessProfile>(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE));
+  return () => {
+    profileSubscribers.delete(callback);
+  };
+}
+
+export function subscribeCustomers(callback: (customers: Customer[]) => void): () => void {
+  customerSubscribers.add(callback);
+  callback(getCustomersCache());
+  return () => {
+    customerSubscribers.delete(callback);
+  };
+}
+
+/**
+ * Loads all authoritative data for the active business upon authentication
+ */
+export async function loadAuthorizedBusinessData(): Promise<void> {
+  const bizId = await getActiveBusinessId();
+  if (!bizId) return;
+
+  // Initialize safe consolidated Realtime stream
+  initSupabaseRealtime(bizId);
+
+  // Fetch all tables in parallel
+  await Promise.allSettled([
+    fetchSupabaseProfile(),
+    fetchSupabaseCategories(),
+    fetchSupabaseProducts(),
+    fetchSupabaseTransactions(),
+    fetchSupabaseCustomers(),
+  ]);
+}
+
+/**
+ * Save Product (Add or Edit)
+ */
 export async function saveProduct(productData: Partial<Product>): Promise<string> {
   const isNew = !productData.id;
   const id = productData.id || `prod-${Date.now()}`;
@@ -485,43 +537,65 @@ export async function saveProduct(productData: Partial<Product>): Promise<string
     updatedAt: now,
   };
 
-  // Update local cache first (instant UI responsiveness)
-  const currentProds = getLocalCache<Product[]>(CACHE_KEYS.PRODUCTS, []);
+  // Immediate optimistic local update
+  const currentProds = getProductsCache();
   const updatedProds = isNew
     ? [product, ...currentProds]
     : currentProds.map((p) => (p.id === id ? product : p));
   setLocalCache(CACHE_KEYS.PRODUCTS, updatedProds);
-  notifyProducts(); // Instant UI sync across subscribers
+  notifyProducts();
 
-  // Firestore write
-  if (db) {
+  // Supabase PostgreSQL write
+  if (isSupabaseConfigured) {
     try {
-      await setDoc(doc(db, 'products', id), product, { merge: true });
+      const bizId = await getActiveBusinessId();
+      await supabase.from('products').upsert(
+        {
+          id,
+          business_id: bizId,
+          name: product.name,
+          sku: product.sku,
+          category: product.category,
+          buy_price: product.buyPrice,
+          sell_price: product.sellPrice,
+          stock_quantity: product.stockQuantity,
+          min_stock_threshold: product.minStockThreshold,
+          unit: product.unit,
+          barcode: product.barcode,
+          notes: product.notes,
+          updated_at: now,
+        },
+        { onConflict: 'id' }
+      );
     } catch (e) {
-      console.warn('Firestore product write saved locally (offline):', e);
+      console.warn('Product saved locally (offline):', e);
     }
   }
 
   return id;
 }
 
-// Delete Product
+/**
+ * Delete Product
+ */
 export async function deleteProduct(productId: string): Promise<void> {
-  const currentProds = getLocalCache<Product[]>(CACHE_KEYS.PRODUCTS, []);
+  const currentProds = getProductsCache();
   const updatedProds = currentProds.filter((p) => p.id !== productId);
   setLocalCache(CACHE_KEYS.PRODUCTS, updatedProds);
-  notifyProducts(); // Instant UI sync across subscribers
+  notifyProducts();
 
-  if (db) {
+  if (isSupabaseConfigured) {
     try {
-      await deleteDoc(doc(db, 'products', productId));
+      await supabase.from('products').delete().eq('id', productId);
     } catch (e) {
-      console.warn('Firestore product delete queued offline:', e);
+      console.warn('Product delete saved locally:', e);
     }
   }
 }
 
-// Process Sale Transaction (with stock auto-deduction)
+/**
+ * Process Sale Transaction (with stock auto-deduction, COGS, gross profit, and CRM update)
+ */
 export async function recordSale(saleData: {
   items: TransactionItem[];
   customerName?: string;
@@ -535,7 +609,7 @@ export async function recordSale(saleData: {
   let totalSellPrice = 0;
   let totalBuyPrice = 0;
 
-  const productsList = getLocalCache<Product[]>(CACHE_KEYS.PRODUCTS, []);
+  const productsList = getProductsCache();
   const updatedProducts = [...productsList];
 
   saleData.items.forEach((item) => {
@@ -552,13 +626,12 @@ export async function recordSale(saleData: {
         updatedAt: now,
       };
 
-      // Also attempt async Firestore update for product stock if configured
-      if (db) {
-        setDoc(
-          doc(db, 'products', prod.id),
-          { stockQuantity: newStock, updatedAt: now },
-          { merge: true }
-        ).catch(() => {});
+      if (isSupabaseConfigured) {
+        supabase
+          .from('products')
+          .update({ stock_quantity: newStock, updated_at: now })
+          .eq('id', prod.id)
+          .then();
       }
     }
   });
@@ -584,8 +657,12 @@ export async function recordSale(saleData: {
     createdAt: now,
   };
 
-  // If customer name was provided, update or create CRM record
-  if (saleData.customerName && saleData.customerName.trim() && saleData.customerName !== 'Walk-in Customer') {
+  // Update CRM if customer name is provided
+  if (
+    saleData.customerName &&
+    saleData.customerName.trim() &&
+    saleData.customerName !== 'Walk-in Customer'
+  ) {
     const custNameClean = saleData.customerName.trim();
     const customers = getCustomersCache();
     const matched = customers.find(
@@ -613,27 +690,44 @@ export async function recordSale(saleData: {
     }
   }
 
-  // Update local caches
+  // Update local state
   setLocalCache(CACHE_KEYS.PRODUCTS, updatedProducts);
-  const currentTxs = getLocalCache<Transaction[]>(CACHE_KEYS.TRANSACTIONS, []);
+  const currentTxs = getTransactionsCache();
   setLocalCache(CACHE_KEYS.TRANSACTIONS, [transaction, ...currentTxs]);
 
-  notifyProducts(); // Instant UI sync across subscribers
-  notifyTransactions(); // Instant UI sync across subscribers
+  notifyProducts();
+  notifyTransactions();
 
-  // Firestore write
-  if (db) {
+  // Supabase PostgreSQL write
+  if (isSupabaseConfigured) {
     try {
-      await setDoc(doc(db, 'transactions', txId), transaction);
+      const bizId = await getActiveBusinessId();
+      await supabase.from('transactions').insert({
+        id: txId,
+        business_id: bizId,
+        type: 'sale',
+        amount: netRevenue,
+        cogs: totalBuyPrice,
+        gross_profit: grossProfit,
+        net_profit: grossProfit,
+        date: now,
+        description: transaction.description,
+        payment_method: transaction.paymentMethod,
+        customer_name: transaction.customerName,
+        items: transaction.items,
+        created_at: now,
+      });
     } catch (e) {
-      console.warn('Sale saved offline:', e);
+      console.warn('Sale saved locally (offline):', e);
     }
   }
 
   return txId;
 }
 
-// Record Expense
+/**
+ * Record Business Operating Expense
+ */
 export async function recordExpense(expenseData: {
   amount: number;
   category: string;
@@ -655,13 +749,25 @@ export async function recordExpense(expenseData: {
     createdAt: now,
   };
 
-  const currentTxs = getLocalCache<Transaction[]>(CACHE_KEYS.TRANSACTIONS, []);
+  const currentTxs = getTransactionsCache();
   setLocalCache(CACHE_KEYS.TRANSACTIONS, [transaction, ...currentTxs]);
-  notifyTransactions(); // Instant UI sync across subscribers
+  notifyTransactions();
 
-  if (db) {
+  if (isSupabaseConfigured) {
     try {
-      await setDoc(doc(db, 'transactions', txId), transaction);
+      const bizId = await getActiveBusinessId();
+      await supabase.from('transactions').insert({
+        id: txId,
+        business_id: bizId,
+        type: 'expense',
+        amount: transaction.amount,
+        net_profit: transaction.netProfit,
+        date: now,
+        description: transaction.description,
+        category: transaction.category,
+        payment_method: transaction.paymentMethod,
+        created_at: now,
+      });
     } catch (e) {
       console.warn('Expense saved offline:', e);
     }
@@ -670,7 +776,10 @@ export async function recordExpense(expenseData: {
   return txId;
 }
 
-// Record Capital Injection
+/**
+ * Record Owner Capital Contribution
+ * Accounting: Cash +amount, Owner Capital +amount. Inventory & COGS are NOT affected.
+ */
 export async function recordCapital(capitalData: {
   amount: number;
   description: string;
@@ -689,13 +798,23 @@ export async function recordCapital(capitalData: {
     createdAt: now,
   };
 
-  const currentTxs = getLocalCache<Transaction[]>(CACHE_KEYS.TRANSACTIONS, []);
+  const currentTxs = getTransactionsCache();
   setLocalCache(CACHE_KEYS.TRANSACTIONS, [transaction, ...currentTxs]);
-  notifyTransactions(); // Instant UI sync across subscribers
+  notifyTransactions();
 
-  if (db) {
+  if (isSupabaseConfigured) {
     try {
-      await setDoc(doc(db, 'transactions', txId), transaction);
+      const bizId = await getActiveBusinessId();
+      await supabase.from('transactions').insert({
+        id: txId,
+        business_id: bizId,
+        type: 'capital',
+        amount: transaction.amount,
+        date: now,
+        description: transaction.description,
+        payment_method: transaction.paymentMethod,
+        created_at: now,
+      });
     } catch (e) {
       console.warn('Capital transaction saved offline:', e);
     }
@@ -704,7 +823,10 @@ export async function recordCapital(capitalData: {
   return txId;
 }
 
-// Refill / Adjust Product Stock
+/**
+ * Record Stock Refill / Inventory Purchase
+ * Accounting: Inventory +amount, Cash -amount. Owner Capital is unchanged.
+ */
 export async function recordStockRefill(refillData: {
   productId: string;
   quantityToAdd: number;
@@ -712,7 +834,7 @@ export async function recordStockRefill(refillData: {
   reason?: string;
 }): Promise<void> {
   const now = new Date().toISOString();
-  const products = getLocalCache<Product[]>(CACHE_KEYS.PRODUCTS, []);
+  const products = getProductsCache();
   const idx = products.findIndex((p) => p.id === refillData.productId);
 
   if (idx >= 0) {
@@ -729,7 +851,6 @@ export async function recordStockRefill(refillData: {
 
     setLocalCache(CACHE_KEYS.PRODUCTS, products);
 
-    // Record Stock Movement / Transaction
     const txId = `tx-${Date.now()}`;
     const tx: Transaction = {
       id: txId,
@@ -740,16 +861,47 @@ export async function recordStockRefill(refillData: {
       createdAt: now,
     };
 
-    const txs = getLocalCache<Transaction[]>(CACHE_KEYS.TRANSACTIONS, []);
+    const txs = getTransactionsCache();
     setLocalCache(CACHE_KEYS.TRANSACTIONS, [tx, ...txs]);
 
-    notifyProducts(); // Instant UI sync across subscribers
-    notifyTransactions(); // Instant UI sync across subscribers
+    notifyProducts();
+    notifyTransactions();
 
-    if (db) {
+    if (isSupabaseConfigured) {
       try {
-        await setDoc(doc(db, 'products', prod.id), products[idx], { merge: true });
-        await setDoc(doc(db, 'transactions', txId), tx);
+        const bizId = await getActiveBusinessId();
+        await supabase
+          .from('products')
+          .update({
+            stock_quantity: newQty,
+            buy_price: newBuyPrice,
+            updated_at: now,
+          })
+          .eq('id', prod.id);
+
+        await supabase.from('transactions').insert({
+          id: txId,
+          business_id: bizId,
+          type: 'stock_refill',
+          amount: tx.amount,
+          date: now,
+          description: tx.description,
+          created_at: now,
+        });
+
+        // Insert into stock movements audit log
+        await supabase.from('stock_movements').insert({
+          id: `mov-${Date.now()}`,
+          business_id: bizId,
+          product_id: prod.id,
+          product_name: prod.name,
+          type: 'in',
+          quantity: refillData.quantityToAdd,
+          cost_per_unit: newBuyPrice,
+          reason: refillData.reason || 'Stock Refill',
+          date: now,
+          created_at: now,
+        });
       } catch (e) {
         console.warn('Stock refill saved offline:', e);
       }
@@ -757,59 +909,92 @@ export async function recordStockRefill(refillData: {
   }
 }
 
-// Save Business Profile
+/**
+ * Save Business Profile
+ */
 export async function saveBusinessProfile(profile: Partial<BusinessProfile>): Promise<void> {
   const current = getLocalCache<BusinessProfile>(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
   const updated = { ...current, ...profile };
   setLocalCache(CACHE_KEYS.PROFILE, updated);
-  notifyProfile(); // Instant UI sync across subscribers
+  notifyProfile();
 
-  if (db) {
+  if (isSupabaseConfigured) {
     try {
-      await setDoc(doc(db, 'profile', 'business_info'), updated, { merge: true });
+      const bizId = await getActiveBusinessId();
+      if (bizId) {
+        await supabase.from('businesses').upsert(
+          {
+            id: bizId,
+            name: updated.businessName,
+            owner_name: updated.ownerName,
+            currency_symbol: updated.currencySymbol,
+            tax_rate: updated.taxRate,
+            low_stock_alert_enabled: updated.lowStockAlertEnabled,
+            allow_negative_stock: updated.allowNegativeStock,
+            receipt_header_msg: updated.receiptHeaderMsg,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'id' }
+        );
+      }
     } catch (e) {
       console.warn('Profile updated offline:', e);
     }
   }
 }
 
-// Save Category
+/**
+ * Save Category
+ */
 export async function saveCategory(category: Category): Promise<void> {
-  const current = getLocalCache<Category[]>(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
+  const current = getCategoriesCache();
   const exists = current.some((c) => c.id === category.id);
   const updated = exists
     ? current.map((c) => (c.id === category.id ? category : c))
     : [...current, category];
 
   setLocalCache(CACHE_KEYS.CATEGORIES, updated);
-  notifyCategories(); // Instant UI sync across subscribers
+  notifyCategories();
 
-  if (db) {
+  if (isSupabaseConfigured) {
     try {
-      await setDoc(doc(db, 'categories', category.id), category, { merge: true });
+      const bizId = await getActiveBusinessId();
+      await supabase.from('categories').upsert(
+        {
+          id: category.id,
+          business_id: bizId,
+          name: category.name,
+          color: category.color || '#10b981',
+        },
+        { onConflict: 'id' }
+      );
     } catch (e) {
       console.warn('Category saved offline:', e);
     }
   }
 }
 
-// Delete Transaction
+/**
+ * Delete Transaction
+ */
 export async function deleteTransaction(txId: string): Promise<void> {
-  const current = getLocalCache<Transaction[]>(CACHE_KEYS.TRANSACTIONS, []);
+  const current = getTransactionsCache();
   const updated = current.filter((t) => t.id !== txId);
   setLocalCache(CACHE_KEYS.TRANSACTIONS, updated);
-  notifyTransactions(); // Instant UI sync across subscribers
+  notifyTransactions();
 
-  if (db) {
+  if (isSupabaseConfigured) {
     try {
-      await deleteDoc(doc(db, 'transactions', txId));
+      await supabase.from('transactions').delete().eq('id', txId);
     } catch (e) {
       console.warn('Transaction deleted offline:', e);
     }
   }
 }
 
-// Add or Edit Customer
+/**
+ * Add or Edit Customer
+ */
 export async function saveCustomer(customerData: Partial<Customer>): Promise<string> {
   const id = customerData.id || `cust-${Date.now()}`;
   const totalSpent = customerData.totalSpent ?? 0;
@@ -821,9 +1006,9 @@ export async function saveCustomer(customerData: Partial<Customer>): Promise<str
 
   const customer: Customer = {
     id,
-    name: customerData.name || 'New Customer',
-    phone: customerData.phone || '',
-    email: customerData.email || '',
+    name: customerData.name?.trim() || 'New Customer',
+    phone: customerData.phone?.trim() || '',
+    email: customerData.email?.trim() || '',
     loyaltyPoints: customerData.loyaltyPoints ?? Math.floor(totalSpent / 10),
     totalSpent,
     orderCount: customerData.orderCount ?? 0,
@@ -849,9 +1034,27 @@ export async function saveCustomer(customerData: Partial<Customer>): Promise<str
   setLocalCache(CACHE_KEYS.CUSTOMERS, updatedList);
   notifyCustomers();
 
-  if (db) {
+  if (isSupabaseConfigured) {
     try {
-      await setDoc(doc(db, 'customers', id), customer);
+      const bizId = await getActiveBusinessId();
+      await supabase.from('customers').upsert(
+        {
+          id,
+          business_id: bizId,
+          name: customer.name,
+          phone: customer.phone,
+          email: customer.email,
+          loyalty_points: customer.loyaltyPoints,
+          total_spent: customer.totalSpent,
+          order_count: customer.orderCount,
+          debt_balance: customer.debtBalance,
+          tier: customer.tier,
+          last_visit: customer.lastVisit,
+          notes: customer.notes,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'id' }
+      );
     } catch (e) {
       console.warn('Saved customer offline:', e);
     }
@@ -860,23 +1063,27 @@ export async function saveCustomer(customerData: Partial<Customer>): Promise<str
   return id;
 }
 
-// Delete Customer
+/**
+ * Delete Customer
+ */
 export async function deleteCustomer(customerId: string): Promise<void> {
   const current = getCustomersCache();
   const updated = current.filter((c) => c.id !== customerId);
   setLocalCache(CACHE_KEYS.CUSTOMERS, updated);
   notifyCustomers();
 
-  if (db) {
+  if (isSupabaseConfigured) {
     try {
-      await deleteDoc(doc(db, 'customers', customerId));
+      await supabase.from('customers').delete().eq('id', customerId);
     } catch (e) {
       console.warn('Deleted customer offline:', e);
     }
   }
 }
 
-// Settle Customer Debt
+/**
+ * Settle Customer Debt
+ */
 export async function settleCustomerDebt(customerId: string): Promise<void> {
   const current = getCustomersCache();
   const index = current.findIndex((c) => c.id === customerId);
@@ -886,9 +1093,12 @@ export async function settleCustomerDebt(customerId: string): Promise<void> {
     setLocalCache(CACHE_KEYS.CUSTOMERS, updated);
     notifyCustomers();
 
-    if (db) {
+    if (isSupabaseConfigured) {
       try {
-        await updateDoc(doc(db, 'customers', customerId), { debtBalance: 0 });
+        await supabase
+          .from('customers')
+          .update({ debt_balance: 0, updated_at: new Date().toISOString() })
+          .eq('id', customerId);
       } catch (e) {
         console.warn('Settled debt offline:', e);
       }
@@ -896,20 +1106,20 @@ export async function settleCustomerDebt(customerId: string): Promise<void> {
   }
 }
 
-// Clear all business records and start completely fresh
+/**
+ * Clear all business records and start completely fresh
+ */
 export async function clearAllBusinessData(): Promise<void> {
-  localStorage.setItem('app_has_initialized_v1', 'true');
-
   setLocalCache(CACHE_KEYS.PRODUCTS, []);
-  setLocalCache(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
+  setLocalCache(CACHE_KEYS.CATEGORIES, DEFAULT_CATEGORIES);
   setLocalCache(CACHE_KEYS.TRANSACTIONS, []);
   setLocalCache(CACHE_KEYS.CUSTOMERS, []);
   setLocalCache(CACHE_KEYS.MOVEMENTS, []);
   setLocalCache(CACHE_KEYS.OFFLINE_QUEUE, []);
-  
-  const cleanProfile = {
+
+  const cleanProfile: BusinessProfile = {
     ...INITIAL_BUSINESS_PROFILE,
-    businessName: 'My Retail Store',
+    businessName: 'BEANNEL',
     ownerName: 'Store Owner',
   };
   setLocalCache(CACHE_KEYS.PROFILE, cleanProfile);
@@ -920,30 +1130,25 @@ export async function clearAllBusinessData(): Promise<void> {
   notifyCustomers();
   notifyProfile();
 
-  if (db) {
+  if (isSupabaseConfigured) {
     try {
-      await clearFirestoreCollection('products');
-      await clearFirestoreCollection('transactions');
-      await clearFirestoreCollection('customers');
-      await clearFirestoreCollection('movements');
-      await clearFirestoreCollection('categories');
-
-      const batch = writeBatch(db);
-      INITIAL_CATEGORIES.forEach((c) => {
-        batch.set(doc(db, 'categories', c.id), c);
-      });
-      batch.set(doc(db, 'profile', 'business_info'), cleanProfile);
-      await batch.commit();
+      const bizId = await getActiveBusinessId();
+      if (bizId) {
+        await supabase.from('products').delete().eq('business_id', bizId);
+        await supabase.from('transactions').delete().eq('business_id', bizId);
+        await supabase.from('customers').delete().eq('business_id', bizId);
+        await supabase.from('categories').delete().eq('business_id', bizId);
+      }
     } catch (e) {
-      console.warn('Error clearing Firestore collections:', e);
+      console.warn('Error clearing Supabase business records:', e);
     }
   }
 }
 
-// Reset database to initial sample data
+/**
+ * Reset database to initial sample demo data (explicit user action only)
+ */
 export async function resetDatabaseToDemo(): Promise<void> {
-  localStorage.setItem('app_has_initialized_v1', 'true');
-
   setLocalCache(CACHE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
   setLocalCache(CACHE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
   setLocalCache(CACHE_KEYS.TRANSACTIONS, INITIAL_TRANSACTIONS);
@@ -956,5 +1161,179 @@ export async function resetDatabaseToDemo(): Promise<void> {
   notifyCustomers();
   notifyProfile();
 
-  await seedInitialData(true);
+  if (isSupabaseConfigured) {
+    try {
+      const bizId = await getActiveBusinessId();
+
+      const catRows = INITIAL_CATEGORIES.map((c) => ({
+        id: c.id,
+        business_id: bizId,
+        name: c.name,
+        color: c.color,
+      }));
+      await supabase.from('categories').upsert(catRows, { onConflict: 'id' });
+
+      const prodRows = INITIAL_PRODUCTS.map((p) => ({
+        id: p.id,
+        business_id: bizId,
+        name: p.name,
+        sku: p.sku,
+        category: p.category,
+        buy_price: p.buyPrice,
+        sell_price: p.sellPrice,
+        stock_quantity: p.stockQuantity,
+        min_stock_threshold: p.minStockThreshold,
+        unit: p.unit,
+        barcode: p.barcode,
+        created_at: p.createdAt,
+        updated_at: p.updatedAt,
+      }));
+      await supabase.from('products').upsert(prodRows, { onConflict: 'id' });
+
+      const custRows = INITIAL_CUSTOMERS.map((c) => ({
+        id: c.id,
+        business_id: bizId,
+        name: c.name,
+        phone: c.phone,
+        email: c.email,
+        loyalty_points: c.loyaltyPoints,
+        total_spent: c.totalSpent,
+        order_count: c.orderCount,
+        debt_balance: c.debtBalance,
+        tier: c.tier,
+        last_visit: c.lastVisit,
+      }));
+      await supabase.from('customers').upsert(custRows, { onConflict: 'id' });
+
+      const txRows = INITIAL_TRANSACTIONS.map((t) => ({
+        id: t.id,
+        business_id: bizId,
+        type: t.type,
+        amount: t.amount,
+        cogs: t.cogs || 0,
+        gross_profit: t.grossProfit || 0,
+        net_profit: t.netProfit || 0,
+        date: t.date,
+        description: t.description,
+        category: t.category || '',
+        payment_method: t.paymentMethod || 'cash',
+        customer_name: t.customerName || '',
+        items: t.items || [],
+        created_at: t.createdAt,
+      }));
+      await supabase.from('transactions').upsert(txRows, { onConflict: 'id' });
+    } catch (e) {
+      console.warn('Demo data sync note:', e);
+    }
+  }
+}
+
+/**
+ * Migration Utility: Safely synchronize local records into Supabase PostgreSQL
+ */
+export async function migrateLocalDataToSupabase(): Promise<{
+  success: boolean;
+  counts: { products: number; transactions: number; customers: number; categories: number };
+  message: string;
+}> {
+  const products = getProductsCache();
+  const transactions = getTransactionsCache();
+  const customers = getCustomersCache();
+  const categories = getCategoriesCache();
+
+  try {
+    const bizId = await getActiveBusinessId();
+
+    if (categories.length > 0) {
+      const catRows = categories.map((c) => ({
+        id: c.id,
+        business_id: bizId,
+        name: c.name,
+        color: c.color,
+      }));
+      const { error: catErr } = await supabase.from('categories').upsert(catRows, { onConflict: 'id' });
+      if (catErr) throw catErr;
+    }
+
+    if (products.length > 0) {
+      const prodRows = products.map((p) => ({
+        id: p.id,
+        business_id: bizId,
+        name: p.name,
+        sku: p.sku,
+        category: p.category,
+        buy_price: p.buyPrice,
+        sell_price: p.sellPrice,
+        stock_quantity: p.stockQuantity,
+        min_stock_threshold: p.minStockThreshold,
+        unit: p.unit,
+        barcode: p.barcode,
+        notes: p.notes,
+        created_at: p.createdAt,
+        updated_at: p.updatedAt,
+      }));
+      const { error: prodErr } = await supabase.from('products').upsert(prodRows, { onConflict: 'id' });
+      if (prodErr) throw prodErr;
+    }
+
+    if (customers.length > 0) {
+      const custRows = customers.map((c) => ({
+        id: c.id,
+        business_id: bizId,
+        name: c.name,
+        phone: c.phone,
+        email: c.email,
+        loyalty_points: c.loyaltyPoints,
+        total_spent: c.totalSpent,
+        order_count: c.orderCount,
+        debt_balance: c.debtBalance,
+        tier: c.tier,
+        last_visit: c.lastVisit,
+        notes: c.notes,
+        created_at: c.createdAt,
+        updated_at: c.updatedAt,
+      }));
+      const { error: custErr } = await supabase.from('customers').upsert(custRows, { onConflict: 'id' });
+      if (custErr) throw custErr;
+    }
+
+    if (transactions.length > 0) {
+      const txRows = transactions.map((t) => ({
+        id: t.id,
+        business_id: bizId,
+        type: t.type,
+        amount: t.amount,
+        cogs: t.cogs || 0,
+        gross_profit: t.grossProfit || 0,
+        net_profit: t.netProfit || 0,
+        date: t.date,
+        description: t.description,
+        category: t.category || '',
+        payment_method: t.paymentMethod || 'cash',
+        customer_name: t.customerName || '',
+        items: t.items || [],
+        created_at: t.createdAt,
+      }));
+      const { error: txErr } = await supabase.from('transactions').upsert(txRows, { onConflict: 'id' });
+      if (txErr) throw txErr;
+    }
+
+    return {
+      success: true,
+      counts: {
+        products: products.length,
+        transactions: transactions.length,
+        customers: customers.length,
+        categories: categories.length,
+      },
+      message: `Successfully synchronized ${products.length} products, ${transactions.length} transactions, and ${customers.length} customers to Supabase!`,
+    };
+  } catch (err: any) {
+    console.error('Migration error:', err);
+    return {
+      success: false,
+      counts: { products: 0, transactions: 0, customers: 0, categories: 0 },
+      message: err.message || 'Migration to Supabase encountered an error.',
+    };
+  }
 }

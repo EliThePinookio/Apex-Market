@@ -179,14 +179,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </div>
                 <div>
                   <div className="flex items-center space-x-2">
-                    <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
+                    <h2 className="font-display text-base sm:text-lg font-semibold text-white tracking-[-0.02em]">
                       Inventory Replenishment Alert
                     </h2>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-[0.04em] bg-rose-500/20 text-rose-300 border border-rose-500/40">
                       Action Required
                     </span>
                   </div>
-                  <p className="text-xs text-amber-200/80 font-medium mt-0.5">
+                  <p className="text-xs text-amber-200/80 font-normal mt-0.5 leading-relaxed">
                     {outOfStockCount > 0 && `${outOfStockCount} Out of Stock • `}
                     {criticalWarningCount > 0 && `${criticalWarningCount} Low Stock Thresholds `}
                     • Ranked by urgency and shortage severity
@@ -198,7 +198,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => onNavigateToInventory(true)}
-                className="px-4 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center space-x-1.5 shadow-lg shadow-amber-500/20 shrink-0 cursor-pointer self-start sm:self-auto"
+                className="px-4 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-xs flex items-center space-x-1.5 shadow-lg shadow-amber-500/20 shrink-0 cursor-pointer self-start sm:self-auto transition-all"
               >
                 <span>View All ({rankedLowStockProducts.length}) Low Stock</span>
                 <ChevronRight className="w-4 h-4" />
@@ -219,21 +219,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   >
                     <div className="flex items-start justify-between">
                       <div>
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400/90 block mb-0.5">
+                        <span className="text-[10px] font-medium uppercase tracking-[0.04em] text-amber-400/90 block mb-0.5">
                           {prod.category}
                         </span>
-                        <h3 className="text-sm font-extrabold text-white truncate max-w-[170px]">
+                        <h3 className="font-display text-sm font-semibold text-white truncate max-w-[170px]">
                           {prod.name}
                         </h3>
                       </div>
 
                       {isOut ? (
-                        <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-rose-500 text-white shadow-xs">
+                        <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-rose-500 text-white shadow-xs">
                           <Flame className="w-3 h-3" />
                           <span>Out of Stock</span>
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-400/30">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-400/30">
                           {pct}% Stock Left
                         </span>
                       )}
@@ -241,9 +241,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                     {/* Stock Level Progress Bar */}
                     <div className="space-y-1">
-                      <div className="flex justify-between text-[11px] font-mono">
+                      <div className="flex justify-between text-[11px] font-mono tabular-nums">
                         <span className="text-slate-400">Current Qty:</span>
-                        <span className={isOut ? 'text-rose-400 font-extrabold' : 'text-amber-300 font-bold'}>
+                        <span className={isOut ? 'text-rose-400 font-semibold' : 'text-amber-300 font-medium'}>
                           {prod.stockQuantity} / {prod.minStockThreshold} {prod.unit}
                         </span>
                       </div>
@@ -262,7 +262,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => openRefillModal(prod)}
-                      className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center justify-center space-x-1.5 shadow-md shadow-emerald-600/20 cursor-pointer"
+                      className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center justify-center space-x-1.5 shadow-md shadow-emerald-600/20 cursor-pointer"
                     >
                       <PackagePlus className="w-4 h-4" />
                       <span>Quick Refill Stock</span>
@@ -285,23 +285,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           {/* Hero Top Bar: Title & Timeframe Selector */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-emerald-800/50 relative z-10">
             <div>
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[11px] font-bold tracking-wide uppercase mb-2 backdrop-blur-md">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[11px] font-semibold tracking-wide uppercase mb-2 backdrop-blur-md">
                 <Zap className="w-3.5 h-3.5 text-emerald-400 animate-bounce" />
                 <span>Executive Live Business Monitor</span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-[-0.03em]">
                 {profile.businessName} Overview
               </h1>
             </div>
 
             {/* Timeframe Tab Switcher */}
-            <div className="flex items-center bg-slate-950/60 p-1.5 rounded-2xl border border-emerald-800/60 text-xs font-semibold backdrop-blur-md self-start sm:self-auto">
+            <div className="flex items-center bg-slate-950/60 p-1.5 rounded-2xl border border-emerald-800/60 text-xs font-medium backdrop-blur-md self-start sm:self-auto">
               {(['today', 'week', 'month', 'all'] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setTimeframe(tab)}
                   className={`relative px-3.5 py-1.5 rounded-xl transition-all capitalize cursor-pointer z-10 ${
-                    timeframe === tab ? 'text-emerald-950 font-black' : 'text-emerald-200/80 hover:text-white'
+                    timeframe === tab ? 'text-emerald-950 font-semibold' : 'text-emerald-200/80 hover:text-white'
                   }`}
                 >
                   {timeframe === tab && (
@@ -321,23 +321,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6 relative z-10 items-center">
             {/* Column 1: Primary Revenue Number */}
             <div className="lg:col-span-5 space-y-3">
-              <div className="flex items-center space-x-2 text-emerald-300 text-xs font-bold uppercase tracking-wider">
+              <div className="flex items-center space-x-2 text-emerald-300 text-xs font-medium uppercase tracking-[0.04em]">
                 <TrendingUp className="w-4 h-4 text-emerald-400" />
                 <span>Period Revenue Velocity</span>
               </div>
 
-              <div className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white font-mono tabular-nums flex items-baseline space-x-1">
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-[-0.03em] text-white font-sans tabular-nums flex items-baseline space-x-1">
                 <span>{cur}</span>
                 <AnimatedNumber value={periodRevenue} duration={800} />
               </div>
 
               <div className="flex items-center space-x-3 text-xs pt-1">
-                <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-medium border border-emerald-500/30">
                   <ArrowUpRight className="w-3.5 h-3.5 mr-1" />
                   {periodSalesCount} Sales Logged
                 </span>
-                <span className="text-emerald-200/70 font-medium">
-                  Avg Basket: <strong className="text-white font-mono">{cur}{avgBasket.toFixed(2)}</strong>
+                <span className="text-emerald-200/70 font-normal">
+                  Avg Basket: <strong className="text-white font-semibold font-sans tabular-nums">{cur}{avgBasket.toFixed(2)}</strong>
                 </span>
               </div>
             </div>
@@ -353,18 +353,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   gradientEnd="#34d399"
                   bgStroke="rgba(6, 78, 59, 0.6)"
                 >
-                  <span className="text-xs font-black text-emerald-300 font-mono">{targetProgress}%</span>
+                  <span className="text-xs font-bold text-emerald-300 font-mono tabular-nums">{targetProgress}%</span>
                 </AnimatedProgressRing>
 
                 <div className="space-y-1">
-                  <div className="flex items-center space-x-1.5 text-xs font-bold text-emerald-200">
+                  <div className="flex items-center space-x-1.5 text-xs font-medium text-emerald-200">
                     <Target className="w-4 h-4 text-emerald-400" />
                     <span>Daily Revenue Target</span>
                   </div>
-                  <div className="text-sm font-extrabold text-white font-mono">
+                  <div className="text-sm font-semibold text-white font-sans tabular-nums">
                     {cur}{periodRevenue.toFixed(0)} / {cur}{dailyTarget}
                   </div>
-                  <p className="text-[10px] text-emerald-300/80">
+                  <p className="text-[10px] text-emerald-300/80 font-medium">
                     {targetProgress >= 100 ? '🎉 Goal Achieved!' : `${100 - targetProgress}% to goal`}
                   </p>
                 </div>
@@ -373,9 +373,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             {/* Column 3: Mini Trend Chart Visualizer */}
             <div className="lg:col-span-4 h-24 bg-emerald-950/40 p-3 rounded-2xl border border-emerald-800/40 backdrop-blur-md flex flex-col justify-between">
-              <div className="flex items-center justify-between text-[11px] font-bold text-emerald-300 px-1">
+              <div className="flex items-center justify-between text-[11px] font-medium text-emerald-300 px-1">
                 <span>Sales Velocity Curve</span>
-                <span className="text-[10px] text-emerald-400 font-mono">Recent 10 Sales</span>
+                <span className="text-[10px] text-emerald-400 font-mono tabular-nums">Recent 10 Sales</span>
               </div>
               {sparklineData.length > 0 ? (
                 <div className="w-full h-16">
@@ -391,7 +391,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         content={({ active, payload }) => {
                           if (active && payload && payload.length) {
                             return (
-                              <div className="bg-slate-900 border border-emerald-500/40 text-emerald-300 p-1.5 rounded-lg text-[10px] font-mono shadow-md">
+                              <div className="bg-slate-900 border border-emerald-500/40 text-emerald-300 p-1.5 rounded-lg text-[10px] font-mono tabular-nums shadow-md">
                                 {cur}{payload[0].value}
                               </div>
                             );
@@ -411,7 +411,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <div className="text-center py-4 text-xs text-emerald-400/60">No sales graph yet</div>
+                <div className="text-center py-4 text-xs text-emerald-400/60 font-medium">No sales graph yet</div>
               )}
             </div>
           </div>
@@ -427,19 +427,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <TrendingUp className="w-20 h-20" />
             </div>
             <div>
-              <div className="flex items-center justify-between text-xs font-bold text-slate-500 mb-1">
+              <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-1">
                 <span>Total Revenue</span>
                 <span className="p-1 rounded-lg bg-emerald-100/80 text-emerald-700 border border-emerald-200">
                   <ArrowUpRight className="w-3.5 h-3.5" />
                 </span>
               </div>
-              <div className="text-xl md:text-2xl font-black text-slate-900 tracking-tight font-mono tabular-nums">
+              <div className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-[-0.025em] font-sans tabular-nums">
                 {cur}<AnimatedNumber value={summary.totalRevenue} />
               </div>
             </div>
-            <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium">
+            <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium tabular-nums">
               <span>COGS: {cur}{summary.totalCOGS.toFixed(0)}</span>
-              <span className="text-emerald-700 font-bold">Gross: {cur}{summary.grossProfit.toFixed(0)}</span>
+              <span className="text-emerald-700 font-semibold">Gross: {cur}{summary.grossProfit.toFixed(0)}</span>
             </div>
           </div>
         </TiltCard>
@@ -451,19 +451,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <DollarSign className={`w-20 h-20 ${summary.netProfit >= 0 ? 'text-emerald-700' : 'text-rose-700'}`} />
             </div>
             <div>
-              <div className="flex items-center justify-between text-xs font-bold text-slate-500 mb-1">
+              <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-1">
                 <span>Net Profit</span>
-                <span className={`p-1 px-1.5 rounded-md text-[11px] font-extrabold ${summary.netProfit >= 0 ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-rose-100 text-rose-800 border border-rose-200'}`}>
+                <span className={`p-1 px-1.5 rounded-md text-[11px] font-semibold ${summary.netProfit >= 0 ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-rose-100 text-rose-800 border border-rose-200'}`}>
                   {profitMarginPercent}%
                 </span>
               </div>
-              <div className={`text-xl md:text-2xl font-black tracking-tight font-mono tabular-nums ${summary.netProfit >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+              <div className={`text-2xl sm:text-3xl font-bold tracking-[-0.025em] font-sans tabular-nums ${summary.netProfit >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
                 {cur}<AnimatedNumber value={summary.netProfit} />
               </div>
             </div>
             <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium">
               <span>Margin Rate</span>
-              <span className="text-slate-800 font-bold">{profitMarginPercent}% Net</span>
+              <span className="text-slate-800 font-semibold">{profitMarginPercent}% Net</span>
             </div>
           </div>
         </TiltCard>
@@ -472,19 +472,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <TiltCard elevation="floating" onClick={onNavigateToTransactions}>
           <div className="p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/80 to-rose-50/20 border border-rose-200/90 flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between text-xs font-bold text-slate-500 mb-1">
+              <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-1">
                 <span>Total Expenses</span>
                 <span className="p-1 rounded-lg bg-rose-100 text-rose-700 border border-rose-200">
                   <ArrowDownRight className="w-3.5 h-3.5" />
                 </span>
               </div>
-              <div className="text-xl md:text-2xl font-black text-rose-600 tracking-tight font-mono tabular-nums">
+              <div className="text-2xl sm:text-3xl font-bold text-rose-600 tracking-[-0.025em] font-sans tabular-nums">
                 {cur}<AnimatedNumber value={summary.totalExpenses} />
               </div>
             </div>
-            <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+            <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium">
               <span>Expense Logs</span>
-              <span className="text-slate-800 font-bold">{transactions.filter(t => t.type === 'expense').length} items</span>
+              <span className="text-slate-800 font-semibold">{transactions.filter(t => t.type === 'expense').length} items</span>
             </div>
           </div>
         </TiltCard>
@@ -493,19 +493,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <TiltCard elevation="floating" onClick={onNavigateToTransactions}>
           <div className="p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/80 to-amber-50/20 border border-amber-200/90 flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between text-xs font-bold text-slate-500 mb-1">
+              <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-1">
                 <span>Owner Capital</span>
                 <span className="p-1 rounded-lg bg-amber-100 text-amber-800 border border-amber-200">
                   <PiggyBank className="w-3.5 h-3.5" />
                 </span>
               </div>
-              <div className="text-xl md:text-2xl font-black text-amber-800 tracking-tight font-mono tabular-nums">
+              <div className="text-2xl sm:text-3xl font-bold text-amber-800 tracking-[-0.025em] font-sans tabular-nums">
                 {cur}<AnimatedNumber value={summary.totalCapital} />
               </div>
             </div>
-            <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+            <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium">
               <span>Capital Reserve</span>
-              <span className="text-amber-800 font-bold">Active Reserve</span>
+              <span className="text-amber-800 font-semibold">Active Reserve</span>
             </div>
           </div>
         </TiltCard>
@@ -522,11 +522,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <Boxes className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-slate-900">Inventory Asset Valuation</h3>
-                  <p className="text-xs text-slate-500 font-medium">{products.length} Active Catalog SKUs</p>
+                  <h3 className="font-display text-base font-semibold text-slate-900 tracking-[-0.02em]">Inventory Asset Valuation</h3>
+                  <p className="text-xs text-slate-500 font-normal">{products.length} Active Catalog SKUs</p>
                 </div>
               </div>
-              <span className="text-xs text-emerald-700 font-extrabold flex items-center space-x-1 group-hover:underline">
+              <span className="text-xs text-emerald-700 font-semibold flex items-center space-x-1 group-hover:underline">
                 <span>Manage Inventory</span>
                 <ArrowUpRight className="w-3.5 h-3.5" />
               </span>
@@ -534,20 +534,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100">
               <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs">
-                <span className="text-slate-500 block text-[10px] uppercase font-bold tracking-wider mb-0.5">Asset Cost Valuation</span>
-                <span className="text-base font-extrabold text-slate-900 font-mono tabular-nums">
+                <span className="text-slate-500 block text-[10px] uppercase font-medium tracking-[0.04em] mb-0.5">Asset Cost Valuation</span>
+                <span className="text-lg font-bold text-slate-900 font-sans tabular-nums tracking-tight">
                   {cur}<AnimatedNumber value={summary.totalInventoryValuation} />
                 </span>
               </div>
               <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs">
-                <span className="text-slate-500 block text-[10px] uppercase font-bold tracking-wider mb-0.5">Potential Revenue</span>
-                <span className="text-base font-extrabold text-emerald-700 font-mono tabular-nums">
+                <span className="text-slate-500 block text-[10px] uppercase font-medium tracking-[0.04em] mb-0.5">Potential Revenue</span>
+                <span className="text-lg font-bold text-emerald-700 font-sans tabular-nums tracking-tight">
                   {cur}<AnimatedNumber value={summary.totalPotentialRevenue} />
                 </span>
               </div>
               <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs col-span-2 sm:col-span-1">
-                <span className="text-slate-500 block text-[10px] uppercase font-bold tracking-wider mb-0.5">Stock Status</span>
-                <span className={`text-base font-extrabold ${rankedLowStockProducts.length > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
+                <span className="text-slate-500 block text-[10px] uppercase font-medium tracking-[0.04em] mb-0.5">Stock Status</span>
+                <span className={`text-base font-semibold ${rankedLowStockProducts.length > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
                   {rankedLowStockProducts.length > 0 ? `${rankedLowStockProducts.length} Low Stock` : 'Healthy Stock'}
                 </span>
               </div>
@@ -557,7 +557,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
         {/* Quick Launch Actions */}
         <div className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-[0_12px_30px_-5px_rgba(15,23,42,0.06)] flex flex-col justify-between space-y-3">
-          <h3 className="text-xs font-black text-slate-500 uppercase tracking-wider">
+          <h3 className="font-display text-xs font-semibold text-slate-500 uppercase tracking-wider">
             Quick Launch Workspace
           </h3>
 
@@ -569,7 +569,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-200 text-emerald-900 transition-all shadow-2xs cursor-pointer"
             >
               <ShoppingBag className="w-5 h-5 mb-1.5 text-emerald-700" />
-              <span className="text-xs font-bold">POS Terminal</span>
+              <span className="text-xs font-semibold">POS Terminal</span>
             </motion.button>
 
             <motion.button
@@ -579,7 +579,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-teal-50 hover:bg-teal-100/80 border border-teal-200 text-teal-900 transition-all shadow-2xs cursor-pointer"
             >
               <Package className="w-5 h-5 mb-1.5 text-teal-700" />
-              <span className="text-xs font-bold">Inventory SKUs</span>
+              <span className="text-xs font-semibold">Inventory SKUs</span>
             </motion.button>
 
             <motion.button
@@ -589,7 +589,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-800 transition-all shadow-2xs cursor-pointer"
             >
               <PlusCircle className="w-5 h-5 mb-1.5 text-emerald-600" />
-              <span className="text-xs font-bold">Quick Entry</span>
+              <span className="text-xs font-semibold">Quick Entry</span>
             </motion.button>
 
             <motion.button
@@ -599,7 +599,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-amber-50 hover:bg-amber-100/80 border border-amber-200 text-amber-900 transition-all shadow-2xs cursor-pointer"
             >
               <BarChart3 className="w-5 h-5 mb-1.5 text-amber-700" />
-              <span className="text-xs font-bold">P&L Report</span>
+              <span className="text-xs font-semibold">P&L Report</span>
             </motion.button>
           </div>
         </div>
@@ -613,10 +613,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Top Selling Products */}
         <div className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-[0_12px_30px_-5px_rgba(15,23,42,0.06)] space-y-3">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 className="text-xs font-black text-slate-500 uppercase tracking-wider">
+            <h3 className="font-display text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Top Catalog Performers
             </h3>
-            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Volume Ranked</span>
+            <span className="text-slate-400 text-[10px] font-medium uppercase tracking-[0.04em]">Volume Ranked</span>
           </div>
 
           {topSellingList.length > 0 ? (
@@ -628,16 +628,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 hover:bg-emerald-50/50 border border-slate-200/70 hover:border-emerald-300 text-xs transition-all"
                 >
                   <div className="flex items-center space-x-3 min-w-0">
-                    <span className="w-7 h-7 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-xs font-black text-emerald-800 shrink-0">
+                    <span className="w-7 h-7 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-xs font-bold text-emerald-800 shrink-0">
                       #{idx + 1}
                     </span>
-                    <span className="font-bold text-slate-800 truncate">
+                    <span className="font-medium text-slate-800 truncate">
                       {item.name}
                     </span>
                   </div>
                   <div className="text-right shrink-0">
-                    <span className="font-extrabold text-emerald-700 font-mono tabular-nums">{cur}{item.total.toFixed(2)}</span>
-                    <span className="block text-[10px] text-slate-500 font-medium">{item.qty} units sold</span>
+                    <span className="font-semibold text-emerald-700 font-sans tabular-nums text-xs sm:text-sm">{cur}{item.total.toFixed(2)}</span>
+                    <span className="block text-[10px] text-slate-500 font-normal">{item.qty} units sold</span>
                   </div>
                 </motion.div>
               ))}
@@ -653,12 +653,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Recent Activity Log */}
         <div className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-[0_12px_30px_-5px_rgba(15,23,42,0.06)] space-y-3">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 className="text-xs font-black text-slate-500 uppercase tracking-wider">
+            <h3 className="font-display text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Recent Transactions
             </h3>
             <button
               onClick={onNavigateToTransactions}
-              className="text-xs text-emerald-700 hover:text-emerald-800 font-extrabold hover:underline cursor-pointer"
+              className="text-xs text-emerald-700 hover:text-emerald-800 font-semibold hover:underline cursor-pointer"
             >
               View Full Ledger ({transactions.length}) &rarr;
             </button>
@@ -673,7 +673,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               >
                 <div className="flex items-center space-x-3 min-w-0">
                   <span
-                    className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase shrink-0 ${
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold uppercase tracking-[0.04em] shrink-0 ${
                       tx.type === 'sale'
                         ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                         : tx.type === 'expense'
@@ -684,14 +684,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     {tx.type}
                   </span>
                   <div className="min-w-0">
-                    <p className="font-bold text-slate-800 truncate">{tx.description}</p>
-                    <p className="text-[10px] text-slate-400 font-medium">
+                    <p className="font-medium text-slate-800 truncate">{tx.description}</p>
+                    <p className="text-[10px] text-slate-400 font-normal">
                       {new Date(tx.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                 </div>
 
-                <div className="text-right font-extrabold font-mono tabular-nums shrink-0">
+                <div className="text-right font-semibold font-sans tabular-nums text-xs sm:text-sm shrink-0">
                   <span
                     className={
                       tx.type === 'sale'

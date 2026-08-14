@@ -1,4 +1,4 @@
-const CACHE_NAME = 'apex-retail-v2';
+const CACHE_NAME = 'beannel-pwa-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',

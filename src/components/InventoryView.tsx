@@ -174,22 +174,22 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       <TiltCard elevation="hero" glowColor="teal">
         <div className="p-6 rounded-3xl bg-gradient-to-br from-slate-900 via-teal-950 to-emerald-950 text-white shadow-2xl border border-teal-800/40 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1 relative z-10">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-teal-500/20 border border-teal-400/30 text-teal-300 text-[11px] font-extrabold uppercase">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-teal-500/20 border border-teal-400/30 text-teal-300 text-[11px] font-semibold uppercase tracking-[0.04em]">
               <Boxes className="w-3.5 h-3.5 text-teal-400" />
               <span>Catalog & Inventory Engine</span>
             </div>
-            <h2 className="text-2xl font-black tracking-tight text-white">
+            <h2 className="font-display text-2xl font-bold tracking-[-0.03em] text-white">
               Stock Inventory Hub
             </h2>
-            <p className="text-xs text-teal-200/80 font-medium">
-              {products.length} Registered Products • Total Asset Value: <strong className="font-mono text-white">{cur}{totalValuation.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong>
+            <p className="text-xs text-teal-200/80 font-normal">
+              {products.length} Registered Products • Total Asset Value: <strong className="font-sans font-semibold text-white tabular-nums">{cur}{totalValuation.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong>
             </p>
           </div>
 
           <div className="flex items-center space-x-2.5 relative z-10">
             <button
               onClick={() => exportInventoryToCSV(products, cur)}
-              className="flex items-center space-x-1.5 px-4 py-2.5 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-200 text-xs font-bold transition-all shadow-md cursor-pointer"
+              className="flex items-center space-x-1.5 px-4 py-2.5 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-200 text-xs font-medium transition-all shadow-md cursor-pointer"
             >
               <Download className="w-4 h-4 text-teal-400" />
               <span>Export CSV</span>
@@ -199,9 +199,9 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
               whileTap={{ scale: 0.97 }}
               onClick={openAddModal}
               id="add-new-product-btn"
-              className="flex items-center space-x-1.5 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
+              className="flex items-center space-x-1.5 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-semibold text-xs shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
             >
-              <Plus className="w-4 h-4 stroke-[3]" />
+              <Plus className="w-4 h-4 stroke-[2.5]" />
               <span>Add New Item</span>
             </motion.button>
           </div>
@@ -225,9 +225,9 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
         <div className="flex items-center space-x-1.5 p-1.5 bg-white rounded-2xl border border-slate-200/80 text-xs shrink-0 shadow-sm">
           <button
             onClick={() => setStockStatusFilter('all')}
-            className={`px-3.5 py-1.5 rounded-xl font-black transition-all active:scale-95 cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-xl font-medium transition-all active:scale-95 cursor-pointer ${
               stockStatusFilter === 'all'
-                ? 'bg-slate-900 text-white shadow-xs'
+                ? 'bg-slate-900 text-white font-semibold shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -235,9 +235,9 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
           </button>
           <button
             onClick={() => setStockStatusFilter('low')}
-            className={`px-3.5 py-1.5 rounded-xl font-black transition-all active:scale-95 cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-xl font-medium transition-all active:scale-95 cursor-pointer ${
               stockStatusFilter === 'low'
-                ? 'bg-amber-500 text-slate-950 shadow-xs'
+                ? 'bg-amber-500 text-slate-950 font-semibold shadow-xs'
                 : 'text-amber-700 hover:text-amber-800'
             }`}
           >
@@ -245,9 +245,9 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
           </button>
           <button
             onClick={() => setStockStatusFilter('out')}
-            className={`px-3.5 py-1.5 rounded-xl font-black transition-all active:scale-95 cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-xl font-medium transition-all active:scale-95 cursor-pointer ${
               stockStatusFilter === 'out'
-                ? 'bg-rose-600 text-white shadow-xs'
+                ? 'bg-rose-600 text-white font-semibold shadow-xs'
                 : 'text-rose-700 hover:text-rose-800'
             }`}
           >
@@ -260,7 +260,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       <div className="hidden md:block bg-white rounded-3xl border border-slate-200/90 shadow-[0_15px_35px_-8px_rgba(15,23,42,0.06)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-slate-700">
-            <thead className="bg-slate-50/90 text-[10px] uppercase font-black text-slate-500 border-b border-slate-200/80">
+            <thead className="bg-slate-50/90 text-[10px] uppercase font-semibold tracking-[0.04em] text-slate-500 border-b border-slate-200/80">
               <tr>
                 <th className="py-4 px-5">SKU / Item Name</th>
                 <th className="py-4 px-4">Category</th>
@@ -284,25 +284,25 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                     className="hover:bg-slate-50/80 transition-colors group"
                   >
                     <td className="py-3.5 px-5">
-                      <div className="font-extrabold text-slate-900 group-hover:text-emerald-700 transition-colors">
+                      <div className="font-semibold text-slate-900 group-hover:text-emerald-700 transition-colors">
                         {p.name}
                       </div>
-                      <span className="font-mono text-[10px] text-slate-400">{p.sku}</span>
+                      <span className="font-sans text-[10px] text-slate-400">{p.sku}</span>
                     </td>
 
                     <td className="py-3.5 px-4">
-                      <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 text-[10px] font-extrabold border border-emerald-200">
+                      <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 text-[10px] font-semibold border border-emerald-200">
                         {p.category}
                       </span>
                     </td>
 
                     <td className="py-3.5 px-4 text-center">
                       <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-black font-mono ${
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium font-sans tabular-nums ${
                           isOut
-                            ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                            ? 'bg-rose-100 text-rose-800 border border-rose-200 font-semibold'
                             : isLow
-                            ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                            ? 'bg-amber-100 text-amber-800 border border-amber-200 font-semibold'
                             : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                         }`}
                       >
@@ -310,15 +310,15 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                       </span>
                     </td>
 
-                    <td className="py-3.5 px-4 text-right font-mono tabular-nums font-semibold text-slate-600">
+                    <td className="py-3.5 px-4 text-right font-sans tabular-nums font-normal text-slate-600">
                       {cur}{p.buyPrice.toFixed(2)}
                     </td>
 
-                    <td className="py-3.5 px-4 text-right font-mono tabular-nums font-black text-emerald-700">
+                    <td className="py-3.5 px-4 text-right font-sans tabular-nums font-semibold text-emerald-700">
                       {cur}{p.sellPrice.toFixed(2)}
                     </td>
 
-                    <td className="py-3.5 px-4 text-right font-mono tabular-nums font-extrabold text-emerald-800">
+                    <td className="py-3.5 px-4 text-right font-sans tabular-nums font-semibold text-emerald-800">
                       +{margin}%
                     </td>
 
@@ -326,7 +326,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                       <div className="flex items-center justify-center space-x-2">
                         <button
                           onClick={() => openRefillModal(p)}
-                          className="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-extrabold active:scale-95 transition-all text-[11px] cursor-pointer"
+                          className="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-semibold active:scale-95 transition-all text-[11px] cursor-pointer"
                           title="Refill Stock"
                         >
                           <PackagePlus className="w-3.5 h-3.5 text-emerald-600" />
@@ -370,20 +370,20 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center space-x-2 mb-1">
-                      <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 text-[10px] font-bold border border-emerald-200">
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 text-[10px] font-semibold border border-emerald-200">
                         {p.category}
                       </span>
-                      <span className="text-[10px] text-slate-400 font-mono">
+                      <span className="text-[10px] text-slate-400 font-sans">
                         {p.sku}
                       </span>
                     </div>
-                    <h3 className="text-sm font-black text-slate-900">{p.name}</h3>
+                    <h3 className="text-sm font-semibold text-slate-900">{p.name}</h3>
                   </div>
 
                   {/* Stock Status Badge */}
                   <div className="text-right">
                     <span
-                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black ${
+                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold font-sans tabular-nums ${
                         isOut
                           ? 'bg-rose-100 text-rose-800 border border-rose-200'
                           : isLow
@@ -397,18 +397,18 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                 </div>
 
                 {/* Price Details Grid */}
-                <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono tabular-nums">
+                <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-sans tabular-nums">
                   <div>
-                    <span className="block text-[10px] text-slate-400 uppercase font-bold font-sans">Cost</span>
-                    <span className="font-bold text-slate-700">{cur}{p.buyPrice.toFixed(2)}</span>
+                    <span className="block text-[10px] text-slate-400 uppercase font-semibold font-sans">Cost</span>
+                    <span className="font-medium text-slate-700">{cur}{p.buyPrice.toFixed(2)}</span>
                   </div>
                   <div>
-                    <span className="block text-[10px] text-slate-400 uppercase font-bold font-sans">Sell</span>
-                    <span className="font-bold text-emerald-700">{cur}{p.sellPrice.toFixed(2)}</span>
+                    <span className="block text-[10px] text-slate-400 uppercase font-semibold font-sans">Sell</span>
+                    <span className="font-semibold text-emerald-700">{cur}{p.sellPrice.toFixed(2)}</span>
                   </div>
                   <div>
-                    <span className="block text-[10px] text-slate-400 uppercase font-bold font-sans">Margin</span>
-                    <span className="font-bold text-emerald-800">+{margin}%</span>
+                    <span className="block text-[10px] text-slate-400 uppercase font-semibold font-sans">Margin</span>
+                    <span className="font-semibold text-emerald-800">+{margin}%</span>
                   </div>
                 </div>
 
@@ -416,7 +416,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                 <div className="flex items-center justify-between pt-1 text-xs border-t border-slate-100">
                   <button
                     onClick={() => openRefillModal(p)}
-                    className="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-bold active:scale-95 transition-all"
+                    className="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-semibold active:scale-95 transition-all"
                   >
                     <PackagePlus className="w-3.5 h-3.5 text-emerald-600" />
                     <span>Refill Stock</span>
@@ -448,7 +448,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       {filteredProducts.length === 0 && (
         <div className="py-12 text-center text-slate-400 space-y-2 bg-white rounded-3xl border border-slate-200">
           <Package className="w-10 h-10 mx-auto opacity-40 text-slate-400" />
-          <p className="text-xs text-slate-500 font-medium">No matching inventory items found.</p>
+          <p className="text-xs text-slate-500 font-normal">No matching inventory items found.</p>
         </div>
       )}
 
@@ -463,13 +463,13 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
               className="bg-white border border-slate-200 w-full max-w-md rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto space-y-4"
             >
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="text-base font-black text-slate-900 flex items-center space-x-2">
+                <h3 className="font-display text-base font-semibold text-slate-900 flex items-center space-x-2 tracking-[-0.02em]">
                   <Package className="w-5 h-5 text-emerald-600" />
                   <span>{editingProduct.id ? 'Edit Product SKU' : 'Register New Catalog Item'}</span>
                 </h3>
                 <button
                   onClick={() => setIsProductModalOpen(false)}
-                  className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                  className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -477,7 +477,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
 
               <form onSubmit={handleSaveProduct} className="space-y-3 text-xs">
                 <div>
-                  <label className="block text-slate-700 font-bold mb-1">
+                  <label className="block text-slate-700 font-medium mb-1">
                     Product Name *
                   </label>
                   <input
@@ -492,7 +492,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-slate-700 font-bold mb-1">
+                    <label className="block text-slate-700 font-medium mb-1">
                       Category
                     </label>
                     <select
@@ -509,21 +509,21 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-slate-700 font-bold mb-1">
+                    <label className="block text-slate-700 font-medium mb-1">
                       SKU Code
                     </label>
                     <input
                       type="text"
                       value={editingProduct.sku || ''}
                       onChange={(e) => setEditingProduct({ ...editingProduct, sku: e.target.value })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 font-mono focus:outline-none focus:border-emerald-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 font-sans focus:outline-none focus:border-emerald-500"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-slate-700 font-bold mb-1">
+                    <label className="block text-slate-700 font-medium mb-1">
                       Cost Price ({cur}) *
                     </label>
                     <input
@@ -533,11 +533,11 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                       placeholder="0.00"
                       value={editingProduct.buyPrice === 0 ? '' : editingProduct.buyPrice ?? ''}
                       onChange={(e) => setEditingProduct({ ...editingProduct, buyPrice: parseFloat(e.target.value) || 0 })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 focus:outline-none focus:border-emerald-500 font-mono"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 focus:outline-none focus:border-emerald-500 font-sans tabular-nums"
                     />
                   </div>
                   <div>
-                    <label className="block text-slate-700 font-bold mb-1">
+                    <label className="block text-slate-700 font-medium mb-1">
                       Selling Price ({cur}) *
                     </label>
                     <input
@@ -547,7 +547,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                       placeholder="0.00"
                       value={editingProduct.sellPrice === 0 ? '' : editingProduct.sellPrice ?? ''}
                       onChange={(e) => setEditingProduct({ ...editingProduct, sellPrice: parseFloat(e.target.value) || 0 })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 focus:outline-none focus:border-emerald-500 font-mono"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 focus:outline-none focus:border-emerald-500 font-sans tabular-nums"
                     />
                   </div>
                 </div>
@@ -555,14 +555,14 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                 {/* Instant Margin Preview */}
                 <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 flex justify-between items-center text-emerald-900 font-medium">
                   <span>Margin Profit Per Unit:</span>
-                  <span className="font-black text-emerald-700 font-mono">
+                  <span className="font-bold text-emerald-700 font-sans tabular-nums">
                     {cur}{profitPerUnit.toFixed(2)} (+{marginPercent}%)
                   </span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="block text-slate-700 font-bold mb-1">
+                    <label className="block text-slate-700 font-medium mb-1">
                       Initial Qty
                     </label>
                     <input
@@ -570,11 +570,11 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                       min="0"
                       value={editingProduct.stockQuantity ?? 10}
                       onChange={(e) => setEditingProduct({ ...editingProduct, stockQuantity: Number(e.target.value) })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono focus:outline-none focus:border-emerald-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-sans tabular-nums focus:outline-none focus:border-emerald-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-slate-700 font-bold mb-1">
+                    <label className="block text-slate-700 font-medium mb-1">
                       Min Alert Threshold
                     </label>
                     <input
@@ -582,11 +582,11 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                       min="1"
                       value={editingProduct.minStockThreshold ?? 5}
                       onChange={(e) => setEditingProduct({ ...editingProduct, minStockThreshold: Number(e.target.value) })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono focus:outline-none focus:border-emerald-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-sans tabular-nums focus:outline-none focus:border-emerald-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-slate-700 font-bold mb-1">
+                    <label className="block text-slate-700 font-medium mb-1">
                       Unit
                     </label>
                     <input
@@ -604,14 +604,14 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                     type="button"
                     disabled={isSavingProduct}
                     onClick={() => setIsProductModalOpen(false)}
-                    className="px-4 py-2 rounded-xl text-slate-600 font-bold bg-slate-100 hover:bg-slate-200 disabled:opacity-50"
+                    className="px-4 py-2 rounded-xl text-slate-600 font-medium bg-slate-100 hover:bg-slate-200 disabled:opacity-50 cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSavingProduct}
-                    className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
+                    className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
                   >
                     {isSavingProduct ? (
                       <>
@@ -640,27 +640,27 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
               className="bg-white border border-slate-200 w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4"
             >
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="text-base font-black text-slate-900">
+                <h3 className="font-display text-base font-semibold text-slate-900 tracking-[-0.02em]">
                   Refill Stock: {refillProduct.name}
                 </h3>
                 <button
                   onClick={() => setIsRefillModalOpen(false)}
-                  className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                  className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <form onSubmit={handleConfirmRefill} className="space-y-3 text-xs">
-                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex justify-between font-mono">
-                  <span className="text-slate-500">Current Stock:</span>
-                  <span className="font-extrabold text-slate-800">
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex justify-between font-sans">
+                  <span className="text-slate-500 font-normal">Current Stock:</span>
+                  <span className="font-semibold text-slate-800 tabular-nums">
                     {refillProduct.stockQuantity} {refillProduct.unit}
                   </span>
                 </div>
 
                 <div>
-                  <label className="block text-slate-700 font-bold mb-1">
+                  <label className="block text-slate-700 font-medium mb-1">
                     Quantity to Add
                   </label>
                   <input
@@ -669,12 +669,12 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                     required
                     value={refillQty}
                     onChange={(e) => setRefillQty(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 font-bold text-sm focus:outline-none focus:border-emerald-500 font-mono"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 font-semibold text-sm focus:outline-none focus:border-emerald-500 font-sans tabular-nums"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-700 font-bold mb-1">
+                  <label className="block text-slate-700 font-medium mb-1">
                     Cost Price Per Unit ({cur})
                   </label>
                   <input
@@ -683,7 +683,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                     required
                     value={refillCostPrice}
                     onChange={(e) => setRefillCostPrice(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 focus:outline-none focus:border-emerald-500 font-mono"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 focus:outline-none focus:border-emerald-500 font-sans tabular-nums"
                   />
                 </div>
 
@@ -692,14 +692,14 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                     type="button"
                     disabled={isRefilling}
                     onClick={() => setIsRefillModalOpen(false)}
-                    className="px-4 py-2 rounded-xl text-slate-600 font-bold bg-slate-100 hover:bg-slate-200 disabled:opacity-50"
+                    className="px-4 py-2 rounded-xl text-slate-600 font-medium bg-slate-100 hover:bg-slate-200 disabled:opacity-50 cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isRefilling}
-                    className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
+                    className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
                   >
                     {isRefilling ? (
                       <>

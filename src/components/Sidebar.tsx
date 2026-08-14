@@ -15,9 +15,12 @@ import {
   Lock,
   Unlock,
   AlertTriangle,
+  LogOut,
+  User,
 } from 'lucide-react';
 import { NavTab } from './BottomNav';
 import { BusinessProfile } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 interface SidebarProps {
   activeTab: NavTab;
@@ -48,6 +51,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleOwnerLock,
   onNavigateToLowStock,
 }) => {
+  const { user, profile: userProfile, signOut } = useAuth();
+
   const navItems: { id: NavTab; label: string; icon: React.ReactNode; badge?: number }[] = [
     {
       id: 'dashboard',
@@ -102,7 +107,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
             {!isCollapsed && (
               <div className="min-w-0">
-                <h1 className="text-sm font-extrabold text-slate-900 dark:text-white truncate tracking-tight">
+                <h1 className="font-display text-sm font-bold text-slate-900 dark:text-white truncate tracking-[-0.02em]">
                   {profile.businessName}
                 </h1>
                 <div className="flex items-center space-x-1.5 mt-0.5">
@@ -111,8 +116,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       isOnline ? 'bg-emerald-500' : 'bg-amber-500'
                     }`}
                   />
-                  <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-                    {isOnline ? 'Online Synced' : 'Offline Mode'}
+                  <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                    {isOnline ? 'Supabase Synced' : 'Offline Mode'}
                   </span>
                 </div>
               </div>
@@ -150,7 +155,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Quick Action Entry Button */}
         <button
           onClick={onOpenQuickAction}
-          className={`w-full flex items-center justify-center space-x-2 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer ${
+          className={`w-full flex items-center justify-center space-x-2 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-semibold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer ${
             isCollapsed ? 'px-0' : 'px-3'
           }`}
           title="Quick Record Entry"
@@ -167,12 +172,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 key={item.id}
                 onClick={() => onTabChange(item.id)}
-                className={`w-full flex items-center justify-between py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer ${
+                className={`w-full flex items-center justify-between py-2.5 rounded-xl text-[13px] transition-all active:scale-[0.98] cursor-pointer ${
                   isCollapsed ? 'justify-center px-0' : 'px-3'
                 } ${
                   isActive
-                    ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80 font-bold shadow-2xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80 font-semibold shadow-2xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 font-medium'
                 }`}
                 title={item.label}
               >
@@ -189,7 +194,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       e.stopPropagation();
                       onNavigateToLowStock();
                     }}
-                    className="bg-amber-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full animate-pulse"
+                    className="bg-amber-600 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full animate-pulse"
                   >
                     {item.badge}
                   </span>
@@ -200,7 +205,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </nav>
       </div>
 
-      {/* Bottom Footer Section */}
+      {/* Bottom Footer Section: Profile, Alerts, Security & Sign Out */}
       <div className="space-y-2 pt-3 border-t border-slate-200/80 dark:border-slate-800/80">
         {lowStockCount > 0 && !isCollapsed && (
           <button
@@ -238,8 +243,46 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           </button>
         )}
+
+        {/* User Account / Supabase Session Widget */}
+        {user && !isCollapsed && (
+          <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold text-xs shrink-0">
+                  <User className="w-3.5 h-3.5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                    {userProfile?.fullName || user.email?.split('@')[0] || 'User'}
+                  </p>
+                  <p className="text-[10px] text-slate-400 truncate">
+                    {user.email}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => signOut()}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+                title="Sign Out of Supabase"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {user && isCollapsed && (
+          <button
+            onClick={() => signOut()}
+            className="w-full flex items-center justify-center p-2 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+            title="Sign Out of Supabase"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        )}
       </div>
     </aside>
   );
 };
-

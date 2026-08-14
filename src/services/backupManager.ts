@@ -11,6 +11,7 @@ import {
   notifyCustomers,
   notifyProfile,
   clearAllBusinessData,
+  getActiveBusinessId,
 } from './dbService';
 import {
   uploadBackupToDrive,
@@ -27,8 +28,7 @@ import {
   BusinessProfile,
   FinancialSummary,
 } from '../types';
-import { db } from '../firebase';
-import { doc, setDoc, writeBatch, collection } from 'firebase/firestore';
+import { supabase, isSupabaseConfigured } from '../supabase';
 
 export interface BackupBundle {
   schemaVersion: string;
@@ -68,7 +68,7 @@ export function generateBackupBundle(): BackupBundle {
   const customers = getCustomersCache();
   const categories = getLocalCache<Category[]>('app_categories_v1', []);
   const profile = getLocalCache<BusinessProfile>('app_profile_v1', {
-    businessName: 'Apex Retail Store',
+    businessName: 'BEANNEL',
     ownerName: 'Store Owner',
     currencySymbol: '$',
     isPinLocked: false,
@@ -82,7 +82,7 @@ export function generateBackupBundle(): BackupBundle {
 
   return {
     schemaVersion: '1.0.0',
-    appName: 'Beannel Business ERP',
+    appName: 'BEANNEL',
     backupTimestamp: new Date().toISOString(),
     recordCounts: {
       products: products.length,
@@ -138,64 +138,51 @@ export function exportToExcel(): void {
   );
   XLSX.utils.book_append_sheet(wb, inventorySheet, 'Products & Stock');
 
-  // Sheet 3: Customers & CRM
-  const crmData = bundle.customers.map((c) => ({
+  // Sheet 3: Customers (CRM)
+  const customerData = bundle.customers.map((c) => ({
     Name: c.name,
-    Phone: c.phone,
-    Email: c.email,
+    Phone: c.phone || '-',
+    Email: c.email || '-',
     Tier: c.tier,
     'Total Spent ($)': c.totalSpent,
-    'Order Count': c.orderCount,
+    'Orders Count': c.orderCount,
     'Loyalty Points': c.loyaltyPoints,
-    'Debt Balance ($)': c.debtBalance,
+    'Outstanding Debt ($)': c.debtBalance,
     'Last Visit': c.lastVisit,
   }));
-  const crmSheet = XLSX.utils.json_to_sheet(crmData.length ? crmData : [{ Status: 'No Customers' }]);
-  XLSX.utils.book_append_sheet(wb, crmSheet, 'Customers & CRM');
-
-  // Sheet 4: Expenses
-  const expenses = bundle.transactions.filter((t) => t.type === 'expense');
-  const expenseData = expenses.map((e) => ({
-    ID: e.id,
-    Date: e.date ? new Date(e.date).toLocaleString() : '',
-    Category: e.category || 'General',
-    Description: e.description,
-    'Amount ($)': e.amount,
-    'Payment Method': e.paymentMethod || 'cash',
-  }));
-  const expenseSheet = XLSX.utils.json_to_sheet(
-    expenseData.length ? expenseData : [{ Status: 'No Expenses' }]
+  const custSheet = XLSX.utils.json_to_sheet(
+    customerData.length ? customerData : [{ Status: 'No Customers' }]
   );
-  XLSX.utils.book_append_sheet(wb, expenseSheet, 'Expenses');
+  XLSX.utils.book_append_sheet(wb, custSheet, 'Customers CRM');
 
-  // Sheet 5: Financial Summary
-  const totalSales = bundle.transactions
-    .filter((t) => t.type === 'sale')
-    .reduce((acc, t) => acc + t.amount, 0);
-  const totalExpenses = bundle.transactions
-    .filter((t) => t.type === 'expense')
-    .reduce((acc, t) => acc + t.amount, 0);
-  const totalCogs = bundle.transactions
-    .filter((t) => t.type === 'sale')
-    .reduce((acc, t) => acc + (t.cogs || 0), 0);
-  const grossProfit = totalSales - totalCogs;
-  const netProfit = grossProfit - totalExpenses;
+  // Sheet 4: Financial Summary & KPI Sheet
+  const totalRev = bundle.transactions.filter((t) => t.type === 'sale').reduce((s, t) => s + (t.amount || 0), 0);
+  const totalCOGS = bundle.transactions.filter((t) => t.type === 'sale').reduce((s, t) => s + (t.cogs || 0), 0);
+  const totalExp = bundle.transactions.filter((t) => t.type === 'expense').reduce((s, t) => s + (t.amount || 0), 0);
+  const totalCap = bundle.transactions.filter((t) => t.type === 'capital').reduce((s, t) => s + (t.amount || 0), 0);
+  const grossProfit = totalRev - totalCOGS;
+  const netProfit = grossProfit - totalExp;
+  const invVal = bundle.products.reduce((s, p) => s + p.buyPrice * p.stockQuantity, 0);
 
   const summaryData = [
-    { Metric: 'Business Name', Value: bundle.profile.businessName },
-    { Metric: 'Export Date', Value: new Date().toLocaleString() },
-    { Metric: 'Total Sales Revenue ($)', Value: totalSales },
-    { Metric: 'Cost of Goods Sold (COGS) ($)', Value: totalCogs },
-    { Metric: 'Gross Profit ($)', Value: grossProfit },
-    { Metric: 'Total Expenses ($)', Value: totalExpenses },
-    { Metric: 'Net Profit ($)', Value: netProfit },
-    { Metric: 'Total Product Items', Value: bundle.products.length },
-    { Metric: 'Total Registered Customers', Value: bundle.customers.length },
+    { Metric: 'Store Name', Value: bundle.profile.businessName },
+    { Metric: 'Owner Name', Value: bundle.profile.ownerName },
+    { Metric: 'Export Timestamp', Value: new Date().toLocaleString() },
+    { Metric: 'Primary Database', Value: 'Supabase PostgreSQL' },
+    { Metric: 'Total Sales Revenue', Value: totalRev },
+    { Metric: 'Total Cost of Goods Sold (COGS)', Value: totalCOGS },
+    { Metric: 'Gross Profit', Value: grossProfit },
+    { Metric: 'Operating Expenses', Value: totalExp },
+    { Metric: 'Net Profit', Value: netProfit },
+    { Metric: 'Owner Capital Injected', Value: totalCap },
+    { Metric: 'Current Inventory Valuation (Cost)', Value: invVal },
+    { Metric: 'Total Active Products', Value: bundle.products.length },
+    { Metric: 'Total Customers', Value: bundle.customers.length },
+    { Metric: 'Total Recorded Transactions', Value: bundle.transactions.length },
   ];
   const summarySheet = XLSX.utils.json_to_sheet(summaryData);
-  XLSX.utils.book_append_sheet(wb, summarySheet, 'Financial Summary');
+  XLSX.utils.book_append_sheet(wb, summarySheet, 'Executive Summary');
 
-  // Save File
   const dateStr = new Date().toISOString().slice(0, 10);
   XLSX.writeFile(wb, `BEANNEL_FINANCIAL_REPORT_${dateStr}.xlsx`);
 }
@@ -320,44 +307,107 @@ export async function restoreFromBackup(bundle: BackupBundle): Promise<void> {
   }
   localStorage.setItem('app_has_initialized_v1', 'true');
 
-  // 3. Write to Firestore if connected
-  if (db) {
+  // 3. Write to Supabase PostgreSQL if configured
+  if (isSupabaseConfigured) {
     try {
+      const bizId = await getActiveBusinessId();
+
       // Clear existing records first
       await clearAllBusinessData();
 
-      const batch = writeBatch(db);
-
-      (bundle.products || []).forEach((p) => {
-        batch.set(doc(db, 'products', p.id), p);
-      });
-
-      (bundle.categories || []).forEach((c) => {
-        batch.set(doc(db, 'categories', c.id), c);
-      });
-
-      (bundle.transactions || []).forEach((t) => {
-        batch.set(doc(db, 'transactions', t.id), t);
-      });
-
-      (bundle.customers || []).forEach((c) => {
-        batch.set(doc(db, 'customers', c.id), c);
-      });
-
-      if (bundle.profile) {
-        batch.set(doc(db, 'profile', 'business_info'), bundle.profile);
+      // Re-insert categories
+      if (bundle.categories && bundle.categories.length > 0) {
+        const catRows = bundle.categories.map((c) => ({
+          id: c.id,
+          business_id: bizId,
+          name: c.name,
+          color: c.color || '#10b981',
+        }));
+        await supabase.from('categories').upsert(catRows, { onConflict: 'id' });
       }
 
-      // Mark metadata doc
-      batch.set(doc(db, 'system', 'metadata'), {
-        isInitialized: true,
-        restoredAt: new Date().toISOString(),
-        schemaVersion: '1.0.0',
-      });
+      // Re-insert products
+      if (bundle.products && bundle.products.length > 0) {
+        const prodRows = bundle.products.map((p) => ({
+          id: p.id,
+          business_id: bizId,
+          name: p.name,
+          sku: p.sku,
+          category: p.category,
+          buy_price: p.buyPrice,
+          sell_price: p.sellPrice,
+          stock_quantity: p.stockQuantity,
+          min_stock_threshold: p.minStockThreshold,
+          unit: p.unit,
+          barcode: p.barcode,
+          notes: p.notes,
+          created_at: p.createdAt,
+          updated_at: p.updatedAt,
+        }));
+        await supabase.from('products').upsert(prodRows, { onConflict: 'id' });
+      }
 
-      await batch.commit();
+      // Re-insert customers
+      if (bundle.customers && bundle.customers.length > 0) {
+        const custRows = bundle.customers.map((c) => ({
+          id: c.id,
+          business_id: bizId,
+          name: c.name,
+          phone: c.phone,
+          email: c.email,
+          loyalty_points: c.loyaltyPoints,
+          total_spent: c.totalSpent,
+          order_count: c.orderCount,
+          debt_balance: c.debtBalance,
+          tier: c.tier,
+          last_visit: c.lastVisit,
+          notes: c.notes,
+          created_at: c.createdAt,
+          updated_at: c.updatedAt,
+        }));
+        await supabase.from('customers').upsert(custRows, { onConflict: 'id' });
+      }
+
+      // Re-insert transactions
+      if (bundle.transactions && bundle.transactions.length > 0) {
+        const txRows = bundle.transactions.map((t) => ({
+          id: t.id,
+          business_id: bizId,
+          type: t.type,
+          amount: t.amount,
+          cogs: t.cogs || 0,
+          gross_profit: t.grossProfit || 0,
+          net_profit: t.netProfit || 0,
+          date: t.date,
+          description: t.description,
+          category: t.category || '',
+          payment_method: t.paymentMethod || 'cash',
+          customer_name: t.customerName || '',
+          items: t.items || [],
+          created_at: t.createdAt,
+        }));
+        await supabase.from('transactions').upsert(txRows, { onConflict: 'id' });
+      }
+
+      // Upsert business profile
+      if (bundle.profile && bizId) {
+        await supabase.from('businesses').upsert(
+          {
+            id: bizId,
+            name: bundle.profile.businessName,
+            owner_name: bundle.profile.ownerName,
+            currency_symbol: bundle.profile.currencySymbol,
+            tax_rate: bundle.profile.taxRate,
+            low_stock_alert_enabled: bundle.profile.lowStockAlertEnabled,
+            allow_negative_stock: bundle.profile.allowNegativeStock,
+            receipt_header_msg: bundle.profile.receiptHeaderMsg,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'id' }
+        );
+      }
     } catch (e) {
-      console.error('Error syncing restored data to Firestore:', e);
+      console.error('Error syncing restored data to Supabase:', e);
     }
   }
 
@@ -382,7 +432,6 @@ export async function performDestructiveDataWipe(): Promise<void> {
       const dateStr = now.toISOString().slice(0, 10);
       const timeStr = now.toTimeString().slice(0, 8).replace(/:/g, '');
       const uploadPromise = uploadBackupToDrive(`PRE_WIPE_SAFETY_BACKUP_${dateStr}_${timeStr}.json`, safetyBundle);
-      // Timeout after 4 seconds to never block wipe execution
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Drive backup timed out')), 4000));
       await Promise.race([uploadPromise, timeoutPromise]).catch((e) => {
         console.warn('Pre-wipe drive upload skipped or timed out:', e);
@@ -397,15 +446,4 @@ export async function performDestructiveDataWipe(): Promise<void> {
 
   // 3. Mark initialized metadata so app stays completely empty and doesn't auto-seed demo data
   localStorage.setItem('app_has_initialized_v1', 'true');
-  if (db) {
-    try {
-      await setDoc(doc(db, 'system', 'metadata'), {
-        isInitialized: true,
-        wipedAt: new Date().toISOString(),
-        schemaVersion: '1.0.0',
-      });
-    } catch (e) {
-      console.warn('Metadata mark error:', e);
-    }
-  }
 }

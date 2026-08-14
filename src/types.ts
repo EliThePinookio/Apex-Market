@@ -163,3 +163,15 @@ export interface FinancialSummary {
   outOfStockCount: number;
   transactionCount: number;
 }
+
+export type AppUserRole = 'owner' | 'manager' | 'cashier' | 'viewer';
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  fullName?: string;
+  businessId?: string;
+  role: AppUserRole;
+  createdAt: string;
+}
+

@@ -96,14 +96,14 @@ export const GeminiProfitAdvisor: React.FC<GeminiProfitAdvisorProps> = ({
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <h3 className="text-sm font-extrabold text-slate-900 tracking-tight">
+              <h3 className="font-display text-sm font-semibold text-slate-900 tracking-[-0.02em]">
                 Gemini AI Profit Advisor
               </h3>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-black text-emerald-800">
+              <span className="px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-semibold text-emerald-800">
                 Gemini 3.6
               </span>
             </div>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-slate-500 font-normal">
               AI-driven margin optimization & expense strategy
             </p>
           </div>
@@ -113,7 +113,7 @@ export const GeminiProfitAdvisor: React.FC<GeminiProfitAdvisorProps> = ({
           <button
             onClick={() => fetchAiAnalysis()}
             disabled={loading}
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 text-xs font-bold transition-all border border-slate-200 flex items-center space-x-1 active:scale-95"
+            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 text-xs font-medium transition-all border border-slate-200 flex items-center space-x-1 active:scale-95 cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-emerald-600' : ''}`} />
             <span className="hidden xs:inline">Refresh</span>
@@ -124,20 +124,20 @@ export const GeminiProfitAdvisor: React.FC<GeminiProfitAdvisorProps> = ({
       {/* Financial Snapshot Bar */}
       <div className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-slate-50 border border-slate-200/80 text-[11px]">
         <div>
-          <span className="text-slate-500 block text-[9px] uppercase font-bold">Revenue</span>
-          <span className="font-black text-emerald-700 font-mono">
+          <span className="text-slate-500 block text-[9px] uppercase font-semibold tracking-wider">Revenue</span>
+          <span className="font-bold text-emerald-700 font-sans tabular-nums text-xs sm:text-sm">
             {cur}{summary.totalRevenue.toFixed(2)}
           </span>
         </div>
         <div>
-          <span className="text-slate-500 block text-[9px] uppercase font-bold">Net Profit</span>
-          <span className={`font-black font-mono ${summary.netProfit >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+          <span className="text-slate-500 block text-[9px] uppercase font-semibold tracking-wider">Net Profit</span>
+          <span className={`font-bold font-sans tabular-nums text-xs sm:text-sm ${summary.netProfit >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
             {cur}{summary.netProfit.toFixed(2)}
           </span>
         </div>
         <div>
-          <span className="text-slate-500 block text-[9px] uppercase font-bold">Net Margin</span>
-          <span className="font-black text-amber-700 font-mono">
+          <span className="text-slate-500 block text-[9px] uppercase font-semibold tracking-wider">Net Margin</span>
+          <span className="font-bold text-amber-700 font-sans tabular-nums text-xs sm:text-sm">
             {summary.totalRevenue > 0 ? ((summary.netProfit / summary.totalRevenue) * 100).toFixed(1) : '0.0'}%
           </span>
         </div>
@@ -146,25 +146,25 @@ export const GeminiProfitAdvisor: React.FC<GeminiProfitAdvisorProps> = ({
       {/* Preset Strategy Questions */}
       {!analysis && !loading && (
         <div className="space-y-2">
-          <p className="text-[11px] font-bold text-slate-700">
+          <p className="text-[11px] font-medium text-slate-700">
             Select an analysis topic or click generate:
           </p>
           <div className="flex flex-wrap gap-1.5 text-[11px]">
             <button
               onClick={() => fetchAiAnalysis('Focus on increasing net profit margin and pricing strategy.')}
-              className="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-bold transition-all active:scale-95"
+              className="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-medium transition-all active:scale-95 cursor-pointer"
             >
               📈 Boost Net Margin
             </button>
             <button
               onClick={() => fetchAiAnalysis('Focus on identifying expense reduction opportunities.')}
-              className="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-800 font-bold transition-all active:scale-95"
+              className="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-800 font-medium transition-all active:scale-95 cursor-pointer"
             >
               ✂️ Cut Overhead Costs
             </button>
             <button
               onClick={() => fetchAiAnalysis('Focus on inventory turnover and cash flow optimization.')}
-              className="px-2.5 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-800 font-bold transition-all active:scale-95"
+              className="px-2.5 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-800 font-medium transition-all active:scale-95 cursor-pointer"
             >
               📦 Inventory Turnover
             </button>
@@ -184,7 +184,7 @@ export const GeminiProfitAdvisor: React.FC<GeminiProfitAdvisorProps> = ({
           />
           <button
             onClick={() => fetchAiAnalysis()}
-            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all flex items-center space-x-1.5 whitespace-nowrap"
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-semibold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all flex items-center space-x-1.5 whitespace-nowrap cursor-pointer"
           >
             <Bot className="w-4 h-4" />
             <span>Analyze</span>
@@ -199,10 +199,10 @@ export const GeminiProfitAdvisor: React.FC<GeminiProfitAdvisorProps> = ({
             <RefreshCw className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs font-extrabold text-slate-900">
+            <p className="text-xs font-semibold text-slate-900">
               Gemini AI is analyzing your financial metrics...
             </p>
-            <p className="text-[11px] text-slate-500 mt-0.5">
+            <p className="text-[11px] text-slate-500 mt-0.5 font-normal">
               Calculating profit margins, COGS efficiency, and cost optimizations
             </p>
           </div>
@@ -214,11 +214,11 @@ export const GeminiProfitAdvisor: React.FC<GeminiProfitAdvisorProps> = ({
         <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start space-x-2.5">
           <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <p className="font-bold">AI Analysis Unavailable</p>
-            <p className="text-[11px] text-rose-700">{error}</p>
+            <p className="font-semibold">AI Analysis Unavailable</p>
+            <p className="text-[11px] text-rose-700 font-normal">{error}</p>
             <button
               onClick={() => fetchAiAnalysis()}
-              className="text-[11px] underline font-bold text-rose-900 hover:text-black"
+              className="text-[11px] underline font-semibold text-rose-900 hover:text-black cursor-pointer"
             >
               Try Again
             </button>
@@ -230,7 +230,7 @@ export const GeminiProfitAdvisor: React.FC<GeminiProfitAdvisorProps> = ({
       {analysis && !loading && (
         <div className="space-y-3">
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs space-y-3 leading-relaxed max-h-96 overflow-y-auto custom-scrollbar">
-            <div className="markdown-body font-sans text-slate-800 space-y-2">
+            <div className="markdown-body font-sans text-slate-800 space-y-2 ai-insight-text leading-relaxed">
               <ReactMarkdown>{analysis}</ReactMarkdown>
             </div>
           </div>
@@ -238,13 +238,13 @@ export const GeminiProfitAdvisor: React.FC<GeminiProfitAdvisorProps> = ({
           <div className="flex items-center justify-between text-[11px] pt-1">
             <button
               onClick={() => setAnalysis(null)}
-              className="text-slate-500 hover:text-slate-800 font-semibold"
+              className="text-slate-500 hover:text-slate-800 font-medium cursor-pointer"
             >
               ← Ask another question
             </button>
             <button
               onClick={() => fetchAiAnalysis()}
-              className="text-emerald-700 hover:text-emerald-800 font-bold flex items-center space-x-1"
+              className="text-emerald-700 hover:text-emerald-800 font-semibold flex items-center space-x-1 cursor-pointer"
             >
               <RefreshCw className="w-3 h-3" />
               <span>Re-analyze</span>

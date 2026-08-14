@@ -1,6 +1,6 @@
 {
-  "name": "Business & Inventory Manager",
-  "description": "Mobile-first PWA for sales, inventory, costs, expenses, capital management, profit analysis, and low-stock alerts with persistent Firebase cloud database.",
+  "name": "BEANNEL",
+  "description": "Mobile-first PWA for sales, inventory, costs, expenses, capital management, profit analysis, and low-stock alerts with authoritative Supabase authentication & PostgreSQL database with Google Drive backups.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

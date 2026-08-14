@@ -203,25 +203,25 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
           <div>
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[11px] font-bold tracking-wide uppercase mb-2">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[11px] font-semibold tracking-[0.04em] uppercase mb-2">
               <Activity className="w-3.5 h-3.5 text-emerald-300 animate-pulse" />
               <span>Central Forecasting & Moving Average Engine</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-[-0.03em]">
               Financial Intelligence & Predictive Analytics
             </h1>
-            <p className="text-xs text-emerald-200/80 mt-1 max-w-xl font-medium">
+            <p className="text-xs text-emerald-200/80 mt-1 max-w-xl font-normal leading-relaxed">
               Historical time-series modeling, rolling moving averages, actual vs. forecast variances, and product velocity forecasting.
             </p>
           </div>
 
           {/* Tab Navigation Pill Bar */}
-          <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-slate-950/80 rounded-2xl border border-emerald-800/60 text-xs font-bold shrink-0 shadow-lg backdrop-blur-md">
+          <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-slate-950/80 rounded-2xl border border-emerald-800/60 text-xs font-medium shrink-0 shadow-lg backdrop-blur-md">
             <button
               onClick={() => setActiveTab('forecast')}
               className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 ${
                 activeTab === 'forecast'
-                  ? 'bg-emerald-500 text-slate-950 font-black shadow-md'
+                  ? 'bg-emerald-500 text-slate-950 font-semibold shadow-md'
                   : 'text-emerald-200/80 hover:text-white'
               }`}
             >
@@ -233,7 +233,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               onClick={() => setActiveTab('what_if')}
               className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 ${
                 activeTab === 'what_if'
-                  ? 'bg-emerald-500 text-slate-950 font-black shadow-md'
+                  ? 'bg-emerald-500 text-slate-950 font-semibold shadow-md'
                   : 'text-emerald-200/80 hover:text-white'
               }`}
             >
@@ -245,7 +245,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               onClick={() => setActiveTab('pl_statement')}
               className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 ${
                 activeTab === 'pl_statement'
-                  ? 'bg-emerald-500 text-slate-950 font-black shadow-md'
+                  ? 'bg-emerald-500 text-slate-950 font-semibold shadow-md'
                   : 'text-emerald-200/80 hover:text-white'
               }`}
             >
@@ -257,7 +257,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               onClick={() => setActiveTab('health_ratios')}
               className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 ${
                 activeTab === 'health_ratios'
-                  ? 'bg-emerald-500 text-slate-950 font-black shadow-md'
+                  ? 'bg-emerald-500 text-slate-950 font-semibold shadow-md'
                   : 'text-emerald-200/80 hover:text-white'
               }`}
             >
@@ -273,9 +273,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         <TiltCard className="rounded-2xl">
           <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Sales Revenue Variance</p>
+              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-[0.04em]">Sales Revenue Variance</p>
               <span
-                className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
+                className={`text-[10px] font-semibold font-sans px-1.5 py-0.5 rounded-md ${
                   forecastResult.summaryStats.salesVariancePercent >= 0
                     ? 'bg-emerald-100 text-emerald-800'
                     : 'bg-rose-100 text-rose-800'
@@ -285,11 +285,11 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 {forecastResult.summaryStats.salesVariancePercent}%
               </span>
             </div>
-            <p className="text-2xl font-black text-slate-900 mt-1 font-mono tabular-nums">
+            <p className="font-sans text-2xl font-bold tracking-tight text-slate-900 mt-1 tabular-nums">
               {cur}<AnimatedNumber value={forecastResult.summaryStats.totalActualSales} />
             </p>
-            <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Forecast: <span className="font-mono text-slate-700 font-bold">{cur}{forecastResult.summaryStats.totalForecastSales.toFixed(2)}</span>
+            <p className="text-xs text-slate-500 font-normal mt-0.5">
+              Forecast: <span className="font-sans text-slate-700 font-medium tabular-nums">{cur}{forecastResult.summaryStats.totalForecastSales.toFixed(2)}</span>
             </p>
           </div>
         </TiltCard>
@@ -297,9 +297,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         <TiltCard className="rounded-2xl">
           <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Profit Margin Variance</p>
+              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-[0.04em]">Profit Margin Variance</p>
               <span
-                className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
+                className={`text-[10px] font-semibold font-sans px-1.5 py-0.5 rounded-md ${
                   forecastResult.summaryStats.profitVariancePercent >= 0
                     ? 'bg-emerald-100 text-emerald-800'
                     : 'bg-rose-100 text-rose-800'
@@ -309,11 +309,11 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 {forecastResult.summaryStats.profitVariancePercent}%
               </span>
             </div>
-            <p className="text-2xl font-black text-emerald-700 mt-1 font-mono tabular-nums">
+            <p className="font-sans text-2xl font-bold tracking-tight text-emerald-700 mt-1 tabular-nums">
               {cur}<AnimatedNumber value={forecastResult.summaryStats.totalActualProfit} />
             </p>
-            <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Expected: <span className="font-mono text-slate-700 font-bold">{cur}{forecastResult.summaryStats.totalForecastProfit.toFixed(2)}</span>
+            <p className="text-xs text-slate-500 font-normal mt-0.5">
+              Expected: <span className="font-sans text-slate-700 font-medium tabular-nums">{cur}{forecastResult.summaryStats.totalForecastProfit.toFixed(2)}</span>
             </p>
           </div>
         </TiltCard>
@@ -321,17 +321,17 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         <TiltCard className="rounded-2xl">
           <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Daily Run-Rate</p>
-              <span className="text-[10px] font-black text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded-md">
+              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-[0.04em]">Daily Run-Rate</p>
+              <span className="text-[10px] font-semibold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded-md">
                 {forecastResult.summaryStats.trendDirection}
               </span>
             </div>
-            <p className="text-2xl font-black text-slate-900 mt-1 font-mono tabular-nums">
+            <p className="font-sans text-2xl font-bold tracking-tight text-slate-900 mt-1 tabular-nums">
               {cur}<AnimatedNumber value={forecastResult.summaryStats.dailyAvgSalesVelocity} />
               <span className="text-xs text-slate-400 font-normal font-sans ml-1">/day</span>
             </p>
-            <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Burn: <span className="font-mono text-rose-600 font-bold">{cur}{forecastResult.summaryStats.dailyAvgBurnRate.toFixed(2)}/d</span>
+            <p className="text-xs text-slate-500 font-normal mt-0.5">
+              Burn: <span className="font-sans text-rose-600 font-medium tabular-nums">{cur}{forecastResult.summaryStats.dailyAvgBurnRate.toFixed(2)}/d</span>
             </p>
           </div>
         </TiltCard>
@@ -339,16 +339,16 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         <TiltCard className="rounded-2xl">
           <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Model Reliability</p>
-              <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md">
+              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-[0.04em]">Model Reliability</p>
+              <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md">
                 MAPE {forecastResult.accuracy.mape}%
               </span>
             </div>
-            <p className="text-2xl font-black text-emerald-800 mt-1 font-mono tabular-nums">
+            <p className="font-sans text-2xl font-bold tracking-tight text-emerald-800 mt-1 tabular-nums">
               {forecastResult.accuracy.reliabilityScore}%
             </p>
-            <p className="text-xs text-slate-500 font-medium mt-0.5">
-              R² Fit: <span className="font-mono text-slate-700 font-bold">{forecastResult.accuracy.rSquared}</span> (MAE: {cur}{forecastResult.accuracy.mae})
+            <p className="text-xs text-slate-500 font-normal mt-0.5">
+              R² Fit: <span className="font-sans text-slate-700 font-medium tabular-nums">{forecastResult.accuracy.rSquared}</span> (MAE: {cur}{forecastResult.accuracy.mae})
             </p>
           </div>
         </TiltCard>

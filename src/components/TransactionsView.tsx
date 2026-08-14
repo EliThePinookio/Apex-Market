@@ -84,11 +84,11 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
       {/* Header & CSV Export Actions */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-extrabold text-slate-900 flex items-center space-x-2">
+          <h2 className="font-display text-xl font-bold text-slate-900 tracking-[-0.02em] flex items-center space-x-2">
             <Receipt className="w-5 h-5 text-emerald-600" />
             <span>Transaction Ledger & History</span>
           </h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 font-normal mt-0.5">
             {filteredTransactions.length} Logged activity records in persistent database
           </p>
         </div>
@@ -98,7 +98,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
           <button
             onClick={() => exportSalesToCSV(transactions, cur)}
             title="Export Sales CSV"
-            className="px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 font-bold text-xs flex items-center space-x-1.5 transition-colors"
+            className="px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 font-semibold text-xs flex items-center space-x-1.5 transition-colors cursor-pointer"
           >
             <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
             <span>Export Sales</span>
@@ -107,7 +107,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
           <button
             onClick={() => exportFullBusinessReportCSV(transactions, products, profile, summary)}
             title="Export Full Master Excel Report"
-            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-extrabold text-xs flex items-center space-x-1.5 shadow-md shadow-emerald-600/20 active:scale-95 transition-all"
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-semibold text-xs flex items-center space-x-1.5 shadow-sm shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer"
           >
             <Download className="w-4 h-4 stroke-[2.5]" />
             <span>Master Excel Report</span>
@@ -124,7 +124,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
             placeholder="Search by note, ID, customer..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-white border border-slate-200/90 rounded-2xl pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 shadow-2xs"
+            className="w-full bg-white border border-slate-200/90 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 shadow-2xs font-normal"
           />
         </div>
 
@@ -140,10 +140,10 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
             <button
               key={item.id}
               onClick={() => setTypeFilter(item.id as any)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 ${
+              className={`px-3 py-1.5 rounded-xl text-xs whitespace-nowrap transition-all active:scale-95 cursor-pointer ${
                 typeFilter === item.id
-                  ? 'bg-emerald-600 text-white font-extrabold shadow-xs'
-                  : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
+                  ? 'bg-emerald-600 text-white font-semibold shadow-xs'
+                  : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200 font-medium'
               }`}
             >
               {item.label}
@@ -152,7 +152,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
         </div>
 
         {/* Date Filter Bar */}
-        <div className="flex items-center space-x-1 p-1.5 bg-white rounded-2xl border border-slate-200/80 text-[11px] font-bold text-center shrink-0 shadow-2xs">
+        <div className="flex items-center space-x-1 p-1.5 bg-white rounded-2xl border border-slate-200/80 text-[11px] font-medium text-center shrink-0 shadow-2xs">
           {[
             { id: 'all', label: 'All Time' },
             { id: 'today', label: 'Today' },
@@ -162,9 +162,9 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
             <button
               key={d.id}
               onClick={() => setDatePreset(d.id as any)}
-              className={`px-2.5 py-1.5 rounded-xl transition-all active:scale-95 ${
+              className={`px-2.5 py-1.5 rounded-xl transition-all active:scale-95 cursor-pointer ${
                 datePreset === d.id
-                  ? 'bg-emerald-50 text-emerald-800 font-extrabold border border-emerald-200 shadow-xs'
+                  ? 'bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -178,15 +178,15 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
       <div className="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-slate-700">
-            <thead className="bg-slate-50 text-[10px] uppercase font-extrabold text-slate-500 border-b border-slate-200/80">
+            <thead className="bg-slate-50 text-[10px] uppercase font-semibold text-slate-400 tracking-[0.04em] border-b border-slate-200/80">
               <tr>
-                <th className="py-3.5 px-4">Date / Ref ID</th>
-                <th className="py-3.5 px-4">Type</th>
-                <th className="py-3.5 px-4">Description</th>
-                <th className="py-3.5 px-4">Customer / Payment</th>
-                <th className="py-3.5 px-4 text-right">Net Amount</th>
-                <th className="py-3.5 px-4 text-right">Profit</th>
-                <th className="py-3.5 px-4 text-center">Action</th>
+                <th className="py-3 px-4">Date / Ref ID</th>
+                <th className="py-3 px-4">Type</th>
+                <th className="py-3 px-4">Description</th>
+                <th className="py-3 px-4">Customer / Payment</th>
+                <th className="py-3 px-4 text-right">Net Amount</th>
+                <th className="py-3 px-4 text-right">Profit</th>
+                <th className="py-3 px-4 text-center">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -200,16 +200,16 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                     onClick={() => setSelectedTx(tx)}
                     className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
                   >
-                    <td className="py-3 px-4 font-mono text-[11px]">
-                      <div className="font-extrabold text-slate-900">{new Date(tx.date).toLocaleDateString()}</div>
-                      <div className="text-[10px] text-slate-400">
+                    <td className="py-3 px-4 text-xs font-medium">
+                      <div className="font-semibold text-slate-900">{new Date(tx.date).toLocaleDateString()}</div>
+                      <div className="text-[10px] text-slate-400 font-normal">
                         {new Date(tx.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} &bull; #{tx.id.slice(0, 8)}
                       </div>
                     </td>
 
                     <td className="py-3 px-4">
                       <span
-                        className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase ${
+                        className={`px-2.5 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-[0.04em] ${
                           isSale
                             ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                             : isExpense
@@ -222,17 +222,17 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                     </td>
 
                     <td className="py-3 px-4">
-                      <div className="font-semibold text-slate-800 group-hover:text-emerald-700 transition-colors max-w-xs truncate">
+                      <div className="font-medium text-slate-800 group-hover:text-emerald-700 transition-colors max-w-xs truncate">
                         {tx.description}
                       </div>
                     </td>
 
                     <td className="py-3 px-4">
                       <div className="text-slate-700 font-medium">{tx.customerName || 'Walk-in'}</div>
-                      <span className="text-[10px] uppercase text-slate-400 font-bold">{tx.paymentMethod || 'cash'}</span>
+                      <span className="text-[10px] uppercase text-slate-400 font-medium tracking-wide">{tx.paymentMethod || 'cash'}</span>
                     </td>
 
-                    <td className="py-3 px-4 text-right font-mono tabular-nums font-black text-sm">
+                    <td className="py-3 px-4 text-right tabular-nums font-bold text-xs">
                       <span
                         className={
                           isSale
@@ -246,7 +246,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                       </span>
                     </td>
 
-                    <td className="py-3 px-4 text-right font-mono tabular-nums font-extrabold text-emerald-800">
+                    <td className="py-3 px-4 text-right tabular-nums font-semibold text-emerald-800 text-xs">
                       {isSale && tx.grossProfit !== undefined ? `+${cur}${tx.grossProfit.toFixed(2)}` : '—'}
                     </td>
 
@@ -256,7 +256,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                           e.stopPropagation();
                           setSelectedTx(tx);
                         }}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-700 hover:bg-slate-100 transition-colors"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-700 hover:bg-slate-100 transition-colors cursor-pointer"
                         title="View Details"
                       >
                         <Eye className="w-4 h-4" />
@@ -284,7 +284,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
             >
               <div className="flex items-start space-x-3">
                 <span
-                  className={`mt-0.5 px-2 py-1 rounded-lg text-[10px] font-black uppercase ${
+                  className={`mt-0.5 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-[0.04em] ${
                     isSale
                       ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                       : isExpense
@@ -296,10 +296,10 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                 </span>
 
                 <div>
-                  <h4 className="text-xs font-bold text-slate-900 line-clamp-1">
+                  <h4 className="text-xs font-semibold text-slate-900 line-clamp-1">
                     {tx.description}
                   </h4>
-                  <p className="text-[10px] text-slate-400 mt-0.5 font-mono">
+                  <p className="text-[10px] text-slate-400 mt-0.5 font-normal">
                     {new Date(tx.date).toLocaleDateString()} &bull;{' '}
                     {new Date(tx.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     {tx.customerName && ` &bull; ${tx.customerName}`}
@@ -307,9 +307,9 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                 </div>
               </div>
 
-              <div className="text-right font-mono tabular-nums">
+              <div className="text-right tabular-nums">
                 <p
-                  className={`text-sm font-black ${
+                  className={`text-xs font-bold ${
                     isSale
                       ? 'text-emerald-700'
                       : isExpense
@@ -320,7 +320,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                   {isExpense ? '-' : '+'}{cur}{tx.amount.toFixed(2)}
                 </p>
                 {isSale && tx.grossProfit !== undefined && (
-                  <p className="text-[10px] text-emerald-800 font-bold">
+                  <p className="text-[10px] text-emerald-800 font-medium">
                     Profit: +{cur}{tx.grossProfit.toFixed(2)}
                   </p>
                 )}
@@ -333,7 +333,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
       {filteredTransactions.length === 0 && (
         <div className="py-12 text-center text-slate-400 space-y-2">
           <Receipt className="w-10 h-10 mx-auto opacity-40 text-slate-400" />
-          <p className="text-xs text-slate-500">No transactions match your search filter.</p>
+          <p className="text-xs text-slate-500 font-normal">No transactions match your search filter.</p>
         </div>
       )}
 
@@ -343,14 +343,14 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
           <div className="bg-white border border-slate-200 w-full max-w-md rounded-2xl p-5 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400">
+                <span className="text-[10px] uppercase font-semibold text-slate-400 tracking-[0.04em]">
                   Transaction Details
                 </span>
-                <h3 className="text-sm font-extrabold text-slate-900">#{selectedTx.id}</h3>
+                <h3 className="font-display text-base font-bold text-slate-900 tracking-[-0.02em]">#{selectedTx.id}</h3>
               </div>
               <button
                 onClick={() => setSelectedTx(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -358,25 +358,25 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
 
             <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
               <div className="flex justify-between">
-                <span className="text-slate-500">Type:</span>
-                <span className="font-bold uppercase text-slate-800">{selectedTx.type}</span>
+                <span className="text-slate-500 font-normal">Type:</span>
+                <span className="font-semibold uppercase text-slate-800 tracking-wide text-[11px]">{selectedTx.type}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Date & Time:</span>
-                <span className="font-semibold text-slate-800">
+                <span className="text-slate-500 font-normal">Date & Time:</span>
+                <span className="font-medium text-slate-800">
                   {new Date(selectedTx.date).toLocaleString()}
                 </span>
               </div>
               {selectedTx.customerName && (
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Customer:</span>
-                  <span className="font-semibold text-slate-800">{selectedTx.customerName}</span>
+                  <span className="text-slate-500 font-normal">Customer:</span>
+                  <span className="font-medium text-slate-800">{selectedTx.customerName}</span>
                 </div>
               )}
               {selectedTx.paymentMethod && (
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Payment Method:</span>
-                  <span className="font-semibold uppercase text-slate-800">
+                  <span className="text-slate-500 font-normal">Payment Method:</span>
+                  <span className="font-semibold uppercase text-slate-800 text-[11px] tracking-wide">
                     {selectedTx.paymentMethod}
                   </span>
                 </div>
@@ -386,7 +386,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
             {/* Items Breakdown if Sale */}
             {selectedTx.items && selectedTx.items.length > 0 && (
               <div className="space-y-2">
-                <h4 className="text-xs font-bold text-slate-700">Items Sold</h4>
+                <h4 className="text-xs font-semibold text-slate-700">Items Sold</h4>
                 <div className="space-y-1.5 max-h-40 overflow-y-auto">
                   {selectedTx.items.map((i, idx) => (
                     <div
@@ -394,12 +394,12 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                       className="p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs flex justify-between"
                     >
                       <div>
-                        <p className="font-semibold text-slate-800">{i.productName}</p>
-                        <p className="text-[10px] text-slate-400">
+                        <p className="font-medium text-slate-800">{i.productName}</p>
+                        <p className="text-[10px] text-slate-400 font-normal">
                           {i.quantity} x {cur}{i.unitSellPrice.toFixed(2)}
                         </p>
                       </div>
-                      <span className="font-bold text-emerald-700 font-mono">
+                      <span className="font-bold text-emerald-700 tabular-nums">
                         {cur}{i.totalSellPrice.toFixed(2)}
                       </span>
                     </div>
@@ -410,22 +410,22 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
 
             {/* Financial Summary Breakdown */}
             <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 text-xs">
-              <div className="flex justify-between font-bold text-slate-800">
-                <span>Total Amount:</span>
-                <span className="text-emerald-700 font-mono text-sm">
+              <div className="flex justify-between font-semibold text-slate-800">
+                <span className="font-normal text-slate-600">Total Amount:</span>
+                <span className="text-emerald-700 tabular-nums font-bold text-sm">
                   {cur}{selectedTx.amount.toFixed(2)}
                 </span>
               </div>
 
               {selectedTx.cogs !== undefined && (
-                <div className="flex justify-between text-slate-500 font-mono">
+                <div className="flex justify-between text-slate-500 tabular-nums font-normal">
                   <span>COGS (Cost):</span>
                   <span>{cur}{selectedTx.cogs.toFixed(2)}</span>
                 </div>
               )}
 
               {selectedTx.grossProfit !== undefined && (
-                <div className="flex justify-between text-emerald-800 font-bold pt-1 border-t border-slate-200 font-mono">
+                <div className="flex justify-between text-emerald-800 font-semibold pt-1 border-t border-slate-200 tabular-nums">
                   <span>Net Gross Profit:</span>
                   <span>+{cur}{selectedTx.grossProfit.toFixed(2)}</span>
                 </div>
@@ -435,7 +435,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
             <div className="pt-2 flex items-center justify-between">
               <button
                 onClick={() => handleDelete(selectedTx.id)}
-                className="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold flex items-center space-x-1"
+                className="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold flex items-center space-x-1 cursor-pointer"
               >
                 <Trash2 className="w-4 h-4" />
                 <span>Delete</span>
@@ -445,7 +445,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                 {selectedTx.type === 'sale' && (
                   <button
                     onClick={() => printReceipt(selectedTx, profile)}
-                    className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center space-x-1"
+                    className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold flex items-center space-x-1 cursor-pointer"
                   >
                     <Printer className="w-4 h-4" />
                     <span>Print Receipt</span>
@@ -453,7 +453,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                 )}
                 <button
                   onClick={() => setSelectedTx(null)}
-                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold"
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold cursor-pointer"
                 >
                   Close
                 </button>

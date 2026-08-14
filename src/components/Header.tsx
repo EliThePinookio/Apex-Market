@@ -46,20 +46,20 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
         <div className="min-w-0">
           <div className="flex items-center space-x-2">
-            <h1 className="text-base font-extrabold text-slate-900 dark:text-white truncate max-w-[150px] sm:max-w-[240px] tracking-tight">
+            <h1 className="font-display text-base font-bold text-slate-900 dark:text-white truncate max-w-[150px] sm:max-w-[240px] tracking-[-0.02em]">
               {profile.businessName}
             </h1>
             {!isOnline ? (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 shrink-0">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 shrink-0">
                 <WifiOff className="w-2.5 h-2.5 mr-1 text-amber-600 dark:text-amber-400" /> Offline
               </span>
             ) : (
-              <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 shrink-0">
+              <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 shrink-0">
                 <Wifi className="w-2.5 h-2.5 mr-1 text-emerald-600 dark:text-emerald-400" /> Synced
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+          <p className="text-xs text-slate-500 dark:text-slate-400 truncate font-normal">
             {profile.ownerName ? profile.ownerName : 'Owner Mode'}
           </p>
         </div>
@@ -70,7 +70,7 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={toggleTheme}
           id="header-theme-toggle-btn"
-          className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 transition-all text-xs font-semibold active:scale-95 cursor-pointer shadow-2xs"
+          className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 transition-all text-xs font-medium active:scale-95 cursor-pointer shadow-2xs"
           title={`Theme Mode: ${mode === 'system' ? 'System Sync (' + (isDark ? 'Dark' : 'Light') + ')' : isDark ? 'Dark Mode' : 'Light Mode'} • Click to toggle`}
         >
           {mode === 'system' ? (
@@ -90,7 +90,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={onOpenCommandPalette}
             id="header-command-palette-btn"
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200/80 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 transition-all text-xs font-semibold active:scale-95 cursor-pointer"
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200/80 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 transition-all text-xs font-medium active:scale-95 cursor-pointer"
             title="Open Command Search Palette (⌘K)"
           >
             <Search className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
@@ -105,12 +105,12 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={onNavigateToLowStock}
             id="header-low-stock-alert"
-            className="relative flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100/80 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800/60 transition-all text-xs font-bold active:scale-95 cursor-pointer"
+            className="relative flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100/80 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800/60 transition-all text-xs font-semibold active:scale-95 cursor-pointer"
             title={`${lowStockCount} items low in stock`}
           >
             <AlertTriangle className="w-3.5 h-3.5 animate-pulse text-amber-600 dark:text-amber-400" />
             <span className="hidden xs:inline">Alerts</span>
-            <span className="ml-1 bg-amber-600 text-white px-1.5 py-0.2 rounded-full text-[10px] font-black">
+            <span className="ml-1 bg-amber-600 text-white px-1.5 py-0.2 rounded-full text-[10px] font-bold">
               {lowStockCount}
             </span>
           </button>
@@ -140,7 +140,7 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={onOpenQuickAction}
           id="header-quick-action-btn"
-          className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer"
+          className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-semibold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer"
         >
           <Plus className="w-4 h-4 stroke-[2.5]" />
           <span className="hidden xs:inline">Quick Entry</span>

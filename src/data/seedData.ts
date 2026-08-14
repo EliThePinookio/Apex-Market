@@ -52,7 +52,7 @@ export const INITIAL_CUSTOMERS: Customer[] = [
 ];
 
 export const INITIAL_BUSINESS_PROFILE: BusinessProfile = {
-  businessName: 'My Retail Store',
+  businessName: 'BEANNEL',
   ownerName: 'Store Owner',
   currencySymbol: '$',
   ownerPin: '1234',
