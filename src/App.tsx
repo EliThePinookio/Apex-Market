@@ -7,6 +7,7 @@ import {
   subscribeProfile,
   subscribeCustomers,
   loadAuthorizedBusinessData,
+  cleanupSupabaseRealtime,
 } from './services/dbService';
 import { usePWA, registerServiceWorker } from './services/pwaService';
 import { BackgroundCanvas, triggerCelebration } from './components/BackgroundCanvas';
@@ -91,6 +92,7 @@ function AppContent() {
       unsubTx();
       unsubProf();
       unsubCust();
+      cleanupSupabaseRealtime();
     };
   }, [user]);
 
@@ -228,7 +230,7 @@ function AppContent() {
         />
 
         {/* Dynamic Main Viewport with Smooth Motion Transitions */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto px-4 md:px-6 py-4 pb-24 md:pb-12">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}

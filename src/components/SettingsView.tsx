@@ -67,10 +67,24 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [isPinLocked, setIsPinLocked] = useState(profile.isPinLocked);
   const [biometricEnabled, setBiometricEnabled] = useState(profile.biometricEnabled ?? true);
   const [newPin, setNewPin] = useState(profile.ownerPin || '1234');
-  const [lowStockAlertEnabled, setLowStockAlertEnabled] = useState(profile.lowStockAlertEnabled);
-  const [allowNegativeStock, setAllowNegativeStock] = useState(profile.allowNegativeStock);
+  const [lowStockAlertEnabled, setLowStockAlertEnabled] = useState(profile.lowStockAlertEnabled ?? true);
+  const [allowNegativeStock, setAllowNegativeStock] = useState(Boolean(profile.allowNegativeStock));
   const [isProcessingData, setIsProcessingData] = useState(false);
   const [securityAction, setSecurityAction] = useState<'wipe' | 'reload' | null>(null);
+
+  useEffect(() => {
+    if (profile) {
+      setBusinessName(profile.businessName || 'BEANNEL');
+      setOwnerName(profile.ownerName || 'Store Owner');
+      setCurrencySymbol(profile.currencySymbol || '$');
+      setReceiptHeaderMsg(profile.receiptHeaderMsg || '');
+      setIsPinLocked(Boolean(profile.isPinLocked));
+      setBiometricEnabled(profile.biometricEnabled ?? true);
+      setNewPin(profile.ownerPin || '1234');
+      setLowStockAlertEnabled(profile.lowStockAlertEnabled ?? true);
+      setAllowNegativeStock(Boolean(profile.allowNegativeStock));
+    }
+  }, [profile]);
 
   const [biometricInfo, setBiometricInfo] = useState<BiometricCapability>({
     isAvailable: false,
@@ -166,7 +180,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   return (
-    <div className="pb-24 md:pb-12 pt-4 px-4 md:px-6 max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6">
       {/* Settings Title Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
