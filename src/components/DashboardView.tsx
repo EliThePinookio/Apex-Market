@@ -16,18 +16,12 @@ import {
   PackagePlus,
   X,
   ChevronRight,
-  CheckCircle2,
-  AlertCircle,
   Flame,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts';
 import { Product, Transaction, BusinessProfile, FinancialSummary } from '../types';
 import { recordStockRefill } from '../services/dbService';
 import { GeminiProfitAdvisor } from './GeminiProfitAdvisor';
-import { AnimatedNumber } from './AnimatedNumber';
-import { TiltCard } from './TiltCard';
-import { AnimatedProgressRing } from './AnimatedProgressRing';
 
 interface DashboardViewProps {
   summary: FinancialSummary;
@@ -52,98 +46,99 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onNavigateToAnalytics,
   onOpenQuickAction,
 }) => {
-  const cur = profile.currencySymbol;
+  const cur = profile.currencySymbol || '$';
   const [timeframe, setTimeframe] = useState<'today' | 'week' | 'month' | 'all'>('all');
 
   // Refill Modal State (Inline on Dashboard)
   const [refillProduct, setRefillProduct] = useState<Product | null>(null);
   const [refillQty, setRefillQty] = useState<number>(10);
-  const [refillCost, setRefillCost] = useState<string>('');
+  const [refillCost, setRefillCost] = useState<string>('0');
 
-  // 1. INTELLIGENT LOW STOCK PRIORITIZATION LOGIC
-  // Filter all items below or equal to reorder threshold
-  const lowStockProductsRaw = products.filter(
-    (p) => p.stockQuantity <= p.minStockThreshold
-  );
-
-  // Intelligently rank and categorize by severity
-  const rankedLowStockProducts = [...lowStockProductsRaw].sort((a, b) => {
-    // Priority 1: Out of stock (0 quantity)
-    const aIsOut = a.stockQuantity <= 0;
-    const bIsOut = b.stockQuantity <= 0;
-    if (aIsOut && !bIsOut) return -1;
-    if (!aIsOut && bIsOut) return 1;
-
-    // Priority 2: Lowest stock percentage remaining
-    const aRatio = a.stockQuantity / (a.minStockThreshold || 1);
-    const bRatio = b.stockQuantity / (b.minStockThreshold || 1);
-    if (aRatio !== bRatio) return aRatio - bRatio;
-
-    // Priority 3: Highest stock deficit (minStockThreshold - stockQuantity)
-    const aDeficit = a.minStockThreshold - a.stockQuantity;
-    const bDeficit = b.minStockThreshold - b.stockQuantity;
-    return bDeficit - aDeficit;
-  });
-
-  const outOfStockCount = rankedLowStockProducts.filter((p) => p.stockQuantity <= 0).length;
-  const criticalWarningCount = rankedLowStockProducts.length - outOfStockCount;
-
-  // Calculate timeframe filtered sales summary
-  const now = new Date();
-  const filteredTransactions = transactions.filter((t) => {
+  // Filter transactions according to selected timeframe
+  const filteredTransactions = transactions.filter((tx) => {
     if (timeframe === 'all') return true;
-    const txDate = new Date(t.date);
-    const diffHours = (now.getTime() - txDate.getTime()) / (1000 * 3600);
-    if (timeframe === 'today') return diffHours <= 24;
-    if (timeframe === 'week') return diffHours <= 24 * 7;
-    if (timeframe === 'month') return diffHours <= 24 * 30;
+    const txDate = new Date(tx.date);
+    const now = new Date();
+    if (timeframe === 'today') {
+      return (
+        txDate.getDate() === now.getDate() &&
+        txDate.getMonth() === now.getMonth() &&
+        txDate.getFullYear() === now.getFullYear()
+      );
+    }
+    if (timeframe === 'week') {
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      return txDate >= oneWeekAgo;
+    }
+    if (timeframe === 'month') {
+      return txDate.getMonth() === now.getMonth() && txDate.getFullYear() === now.getFullYear();
+    }
     return true;
   });
 
   const periodRevenue = filteredTransactions
-    .filter((t) => t.type === 'sale')
-    .reduce((acc, t) => acc + t.amount, 0);
+    .filter((tx) => tx.type === 'sale')
+    .reduce((acc, tx) => acc + (tx.amount || 0), 0);
 
-  const periodSalesCount = filteredTransactions.filter((t) => t.type === 'sale').length;
+  const periodSalesCount = filteredTransactions.filter((tx) => tx.type === 'sale').length;
   const avgBasket = periodSalesCount > 0 ? periodRevenue / periodSalesCount : 0;
 
-  // Daily target benchmark
+  // Margin calculation
+  const profitMarginPercent =
+    summary.totalRevenue > 0
+      ? Math.round((summary.netProfit / summary.totalRevenue) * 100)
+      : 0;
+
+  // Target calculations (e.g. daily target $1,000 or custom)
   const dailyTarget = 1000;
   const targetProgress = Math.min(100, Math.round((periodRevenue / dailyTarget) * 100));
 
-  // Top Selling products calculation
-  const topProductsMap: { [id: string]: { name: string; qty: number; total: number } } = {};
+  // Top Selling Products Calculation
+  const productSalesMap = new Map<string, { name: string; qty: number; total: number }>();
   transactions
     .filter((t) => t.type === 'sale' && t.items)
     .forEach((t) => {
-      t.items?.forEach((i) => {
-        if (!topProductsMap[i.productId]) {
-          topProductsMap[i.productId] = { name: i.productName, qty: 0, total: 0 };
-        }
-        topProductsMap[i.productId].qty += i.quantity;
-        topProductsMap[i.productId].total += i.totalSellPrice;
+      t.items?.forEach((item) => {
+        const existing = productSalesMap.get(item.productId) || {
+          name: item.productName,
+          qty: 0,
+          total: 0,
+        };
+        existing.qty += item.quantity;
+        existing.total += item.totalSellPrice || (item.unitSellPrice * item.quantity);
+        productSalesMap.set(item.productId, existing);
       });
     });
 
-  const topSellingList = Object.values(topProductsMap)
+  const topSellingList = Array.from(productSalesMap.values())
     .sort((a, b) => b.qty - a.qty)
     .slice(0, 5);
 
-  const profitMarginPercent = summary.totalRevenue > 0
-    ? ((summary.netProfit / summary.totalRevenue) * 100).toFixed(1)
-    : '0.0';
+  // Ranked Low Stock Products
+  const rankedLowStockProducts = products
+    .filter((p) => p.stockQuantity <= p.minStockThreshold)
+    .sort((a, b) => {
+      const aRatio = a.stockQuantity / (a.minStockThreshold || 1);
+      const bRatio = b.stockQuantity / (b.minStockThreshold || 1);
+      return aRatio - bRatio;
+    });
 
-  // Sparkline data for hero chart
+  const outOfStockCount = rankedLowStockProducts.filter((p) => p.stockQuantity <= 0).length;
+  const criticalWarningCount = rankedLowStockProducts.length - outOfStockCount;
+
+  // Sparkline data for recent revenue velocity
   const sparklineData = transactions
     .filter((t) => t.type === 'sale')
-    .slice(-10)
-    .map((t, i) => ({ index: i, amount: t.amount }));
+    .slice(0, 10)
+    .reverse()
+    .map((t, idx) => ({
+      name: idx.toString(),
+      amount: t.amount,
+    }));
 
-  // Handle Quick Refill Action
   const openRefillModal = (prod: Product) => {
-    const suggestedAdd = Math.max(10, prod.minStockThreshold * 2 - prod.stockQuantity);
     setRefillProduct(prod);
-    setRefillQty(suggestedAdd);
+    setRefillQty(10);
     setRefillCost(prod.buyPrice.toString());
   };
 
@@ -154,453 +149,386 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     await recordStockRefill({
       productId: refillProduct.id,
       quantityToAdd: Number(refillQty),
-      costPerUnit: Number(refillCost) || refillProduct.buyPrice,
-      reason: 'Quick Replenishment via Dashboard Alert',
+      costPerUnit: parseFloat(refillCost) || refillProduct.buyPrice,
     });
 
     setRefillProduct(null);
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* 1. INTELLIGENT PRIORITIZED LOW STOCK REPLENISHMENT ALERT COMMAND SURFACE */}
+    <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto">
+      {/* 1. LOW STOCK REPLENISHMENT ALERT */}
       {rankedLowStockProducts.length > 0 && (
-        <TiltCard elevation="floating" glowColor={outOfStockCount > 0 ? 'rose' : 'amber'}>
-          <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-amber-950/90 via-slate-900 to-slate-950 border border-amber-500/40 text-white shadow-2xl relative overflow-hidden space-y-4">
-            {/* Ambient Background Glow */}
-            <div className="absolute top-0 right-0 w-72 h-72 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
-
-            {/* Alert Header & Primary Call-to-Action */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-500/30 pb-4 relative z-10">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-500/30 to-rose-500/30 border border-amber-400/40 text-amber-300 relative shrink-0">
-                  <AlertTriangle className="w-6 h-6 text-amber-300 animate-pulse" />
-                  <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-rose-500 animate-ping" />
-                </div>
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <h2 className="font-display text-base sm:text-lg font-semibold text-white tracking-[-0.02em]">
-                      Inventory Replenishment Alert
-                    </h2>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-[0.04em] bg-rose-500/20 text-rose-300 border border-rose-500/40">
-                      Action Required
-                    </span>
-                  </div>
-                  <p className="text-xs text-amber-200/80 font-normal mt-0.5 leading-relaxed">
-                    {outOfStockCount > 0 && `${outOfStockCount} Out of Stock • `}
-                    {criticalWarningCount > 0 && `${criticalWarningCount} Low Stock Thresholds `}
-                    • Ranked by urgency and shortage severity
-                  </p>
-                </div>
+        <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/[0.08] dark:bg-amber-500/[0.12] border border-amber-500/20 text-slate-900 dark:text-slate-100 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-500/15 pb-3">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-300 shrink-0">
+                <AlertTriangle className="w-5 h-5" />
               </div>
-
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => onNavigateToInventory(true)}
-                className="px-4 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-xs flex items-center space-x-1.5 shadow-lg shadow-amber-500/20 shrink-0 cursor-pointer self-start sm:self-auto transition-all"
-              >
-                <span>View All ({rankedLowStockProducts.length}) Low Stock</span>
-                <ChevronRight className="w-4 h-4" />
-              </motion.button>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                    Inventory Replenishment Alert
+                  </h2>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/20">
+                    Action Required
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 font-medium">
+                  {outOfStockCount > 0 && `${outOfStockCount} Out of Stock • `}
+                  {criticalWarningCount > 0 && `${criticalWarningCount} Low Stock • `}
+                  Ranked by shortage severity
+                </p>
+              </div>
             </div>
 
-            {/* Top Critical Items Grid (Displaying top 3-4 prioritized items) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 relative z-10">
-              {rankedLowStockProducts.slice(0, 3).map((prod) => {
-                const isOut = prod.stockQuantity <= 0;
-                const ratio = prod.stockQuantity / (prod.minStockThreshold || 1);
-                const pct = Math.min(100, Math.round(ratio * 100));
-
-                return (
-                  <div
-                    key={prod.id}
-                    className="p-4 rounded-2xl bg-slate-900/80 border border-amber-500/30 hover:border-amber-400 transition-all flex flex-col justify-between space-y-3 shadow-md"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <span className="text-[10px] font-medium uppercase tracking-[0.04em] text-amber-400/90 block mb-0.5">
-                          {prod.category}
-                        </span>
-                        <h3 className="font-display text-sm font-semibold text-white truncate max-w-[170px]">
-                          {prod.name}
-                        </h3>
-                      </div>
-
-                      {isOut ? (
-                        <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-rose-500 text-white shadow-xs">
-                          <Flame className="w-3 h-3" />
-                          <span>Out of Stock</span>
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-400/30">
-                          {pct}% Stock Left
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Stock Level Progress Bar */}
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-[11px] font-mono tabular-nums">
-                        <span className="text-slate-400">Current Qty:</span>
-                        <span className={isOut ? 'text-rose-400 font-semibold' : 'text-amber-300 font-medium'}>
-                          {prod.stockQuantity} / {prod.minStockThreshold} {prod.unit}
-                        </span>
-                      </div>
-                      <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden border border-slate-700">
-                        <div
-                          className={`h-full transition-all duration-500 ${
-                            isOut ? 'bg-rose-500' : ratio <= 0.3 ? 'bg-amber-500' : 'bg-yellow-400'
-                          }`}
-                          style={{ width: `${Math.max(5, pct)}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Quick Refill Button */}
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => openRefillModal(prod)}
-                      className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center justify-center space-x-1.5 shadow-md shadow-emerald-600/20 cursor-pointer"
-                    >
-                      <PackagePlus className="w-4 h-4" />
-                      <span>Quick Refill Stock</span>
-                    </motion.button>
-                  </div>
-                );
-              })}
-            </div>
+            <button
+              onClick={() => onNavigateToInventory(true)}
+              className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 active:scale-[0.97] text-white font-semibold text-xs flex items-center space-x-1 shrink-0 cursor-pointer self-start sm:self-auto transition shadow-xs"
+            >
+              <span>View All ({rankedLowStockProducts.length}) Low Stock</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
-        </TiltCard>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {rankedLowStockProducts.slice(0, 3).map((prod) => {
+              const isOut = prod.stockQuantity <= 0;
+              const ratio = prod.stockQuantity / (prod.minStockThreshold || 1);
+              const pct = Math.min(100, Math.round(ratio * 100));
+
+              return (
+                <div
+                  key={prod.id}
+                  className="p-3.5 rounded-xl bg-white dark:bg-[#1C1C1E] border border-black/[0.06] dark:border-white/[0.08] shadow-xs flex flex-col justify-between space-y-3"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block mb-0.5">
+                        {prod.category}
+                      </span>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate max-w-[170px]">
+                        {prod.name}
+                      </h3>
+                    </div>
+
+                    {isOut ? (
+                      <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-600 text-white shadow-2xs">
+                        <Flame className="w-3 h-3" />
+                        <span>Out of Stock</span>
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                        {pct}% Stock Left
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs tabular-nums text-slate-600 dark:text-slate-400">
+                      <span className="font-medium">Current Stock:</span>
+                      <span className={isOut ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-slate-900 dark:text-white font-bold'}>
+                        {prod.stockQuantity} / {prod.minStockThreshold} {prod.unit}
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5 rounded-full bg-black/[0.06] dark:bg-white/[0.1] overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${isOut ? 'bg-rose-500' : 'bg-amber-500'}`}
+                        style={{ width: `${Math.max(5, pct)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => openRefillModal(prod)}
+                    className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-semibold text-xs flex items-center justify-center space-x-1.5 cursor-pointer transition shadow-2xs"
+                  >
+                    <PackagePlus className="w-3.5 h-3.5" />
+                    <span>Quick Refill Stock</span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
 
-      {/* 2. LIVING HERO AREA - Animated Primary Metric & Dynamic Dimensional Emerald System */}
-      <TiltCard elevation="hero" glowColor="emerald">
-        <div className="relative rounded-3xl bg-gradient-to-br from-emerald-950 via-emerald-900 to-slate-900 text-white p-6 sm:p-8 shadow-2xl border border-emerald-800/40 overflow-hidden">
-          {/* Soft Ambient Light Glow Blobs */}
-          <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none animate-pulse" />
-          <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-teal-400/10 blur-3xl pointer-events-none" />
-
-          {/* Hero Top Bar: Title & Timeframe Selector */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-emerald-800/50 relative z-10">
-            <div>
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[11px] font-semibold tracking-wide uppercase mb-2 backdrop-blur-md">
-                <Zap className="w-3.5 h-3.5 text-emerald-400 animate-bounce" />
-                <span>Executive Live Business Monitor</span>
-              </div>
-              <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-[-0.03em]">
-                {profile.businessName} Overview
-              </h1>
+      {/* 2. MAIN OVERVIEW HERO CARD */}
+      <div className="rounded-2xl bg-gradient-to-br from-slate-900 via-[#131722] to-slate-950 text-white p-5 sm:p-6 border border-white/[0.08] shadow-lg shadow-black/20 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
+          <div>
+            <div className="inline-flex items-center space-x-1.5 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-1">
+              <Zap className="w-3.5 h-3.5" />
+              <span>Executive Business Monitor</span>
             </div>
+            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+              {profile.businessName} Overview
+            </h1>
+          </div>
 
-            {/* Timeframe Tab Switcher */}
-            <div className="flex items-center bg-slate-950/60 p-1.5 rounded-2xl border border-emerald-800/60 text-xs font-medium backdrop-blur-md self-start sm:self-auto">
-              {(['today', 'week', 'month', 'all'] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setTimeframe(tab)}
-                  className={`relative px-3.5 py-1.5 rounded-xl transition-all capitalize cursor-pointer z-10 ${
-                    timeframe === tab ? 'text-emerald-950 font-semibold' : 'text-emerald-200/80 hover:text-white'
-                  }`}
-                >
-                  {timeframe === tab && (
-                    <motion.div
-                      layoutId="heroTimeframe"
-                      className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-mint-400 bg-emerald-400 rounded-xl shadow-md"
-                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                    />
-                  )}
-                  <span className="relative z-10">{tab === 'all' ? 'All Time' : tab}</span>
-                </button>
-              ))}
+          {/* iOS Segmented Control */}
+          <div className="flex items-center bg-black/40 p-1 rounded-xl border border-white/[0.08] text-xs font-semibold self-start sm:self-auto backdrop-blur-xs">
+            {(['today', 'week', 'month', 'all'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setTimeframe(tab)}
+                className={`px-3 py-1.5 rounded-lg transition-all capitalize cursor-pointer active:scale-[0.96] ${
+                  timeframe === tab
+                    ? 'bg-white text-slate-950 font-bold shadow-xs'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {tab === 'all' ? 'All Time' : tab}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          <div className="lg:col-span-5 space-y-2">
+            <div className="text-slate-400 text-xs font-semibold uppercase tracking-wider">
+              Period Revenue
+            </div>
+            <div className="text-3xl sm:text-4xl font-bold text-white tabular-nums tracking-tight">
+              {cur}{periodRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <div className="flex items-center space-x-3 text-xs pt-1 text-slate-300">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-semibold border border-emerald-500/30">
+                <ArrowUpRight className="w-3.5 h-3.5 mr-1" />
+                {periodSalesCount} Sales Logged
+              </span>
+              <span className="font-medium text-slate-400">
+                Avg Basket: <strong className="text-white tabular-nums font-bold">{cur}{avgBasket.toFixed(2)}</strong>
+              </span>
             </div>
           </div>
 
-          {/* Hero Content Grid: Primary Animated Metric + Progress Target Ring + Sparkline */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6 relative z-10 items-center">
-            {/* Column 1: Primary Revenue Number */}
-            <div className="lg:col-span-5 space-y-3">
-              <div className="flex items-center space-x-2 text-emerald-300 text-xs font-medium uppercase tracking-[0.04em]">
-                <TrendingUp className="w-4 h-4 text-emerald-400" />
-                <span>Period Revenue Velocity</span>
+          <div className="lg:col-span-3">
+            <div className="p-3.5 rounded-xl bg-white/[0.04] border border-white/[0.08] space-y-2.5">
+              <div className="flex items-center space-x-1.5 text-xs text-slate-300 font-bold">
+                <Target className="w-4 h-4 text-emerald-400" />
+                <span>Daily Revenue Target</span>
               </div>
-
-              <div className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-[-0.03em] text-white font-sans tabular-nums flex items-baseline space-x-1">
-                <span>{cur}</span>
-                <AnimatedNumber value={periodRevenue} duration={800} />
+              <div className="text-base font-bold text-white tabular-nums">
+                {cur}{periodRevenue.toFixed(0)} / {cur}{dailyTarget}
               </div>
+              <div className="w-full h-1.5 rounded-full bg-white/[0.1] overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-emerald-400 transition-all duration-300"
+                  style={{ width: `${Math.min(100, targetProgress)}%` }}
+                />
+              </div>
+              <p className="text-[11px] text-slate-400 font-medium">
+                {targetProgress >= 100 ? 'Goal Achieved!' : `${targetProgress}% of target reached`}
+              </p>
+            </div>
+          </div>
 
-              <div className="flex items-center space-x-3 text-xs pt-1">
-                <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-medium border border-emerald-500/30">
-                  <ArrowUpRight className="w-3.5 h-3.5 mr-1" />
-                  {periodSalesCount} Sales Logged
-                </span>
-                <span className="text-emerald-200/70 font-normal">
-                  Avg Basket: <strong className="text-white font-semibold font-sans tabular-nums">{cur}{avgBasket.toFixed(2)}</strong>
-                </span>
+          <div className="lg:col-span-4 h-24 bg-white/[0.04] p-3 rounded-xl border border-white/[0.08] flex flex-col justify-between">
+            <div className="flex items-center justify-between text-xs text-slate-300 font-semibold">
+              <span>Sales Velocity</span>
+              <span className="text-[10px] text-slate-400 font-medium">Recent 10 Sales</span>
+            </div>
+            {sparklineData.length > 0 ? (
+              <div className="w-full h-14">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={sparklineData}>
+                    <Tooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="bg-[#1C1C1E] border border-white/[0.12] text-white p-1 rounded-md text-[10px] tabular-nums font-semibold">
+                              {cur}{payload[0].value}
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="amount"
+                      stroke="#10b981"
+                      strokeWidth={2}
+                      fill="#10b981"
+                      fillOpacity={0.25}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="text-center py-2 text-xs text-slate-500 font-medium">No sales logged yet</div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 3. METRICS GRID */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 md:gap-4">
+        {/* Total Revenue */}
+        <div
+          onClick={onNavigateToAnalytics}
+          className="ios-card ios-card-interactive p-4 sm:p-5 flex flex-col justify-between"
+        >
+          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+            <span>Total Revenue</span>
+            <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tabular-nums tracking-tight">
+            {cur}{summary.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+          <div className="mt-3 pt-2 border-t border-black/[0.05] dark:border-white/[0.06] flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 tabular-nums font-medium">
+            <span>COGS: {cur}{summary.totalCOGS.toFixed(0)}</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold">Gross: {cur}{summary.grossProfit.toFixed(0)}</span>
+          </div>
+        </div>
+
+        {/* Net Profit */}
+        <div
+          onClick={onNavigateToAnalytics}
+          className="ios-card ios-card-interactive p-4 sm:p-5 flex flex-col justify-between"
+        >
+          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+            <span>Net Profit</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${summary.netProfit >= 0 ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20' : 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/20'}`}>
+              {profitMarginPercent}% Margin
+            </span>
+          </div>
+          <div className={`text-xl sm:text-2xl font-bold tabular-nums tracking-tight ${summary.netProfit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+            {cur}{summary.netProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+          <div className="mt-3 pt-2 border-t border-black/[0.05] dark:border-white/[0.06] flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
+            <span>Profit Margin</span>
+            <span className="font-bold text-slate-900 dark:text-white">{profitMarginPercent}% Net</span>
+          </div>
+        </div>
+
+        {/* Total Expenses */}
+        <div
+          onClick={onNavigateToTransactions}
+          className="ios-card ios-card-interactive p-4 sm:p-5 flex flex-col justify-between"
+        >
+          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+            <span>Total Expenses</span>
+            <div className="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+              <ArrowDownRight className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-bold text-rose-600 dark:text-rose-400 tabular-nums tracking-tight">
+            {cur}{summary.totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+          <div className="mt-3 pt-2 border-t border-black/[0.05] dark:border-white/[0.06] flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
+            <span>Expense Logs</span>
+            <span className="font-bold text-slate-900 dark:text-white">{transactions.filter(t => t.type === 'expense').length} items</span>
+          </div>
+        </div>
+
+        {/* Owner Capital */}
+        <div
+          onClick={onNavigateToTransactions}
+          className="ios-card ios-card-interactive p-4 sm:p-5 flex flex-col justify-between"
+        >
+          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+            <span>Owner Capital</span>
+            <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+              <PiggyBank className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-bold text-amber-700 dark:text-amber-400 tabular-nums tracking-tight">
+            {cur}{summary.totalCapital.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+          <div className="mt-3 pt-2 border-t border-black/[0.05] dark:border-white/[0.06] flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
+            <span>Capital Reserve</span>
+            <span className="font-bold text-amber-700 dark:text-amber-400">Active</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. INVENTORY VALUATION & QUICK ACTIONS */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Inventory Stock Valuation Card */}
+        <div
+          onClick={() => onNavigateToInventory()}
+          className="lg:col-span-2 ios-card ios-card-interactive p-5 flex flex-col justify-between space-y-4"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
+                <Boxes className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">Inventory Asset Valuation</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{products.length} Active Catalog SKUs</p>
               </div>
             </div>
+            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center space-x-1">
+              <span>Manage Inventory</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </span>
+          </div>
 
-            {/* Column 2: Interactive Target Progress Ring */}
-            <div className="lg:col-span-3 flex items-center justify-center lg:justify-start">
-              <div className="flex items-center space-x-4 bg-emerald-950/50 p-4 rounded-2xl border border-emerald-800/50 backdrop-blur-md w-full sm:w-auto">
-                <AnimatedProgressRing
-                  progress={targetProgress}
-                  size={80}
-                  strokeWidth={8}
-                  gradientStart="#10b981"
-                  gradientEnd="#34d399"
-                  bgStroke="rgba(6, 78, 59, 0.6)"
-                >
-                  <span className="text-xs font-bold text-emerald-300 font-mono tabular-nums">{targetProgress}%</span>
-                </AnimatedProgressRing>
-
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-1.5 text-xs font-medium text-emerald-200">
-                    <Target className="w-4 h-4 text-emerald-400" />
-                    <span>Daily Revenue Target</span>
-                  </div>
-                  <div className="text-sm font-semibold text-white font-sans tabular-nums">
-                    {cur}{periodRevenue.toFixed(0)} / {cur}{dailyTarget}
-                  </div>
-                  <p className="text-[10px] text-emerald-300/80 font-medium">
-                    {targetProgress >= 100 ? '🎉 Goal Achieved!' : `${100 - targetProgress}% to goal`}
-                  </p>
-                </div>
-              </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2 border-t border-black/[0.05] dark:border-white/[0.06]">
+            <div className="ios-subcard p-3">
+              <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-bold tracking-wider mb-0.5">Asset Cost Value</span>
+              <span className="text-base font-bold text-slate-900 dark:text-white tabular-nums">
+                {cur}{summary.totalInventoryValuation.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
             </div>
-
-            {/* Column 3: Mini Trend Chart Visualizer */}
-            <div className="lg:col-span-4 h-24 bg-emerald-950/40 p-3 rounded-2xl border border-emerald-800/40 backdrop-blur-md flex flex-col justify-between">
-              <div className="flex items-center justify-between text-[11px] font-medium text-emerald-300 px-1">
-                <span>Sales Velocity Curve</span>
-                <span className="text-[10px] text-emerald-400 font-mono tabular-nums">Recent 10 Sales</span>
-              </div>
-              {sparklineData.length > 0 ? (
-                <div className="w-full h-16">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={sparklineData}>
-                      <defs>
-                        <linearGradient id="heroGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#34d399" stopOpacity={0.6} />
-                          <stop offset="95%" stopColor="#34d399" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <Tooltip
-                        content={({ active, payload }) => {
-                          if (active && payload && payload.length) {
-                            return (
-                              <div className="bg-slate-900 border border-emerald-500/40 text-emerald-300 p-1.5 rounded-lg text-[10px] font-mono tabular-nums shadow-md">
-                                {cur}{payload[0].value}
-                              </div>
-                            );
-                          }
-                          return null;
-                        }}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="amount"
-                        stroke="#34d399"
-                        strokeWidth={2.5}
-                        fillOpacity={1}
-                        fill="url(#heroGradient)"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              ) : (
-                <div className="text-center py-4 text-xs text-emerald-400/60 font-medium">No sales graph yet</div>
-              )}
+            <div className="ios-subcard p-3">
+              <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-bold tracking-wider mb-0.5">Potential Revenue</span>
+              <span className="text-base font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                {cur}{summary.totalPotentialRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+            <div className="ios-subcard p-3 col-span-2 sm:col-span-1">
+              <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-bold tracking-wider mb-0.5">Stock Status</span>
+              <span className={`text-base font-bold ${rankedLowStockProducts.length > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                {rankedLowStockProducts.length > 0 ? `${rankedLowStockProducts.length} Low Stock` : 'Healthy Stock'}
+              </span>
             </div>
           </div>
         </div>
-      </TiltCard>
-
-      {/* 3. TACTILE METRICS GRID WITH 3D FLOATING OBJECTS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 md:gap-4">
-        {/* Total Revenue Card */}
-        <TiltCard elevation="floating" onClick={onNavigateToAnalytics}>
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/80 to-emerald-50/30 border border-slate-200/90 flex flex-col justify-between relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-3 opacity-5 text-emerald-800 transition-transform group-hover:scale-110 pointer-events-none">
-              <TrendingUp className="w-20 h-20" />
-            </div>
-            <div>
-              <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-1">
-                <span>Total Revenue</span>
-                <span className="p-1 rounded-lg bg-emerald-100/80 text-emerald-700 border border-emerald-200">
-                  <ArrowUpRight className="w-3.5 h-3.5" />
-                </span>
-              </div>
-              <div className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-[-0.025em] font-sans tabular-nums">
-                {cur}<AnimatedNumber value={summary.totalRevenue} />
-              </div>
-            </div>
-            <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium tabular-nums">
-              <span>COGS: {cur}{summary.totalCOGS.toFixed(0)}</span>
-              <span className="text-emerald-700 font-semibold">Gross: {cur}{summary.grossProfit.toFixed(0)}</span>
-            </div>
-          </div>
-        </TiltCard>
-
-        {/* Net Profit Card */}
-        <TiltCard elevation="floating" onClick={onNavigateToAnalytics}>
-          <div className={`p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/80 to-emerald-50/30 border ${summary.netProfit >= 0 ? 'border-emerald-200' : 'border-rose-200'} flex flex-col justify-between relative overflow-hidden group`}>
-            <div className="absolute top-0 right-0 p-3 opacity-5 transition-transform group-hover:scale-110 pointer-events-none">
-              <DollarSign className={`w-20 h-20 ${summary.netProfit >= 0 ? 'text-emerald-700' : 'text-rose-700'}`} />
-            </div>
-            <div>
-              <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-1">
-                <span>Net Profit</span>
-                <span className={`p-1 px-1.5 rounded-md text-[11px] font-semibold ${summary.netProfit >= 0 ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-rose-100 text-rose-800 border border-rose-200'}`}>
-                  {profitMarginPercent}%
-                </span>
-              </div>
-              <div className={`text-2xl sm:text-3xl font-bold tracking-[-0.025em] font-sans tabular-nums ${summary.netProfit >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
-                {cur}<AnimatedNumber value={summary.netProfit} />
-              </div>
-            </div>
-            <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium">
-              <span>Margin Rate</span>
-              <span className="text-slate-800 font-semibold">{profitMarginPercent}% Net</span>
-            </div>
-          </div>
-        </TiltCard>
-
-        {/* Total Expenses Card */}
-        <TiltCard elevation="floating" onClick={onNavigateToTransactions}>
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/80 to-rose-50/20 border border-rose-200/90 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-1">
-                <span>Total Expenses</span>
-                <span className="p-1 rounded-lg bg-rose-100 text-rose-700 border border-rose-200">
-                  <ArrowDownRight className="w-3.5 h-3.5" />
-                </span>
-              </div>
-              <div className="text-2xl sm:text-3xl font-bold text-rose-600 tracking-[-0.025em] font-sans tabular-nums">
-                {cur}<AnimatedNumber value={summary.totalExpenses} />
-              </div>
-            </div>
-            <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium">
-              <span>Expense Logs</span>
-              <span className="text-slate-800 font-semibold">{transactions.filter(t => t.type === 'expense').length} items</span>
-            </div>
-          </div>
-        </TiltCard>
-
-        {/* Owner Capital Card */}
-        <TiltCard elevation="floating" onClick={onNavigateToTransactions}>
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/80 to-amber-50/20 border border-amber-200/90 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-1">
-                <span>Owner Capital</span>
-                <span className="p-1 rounded-lg bg-amber-100 text-amber-800 border border-amber-200">
-                  <PiggyBank className="w-3.5 h-3.5" />
-                </span>
-              </div>
-              <div className="text-2xl sm:text-3xl font-bold text-amber-800 tracking-[-0.025em] font-sans tabular-nums">
-                {cur}<AnimatedNumber value={summary.totalCapital} />
-              </div>
-            </div>
-            <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium">
-              <span>Capital Reserve</span>
-              <span className="text-amber-800 font-semibold">Active Reserve</span>
-            </div>
-          </div>
-        </TiltCard>
-      </div>
-
-      {/* 4. ASYMMETRIC LAYOUT: INVENTORY VALUATION & QUICK WORKSPACE */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Inventory Stock Valuation Card */}
-        <TiltCard elevation="elevated" className="lg:col-span-2 rounded-3xl" onClick={() => onNavigateToInventory()}>
-          <div className="p-6 rounded-3xl bg-gradient-to-br from-white via-slate-50/90 to-emerald-50/30 border border-slate-200/90 flex flex-col justify-between space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 rounded-2xl bg-emerald-100/80 border border-emerald-200 text-emerald-800 shadow-xs">
-                  <Boxes className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-display text-base font-semibold text-slate-900 tracking-[-0.02em]">Inventory Asset Valuation</h3>
-                  <p className="text-xs text-slate-500 font-normal">{products.length} Active Catalog SKUs</p>
-                </div>
-              </div>
-              <span className="text-xs text-emerald-700 font-semibold flex items-center space-x-1 group-hover:underline">
-                <span>Manage Inventory</span>
-                <ArrowUpRight className="w-3.5 h-3.5" />
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100">
-              <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs">
-                <span className="text-slate-500 block text-[10px] uppercase font-medium tracking-[0.04em] mb-0.5">Asset Cost Valuation</span>
-                <span className="text-lg font-bold text-slate-900 font-sans tabular-nums tracking-tight">
-                  {cur}<AnimatedNumber value={summary.totalInventoryValuation} />
-                </span>
-              </div>
-              <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs">
-                <span className="text-slate-500 block text-[10px] uppercase font-medium tracking-[0.04em] mb-0.5">Potential Revenue</span>
-                <span className="text-lg font-bold text-emerald-700 font-sans tabular-nums tracking-tight">
-                  {cur}<AnimatedNumber value={summary.totalPotentialRevenue} />
-                </span>
-              </div>
-              <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs col-span-2 sm:col-span-1">
-                <span className="text-slate-500 block text-[10px] uppercase font-medium tracking-[0.04em] mb-0.5">Stock Status</span>
-                <span className={`text-base font-semibold ${rankedLowStockProducts.length > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
-                  {rankedLowStockProducts.length > 0 ? `${rankedLowStockProducts.length} Low Stock` : 'Healthy Stock'}
-                </span>
-              </div>
-            </div>
-          </div>
-        </TiltCard>
 
         {/* Quick Launch Actions */}
-        <div className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-[0_12px_30px_-5px_rgba(15,23,42,0.06)] flex flex-col justify-between space-y-3">
-          <h3 className="font-display text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Quick Launch Workspace
+        <div className="ios-card p-5 flex flex-col justify-between space-y-3">
+          <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+            Quick Actions
           </h3>
 
-          <div className="grid grid-cols-2 gap-2.5">
-            <motion.button
-              whileHover={{ scale: 1.03, y: -2 }}
-              whileTap={{ scale: 0.96 }}
+          <div className="grid grid-cols-2 gap-2">
+            <button
               onClick={onNavigateToPOS}
-              className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-200 text-emerald-900 transition-all shadow-2xs cursor-pointer"
+              className="flex flex-col items-center justify-center p-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 transition-all active:scale-[0.96] cursor-pointer"
             >
-              <ShoppingBag className="w-5 h-5 mb-1.5 text-emerald-700" />
-              <span className="text-xs font-semibold">POS Terminal</span>
-            </motion.button>
+              <ShoppingBag className="w-5 h-5 mb-1 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-xs font-bold">POS Terminal</span>
+            </button>
 
-            <motion.button
-              whileHover={{ scale: 1.03, y: -2 }}
-              whileTap={{ scale: 0.96 }}
+            <button
               onClick={() => onNavigateToInventory()}
-              className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-teal-50 hover:bg-teal-100/80 border border-teal-200 text-teal-900 transition-all shadow-2xs cursor-pointer"
+              className="flex flex-col items-center justify-center p-3 rounded-xl bg-teal-500/10 hover:bg-teal-500/15 border border-teal-500/20 text-teal-800 dark:text-teal-300 transition-all active:scale-[0.96] cursor-pointer"
             >
-              <Package className="w-5 h-5 mb-1.5 text-teal-700" />
-              <span className="text-xs font-semibold">Inventory SKUs</span>
-            </motion.button>
+              <Package className="w-5 h-5 mb-1 text-teal-600 dark:text-teal-400" />
+              <span className="text-xs font-bold">Inventory</span>
+            </button>
 
-            <motion.button
-              whileHover={{ scale: 1.03, y: -2 }}
-              whileTap={{ scale: 0.96 }}
+            <button
               onClick={onOpenQuickAction}
-              className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-800 transition-all shadow-2xs cursor-pointer"
+              className="flex flex-col items-center justify-center p-3 rounded-xl bg-black/[0.03] dark:bg-white/[0.06] hover:bg-black/[0.06] dark:hover:bg-white/[0.09] border border-black/[0.04] dark:border-white/[0.06] text-slate-800 dark:text-slate-200 transition-all active:scale-[0.96] cursor-pointer"
             >
-              <PlusCircle className="w-5 h-5 mb-1.5 text-emerald-600" />
-              <span className="text-xs font-semibold">Quick Entry</span>
-            </motion.button>
+              <PlusCircle className="w-5 h-5 mb-1 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-xs font-bold">Quick Entry</span>
+            </button>
 
-            <motion.button
-              whileHover={{ scale: 1.03, y: -2 }}
-              whileTap={{ scale: 0.96 }}
+            <button
               onClick={onNavigateToAnalytics}
-              className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-amber-50 hover:bg-amber-100/80 border border-amber-200 text-amber-900 transition-all shadow-2xs cursor-pointer"
+              className="flex flex-col items-center justify-center p-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/15 border border-amber-500/20 text-amber-800 dark:text-amber-300 transition-all active:scale-[0.96] cursor-pointer"
             >
-              <BarChart3 className="w-5 h-5 mb-1.5 text-amber-700" />
-              <span className="text-xs font-semibold">P&L Report</span>
-            </motion.button>
+              <BarChart3 className="w-5 h-5 mb-1 text-amber-600 dark:text-amber-400" />
+              <span className="text-xs font-bold">P&L Report</span>
+            </button>
           </div>
         </div>
       </div>
@@ -611,54 +539,53 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* 6. BOTTOM ROW: TOP PERFORMING PRODUCTS & RECENT LEDGER */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Top Selling Products */}
-        <div className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-[0_12px_30px_-5px_rgba(15,23,42,0.06)] space-y-3">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 className="font-display text-xs font-semibold text-slate-500 uppercase tracking-wider">
+        <div className="ios-card p-5 space-y-3">
+          <div className="flex items-center justify-between border-b border-black/[0.05] dark:border-white/[0.06] pb-3">
+            <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               Top Catalog Performers
             </h3>
-            <span className="text-slate-400 text-[10px] font-medium uppercase tracking-[0.04em]">Volume Ranked</span>
+            <span className="text-slate-400 text-[10px] font-bold uppercase">Volume Ranked</span>
           </div>
 
           {topSellingList.length > 0 ? (
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               {topSellingList.map((item, idx) => (
-                <motion.div
+                <div
                   key={idx}
-                  whileHover={{ x: 4 }}
-                  className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 hover:bg-emerald-50/50 border border-slate-200/70 hover:border-emerald-300 text-xs transition-all"
+                  className="flex items-center justify-between p-2.5 rounded-xl ios-subcard text-xs"
                 >
-                  <div className="flex items-center space-x-3 min-w-0">
-                    <span className="w-7 h-7 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-xs font-bold text-emerald-800 shrink-0">
+                  <div className="flex items-center space-x-2.5 min-w-0">
+                    <span className="w-6 h-6 rounded-lg bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 flex items-center justify-center text-xs font-bold shrink-0">
                       #{idx + 1}
                     </span>
-                    <span className="font-medium text-slate-800 truncate">
+                    <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
                       {item.name}
                     </span>
                   </div>
                   <div className="text-right shrink-0">
-                    <span className="font-semibold text-emerald-700 font-sans tabular-nums text-xs sm:text-sm">{cur}{item.total.toFixed(2)}</span>
-                    <span className="block text-[10px] text-slate-500 font-normal">{item.qty} units sold</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums text-xs sm:text-sm">{cur}{item.total.toFixed(2)}</span>
+                    <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium">{item.qty} units sold</span>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           ) : (
-            <div className="text-xs text-slate-400 py-8 text-center flex flex-col items-center justify-center space-y-1">
-              <ShoppingBag className="w-6 h-6 text-slate-300 mb-1" />
+            <div className="text-xs text-slate-400 py-6 text-center flex flex-col items-center justify-center space-y-1">
+              <ShoppingBag className="w-6 h-6 text-slate-300 dark:text-slate-600 mb-1" />
               <span>No sales logged yet. Complete a checkout in POS!</span>
             </div>
           )}
         </div>
 
         {/* Recent Activity Log */}
-        <div className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-[0_12px_30px_-5px_rgba(15,23,42,0.06)] space-y-3">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 className="font-display text-xs font-semibold text-slate-500 uppercase tracking-wider">
+        <div className="ios-card p-5 space-y-3">
+          <div className="flex items-center justify-between border-b border-black/[0.05] dark:border-white/[0.06] pb-3">
+            <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               Recent Transactions
             </h3>
             <button
               onClick={onNavigateToTransactions}
-              className="text-xs text-emerald-700 hover:text-emerald-800 font-semibold hover:underline cursor-pointer"
+              className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline font-bold cursor-pointer"
             >
               View Full Ledger ({transactions.length}) &rarr;
             </button>
@@ -666,140 +593,132 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
           <div className="space-y-2">
             {transactions.slice(0, 5).map((tx) => (
-              <motion.div
+              <div
                 key={tx.id}
-                whileHover={{ x: 4 }}
-                className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 hover:bg-slate-100/80 border border-slate-200/70 text-xs hover:border-slate-300 transition-all"
+                className="flex items-center justify-between p-2.5 rounded-xl ios-subcard text-xs"
               >
-                <div className="flex items-center space-x-3 min-w-0">
+                <div className="flex items-center space-x-2.5 min-w-0">
                   <span
-                    className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold uppercase tracking-[0.04em] shrink-0 ${
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase shrink-0 ${
                       tx.type === 'sale'
-                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
                         : tx.type === 'expense'
-                        ? 'bg-rose-100 text-rose-800 border border-rose-200'
-                        : 'bg-amber-100 text-amber-800 border border-amber-200'
+                        ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/20'
+                        : 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/20'
                     }`}
                   >
                     {tx.type}
                   </span>
                   <div className="min-w-0">
-                    <p className="font-medium text-slate-800 truncate">{tx.description}</p>
-                    <p className="text-[10px] text-slate-400 font-normal">
+                    <p className="font-semibold text-slate-800 dark:text-slate-200 truncate">{tx.description}</p>
+                    <p className="text-[10px] text-slate-400 font-medium">
                       {new Date(tx.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                 </div>
 
-                <div className="text-right font-semibold font-sans tabular-nums text-xs sm:text-sm shrink-0">
+                <div className="text-right font-bold tabular-nums text-xs sm:text-sm shrink-0">
                   <span
                     className={
                       tx.type === 'sale'
-                        ? 'text-emerald-700'
+                        ? 'text-emerald-600 dark:text-emerald-400'
                         : tx.type === 'expense'
-                        ? 'text-rose-600'
-                        : 'text-amber-800'
+                        ? 'text-rose-600 dark:text-rose-400'
+                        : 'text-amber-600 dark:text-amber-400'
                     }
                   >
                     {tx.type === 'expense' ? '-' : '+'}{cur}{tx.amount.toFixed(2)}
                   </span>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* REFILL MODAL (INLINE DIRECT REPLENISHMENT) */}
-      <AnimatePresence>
-        {refillProduct && (
-          <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white border border-slate-200 rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-4"
-            >
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div>
-                  <span className="text-[10px] font-extrabold text-emerald-700 uppercase tracking-wider block">
-                    {refillProduct.category}
-                  </span>
-                  <h3 className="text-base font-black text-slate-900">
-                    Refill Stock: {refillProduct.name}
-                  </h3>
-                </div>
-                <button
-                  onClick={() => setRefillProduct(null)}
-                  className="p-1 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+      {/* REFILL MODAL */}
+      {refillProduct && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#1C1C1E] border border-black/[0.08] dark:border-white/[0.12] rounded-2xl w-full max-w-md p-5 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-black/[0.05] dark:border-white/[0.06] pb-3">
+              <div>
+                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
+                  {refillProduct.category}
+                </span>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                  Refill Stock: {refillProduct.name}
+                </h3>
+              </div>
+              <button
+                onClick={() => setRefillProduct(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmDashboardRefill} className="space-y-3.5 text-xs">
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex justify-between items-center text-amber-900 dark:text-amber-200">
+                <span className="font-medium">Current Stock:</span>
+                <span className="font-bold text-sm tabular-nums">
+                  {refillProduct.stockQuantity} / {refillProduct.minStockThreshold} {refillProduct.unit}
+                </span>
               </div>
 
-              <form onSubmit={handleConfirmDashboardRefill} className="space-y-3 text-xs">
-                <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 flex justify-between items-center text-amber-900">
-                  <span>Current Inventory Stock:</span>
-                  <span className="font-black text-sm font-mono">
-                    {refillProduct.stockQuantity} / {refillProduct.minStockThreshold} {refillProduct.unit}
-                  </span>
-                </div>
+              <div>
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+                  Units to Add *
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  required
+                  value={refillQty}
+                  onChange={(e) => setRefillQty(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-xl px-3 py-2.5 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-emerald-500 text-sm"
+                />
+              </div>
 
-                <div>
-                  <label className="block text-slate-700 font-bold mb-1">
-                    Units to Add *
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    required
-                    value={refillQty}
-                    onChange={(e) => setRefillQty(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 font-bold focus:outline-none focus:border-emerald-500 text-sm"
-                  />
-                </div>
+              <div>
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+                  Cost Price Per Unit ({cur}) *
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  required
+                  value={refillCost}
+                  onChange={(e) => setRefillCost(e.target.value)}
+                  className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 text-xs font-semibold tabular-nums"
+                />
+              </div>
 
-                <div>
-                  <label className="block text-slate-700 font-bold mb-1">
-                    Cost Price Per Unit ({cur}) *
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    value={refillCost}
-                    onChange={(e) => setRefillCost(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none focus:border-emerald-500 text-xs"
-                  />
-                </div>
+              <div className="p-3 rounded-xl ios-subcard flex justify-between">
+                <span className="text-slate-500 dark:text-slate-400 font-medium">New Total Stock:</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                  {refillProduct.stockQuantity + Number(refillQty)} {refillProduct.unit}
+                </span>
+              </div>
 
-                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex justify-between font-mono">
-                  <span className="text-slate-500">New Total Stock:</span>
-                  <span className="font-black text-emerald-700">
-                    {refillProduct.stockQuantity + Number(refillQty)} {refillProduct.unit}
-                  </span>
-                </div>
-
-                <div className="pt-2 flex justify-end space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => setRefillProduct(null)}
-                    className="px-4 py-2 rounded-xl text-slate-600 font-bold bg-slate-100 hover:bg-slate-200"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black shadow-md cursor-pointer"
-                  >
-                    Confirm Refill
-                  </button>
-                </div>
-              </form>
-            </motion.div>
+              <div className="pt-2 flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setRefillProduct(null)}
+                  className="px-4 py-2.5 rounded-xl text-slate-700 dark:text-slate-300 font-semibold bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.1] active:scale-[0.97] cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.97] text-white font-bold cursor-pointer shadow-xs"
+                >
+                  Confirm Refill
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 };

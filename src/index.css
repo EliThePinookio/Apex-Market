@@ -2,290 +2,115 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-@theme {
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif;
-  --font-display: 'Manrope', 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-}
-
 @layer base {
+  :root {
+    --font-system: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", -apple-system, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  html {
+    font-family: var(--font-system);
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
   body {
-    background-color: #f7f9f5;
-    color: #0f172a;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    background-color: #F2F2F7;
+    color: #1C1C1E;
+    font-family: var(--font-system);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
-    transition: background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   body.dark, html.dark body {
-    background-color: #090d16;
-    color: #f8fafc;
-  }
-
-  /* Headings defaults */
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Manrope', 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+    background-color: #000000;
+    color: #F2F2F7;
   }
 }
 
-/* Custom Typography & Monospace Numbers */
-.font-display {
-  font-family: 'Manrope', 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-}
-
-.font-sans {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif;
-}
-
-.font-mono {
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-}
-
-.tabular-nums, .font-tabular {
+.tabular-nums {
   font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
 }
 
-/* Specific Typography Hierarchy Helpers matching prompt */
-.page-title {
-  font-family: 'Manrope', 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
+/* Safe Area Padding for mobile */
+.safe-area-top {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+.safe-area-bottom {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
 }
 
-.section-title {
-  font-family: 'Manrope', 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.25;
-}
-
-.financial-hero-val {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-  line-height: 1.1;
-}
-
-.financial-figure {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-}
-
-.ai-insight-text {
-  font-family: 'Manrope', 'Inter', sans-serif;
-  font-weight: 500;
-}
-
-/* Background Material Keyframes for Subconscious Drifting Orbs */
-@keyframes floatOrb1 {
-  0%, 100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  33% {
-    transform: translate3d(40px, -35px, 0) scale(1.08);
-  }
-  66% {
-    transform: translate3d(-30px, 25px, 0) scale(0.94);
-  }
-}
-
-@keyframes floatOrb2 {
-  0%, 100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(-45px, -40px, 0) scale(1.12);
-  }
-}
-
-@keyframes floatOrb3 {
-  0%, 100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  40% {
-    transform: translate3d(35px, 45px, 0) scale(0.92);
-  }
-  80% {
-    transform: translate3d(-20px, -20px, 0) scale(1.06);
-  }
-}
-
-@keyframes floatOrb4 {
-  0%, 100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  45% {
-    transform: translate3d(-30px, 30px, 0) scale(1.1);
-  }
-}
-
-@keyframes subtleWave {
-  0%, 100% {
-    transform: rotate(0deg) scale(1);
-    opacity: 0.05;
-  }
-  50% {
-    transform: rotate(2.5deg) scale(1.04);
-    opacity: 0.08;
-  }
-}
-
-.animate-float-orb-1 {
-  animation: floatOrb1 26s ease-in-out infinite;
-  will-change: transform;
-}
-
-.animate-float-orb-2 {
-  animation: floatOrb2 30s ease-in-out infinite;
-  will-change: transform;
-}
-
-.animate-float-orb-3 {
-  animation: floatOrb3 24s ease-in-out infinite;
-  will-change: transform;
-}
-
-.animate-float-orb-4 {
-  animation: floatOrb4 28s ease-in-out infinite;
-  will-change: transform;
-}
-
-.animate-subtle-wave {
-  animation: subtleWave 32s ease-in-out infinite;
-  will-change: transform, opacity;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-float-orb-1,
-  .animate-float-orb-2,
-  .animate-float-orb-3,
-  .animate-float-orb-4,
-  .animate-subtle-wave {
-    animation: none !important;
-  }
-}
-
-/* Apple/Linear/Revolut-inspired White & Emerald Surface Elevation Tokens */
-.glass-card {
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
-}
-.dark .glass-card {
-  background: rgba(15, 23, 42, 0.75);
-  border-color: rgba(51, 65, 85, 0.6);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4), 0 2px 6px -1px rgba(0, 0, 0, 0.2);
-}
-
-.glass-card-interactive {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  box-shadow: 0 4px 18px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.dark .glass-card-interactive {
-  background: rgba(15, 23, 42, 0.85);
-  border-color: rgba(51, 65, 85, 0.7);
-  box-shadow: 0 4px 18px -2px rgba(0, 0, 0, 0.4), 0 2px 6px -1px rgba(0, 0, 0, 0.2);
-}
-
-.glass-card-interactive:hover {
-  transform: translateY(-2px);
-  border-color: rgba(16, 185, 129, 0.35);
-  box-shadow: 0 16px 32px -8px rgba(5, 150, 105, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
-}
-.dark .glass-card-interactive:hover {
-  border-color: rgba(16, 185, 129, 0.5);
-  box-shadow: 0 16px 32px -8px rgba(16, 185, 129, 0.2), 0 4px 12px -2px rgba(0, 0, 0, 0.5);
-}
-
-.glass-modal-light {
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.16), 0 10px 20px -5px rgba(5, 150, 105, 0.08);
-}
-.dark .glass-modal-light {
-  background: rgba(15, 23, 42, 0.96);
-  border-color: rgba(51, 65, 85, 0.8);
-  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6), 0 10px 20px -5px rgba(16, 185, 129, 0.1);
-}
-
-.glass-pill {
-  background: rgba(236, 253, 245, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-}
-.dark .glass-pill {
-  background: rgba(6, 78, 59, 0.4);
-  border-color: rgba(16, 185, 129, 0.4);
-}
-
-/* Tactile 3D Soft Shadows & Elevation */
-.shadow-tactile-sm {
-  box-shadow: 0 2px 5px 0 rgba(15, 23, 42, 0.04), 0 1px 2px 0 rgba(16, 185, 129, 0.06);
-}
-.dark .shadow-tactile-sm {
-  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(16, 185, 129, 0.1);
-}
-
-.shadow-tactile-emerald {
-  box-shadow: 0 12px 28px -6px rgba(5, 150, 105, 0.22), 0 4px 10px -2px rgba(16, 185, 129, 0.12);
-}
-
-.shadow-tactile-card {
-  box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.06), 0 4px 12px -2px rgba(5, 150, 105, 0.04);
-}
-.dark .shadow-tactile-card {
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.45), 0 4px 12px -2px rgba(16, 185, 129, 0.06);
-}
-
-/* Custom Subtle Scrollbar */
+/* iOS-style custom thin scrollbars */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(241, 245, 249, 0.8);
-  border-radius: 9999px;
-}
-.dark .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.8);
+  background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(16, 185, 129, 0.3);
+  background: rgba(0, 0, 0, 0.12);
   border-radius: 9999px;
 }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(5, 150, 105, 0.6);
-}
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(16, 185, 129, 0.4);
-}
-.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(52, 211, 153, 0.8);
+  background: rgba(255, 255, 255, 0.16);
 }
 
-/* Safe Area Padding for iOS Notches & Dynamic Island */
-.safe-area-top {
-  padding-top: max(1rem, env(safe-area-inset-top));
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
-.safe-area-bottom {
-  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
+
+/* Apple iOS-inspired Card and Surface utility classes */
+.ios-card {
+  background-color: #FFFFFF;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 4px 12px rgba(0, 0, 0, 0.03);
+  transition: transform 0.18s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.18s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.2s ease;
+}
+
+.dark .ios-card {
+  background-color: #1C1C1E;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.ios-card-interactive {
+  cursor: pointer;
+}
+.ios-card-interactive:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+.dark .ios-card-interactive:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+.ios-card-interactive:active {
+  transform: scale(0.985);
+}
+
+.ios-subcard {
+  background-color: #F8F8FA;
+  border-radius: 0.875rem;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+.dark .ios-subcard {
+  background-color: #2C2C2E;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ios-glass {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background-color: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.06);
+}
+.dark .ios-glass {
+  background-color: rgba(28, 28, 30, 0.85);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+

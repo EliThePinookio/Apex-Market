@@ -10,7 +10,6 @@ import {
   cleanupSupabaseRealtime,
 } from './services/dbService';
 import { usePWA, registerServiceWorker } from './services/pwaService';
-import { BackgroundCanvas, triggerCelebration } from './components/BackgroundCanvas';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { BottomNav, NavTab } from './components/BottomNav';
@@ -99,7 +98,6 @@ function AppContent() {
   // Auto hide notification toast after 3 seconds
   const showNotification = (msg: string) => {
     setNotificationMsg(msg);
-    triggerCelebration();
     setTimeout(() => {
       setNotificationMsg(null);
     }, 3200);
@@ -163,12 +161,12 @@ function AppContent() {
   // If Supabase Auth is loading session
   if (isLoading) {
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-900 text-white space-y-4">
-        <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-xl shadow-emerald-500/20 animate-pulse">
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#F2F2F7] dark:bg-[#000000] text-slate-900 dark:text-slate-100 space-y-4">
+        <div className="w-16 h-16 rounded-3xl bg-emerald-600 dark:bg-emerald-500 flex items-center justify-center shadow-xl shadow-emerald-500/20 animate-pulse">
           <Store className="w-8 h-8 text-white" />
         </div>
-        <div className="flex items-center space-x-2 text-sm text-slate-300 font-semibold">
-          <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+        <div className="flex items-center space-x-2 text-xs text-slate-500 dark:text-slate-400 font-bold">
+          <Loader2 className="w-4 h-4 animate-spin text-emerald-600 dark:text-emerald-400" />
           <span>Connecting to Supabase Database...</span>
         </div>
       </div>
@@ -181,10 +179,7 @@ function AppContent() {
   }
 
   return (
-    <div className="relative min-h-screen w-full flex bg-slate-100/90 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-emerald-500 selection:text-white transition-colors duration-300">
-      {/* Visual Canvas Particle Effects */}
-      <BackgroundCanvas />
-
+    <div className="relative min-h-screen w-full flex bg-[#F2F2F7] dark:bg-[#000000] text-slate-900 dark:text-slate-100">
       {/* Desktop Persistent Sidebar */}
       <Sidebar
         activeTab={activeTab}
@@ -230,14 +225,14 @@ function AppContent() {
         />
 
         {/* Dynamic Main Viewport with Smooth Motion Transitions */}
-        <main className="flex-1 overflow-y-auto px-4 md:px-6 py-4 pb-24 md:pb-12">
+        <main className="flex-1 overflow-y-auto">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.18, ease: 'easeOut' }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.16, ease: 'easeOut' }}
               className="h-full"
             >
               {activeTab === 'dashboard' && (
@@ -366,7 +361,7 @@ function AppContent() {
 
         {/* Floating Notification Toast */}
         {notificationMsg && (
-          <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-white/95 dark:bg-slate-900/95 border border-emerald-300 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200 px-5 py-3 rounded-2xl shadow-xl shadow-emerald-500/10 backdrop-blur-md flex items-center space-x-2.5 text-xs font-bold animate-in fade-in slide-in-from-top duration-300">
+          <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-white/95 dark:bg-[#1C1C1E]/95 border border-black/[0.08] dark:border-white/[0.1] text-slate-900 dark:text-white px-5 py-3 rounded-2xl shadow-xl backdrop-blur-md flex items-center space-x-2.5 text-xs font-bold animate-in fade-in slide-in-from-top duration-200">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>{notificationMsg}</span>
           </div>

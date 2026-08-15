@@ -143,14 +143,22 @@ let activeRealtimeBizId: string | null = null;
  * Safe Realtime Subscription Manager
  * Connects a single unified WebSocket channel only when authenticated.
  * Gracefully handles errors, timeouts, and WebSocket closures without unhandled rejections.
+ * Returns an unsubscribe cleanup function.
  */
-export function initSupabaseRealtime(bizId: string): void {
-  if (!isSupabaseConfigured || !bizId) return;
-  if (activeRealtimeChannel && activeRealtimeBizId === bizId) return;
+export function initSupabaseRealtime(bizId: string): () => void {
+  if (!isSupabaseConfigured || !bizId) return () => {};
+  if (activeRealtimeChannel && activeRealtimeBizId === bizId) {
+    return () => {
+      cleanupSupabaseRealtime();
+    };
+  }
 
   // Clean up any existing channel
   if (activeRealtimeChannel) {
     try {
+      if (typeof activeRealtimeChannel.unsubscribe === 'function') {
+        activeRealtimeChannel.unsubscribe();
+      }
       supabase.removeChannel(activeRealtimeChannel);
     } catch (e) {
       // Safe cleanup
@@ -213,11 +221,18 @@ export function initSupabaseRealtime(bizId: string): void {
   } catch (e) {
     // Realtime not supported or blocked in environment - continue with direct queries
   }
+
+  return () => {
+    cleanupSupabaseRealtime();
+  };
 }
 
 export function cleanupSupabaseRealtime(): void {
   if (activeRealtimeChannel) {
     try {
+      if (typeof activeRealtimeChannel.unsubscribe === 'function') {
+        activeRealtimeChannel.unsubscribe();
+      }
       supabase.removeChannel(activeRealtimeChannel);
     } catch (e) {
       // Safe cleanup
@@ -496,12 +511,12 @@ export function subscribeCustomers(callback: (customers: Customer[]) => void): (
 /**
  * Loads all authoritative data for the active business upon authentication
  */
-export async function loadAuthorizedBusinessData(): Promise<void> {
+export async function loadAuthorizedBusinessData(): Promise<() => void> {
   const bizId = await getActiveBusinessId();
-  if (!bizId) return;
+  if (!bizId) return () => {};
 
   // Initialize safe consolidated Realtime stream
-  initSupabaseRealtime(bizId);
+  const unsubscribe = initSupabaseRealtime(bizId);
 
   // Fetch all tables in parallel
   await Promise.allSettled([
@@ -511,6 +526,8 @@ export async function loadAuthorizedBusinessData(): Promise<void> {
     fetchSupabaseTransactions(),
     fetchSupabaseCustomers(),
   ]);
+
+  return unsubscribe;
 }
 
 /**
