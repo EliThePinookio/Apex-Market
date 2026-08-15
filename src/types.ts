@@ -1,4 +1,4 @@
-export type TransactionType = 'sale' | 'expense' | 'capital' | 'stock_refill' | 'adjustment';
+export type TransactionType = 'sale' | 'expense' | 'capital' | 'stock_refill' | 'adjustment' | 'owner_draw';
 
 export type PaymentMethod = 'cash' | 'card' | 'transfer' | 'mobile_money' | 'other';
 
@@ -6,10 +6,26 @@ export interface Category {
   id: string;
   name: string;
   color?: string;
+  businessId?: string;
+}
+
+export interface Supplier {
+  id: string;
+  businessId?: string;
+  name: string;
+  contactPerson?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Product {
   id: string;
+  businessId?: string;
+  categoryId?: string;
   name: string;
   sku: string;
   category: string;
@@ -19,6 +35,7 @@ export interface Product {
   minStockThreshold: number; // Low stock alert level
   unit: string; // e.g., pcs, kg, box, bottle
   barcode?: string;
+  supplierId?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -34,8 +51,99 @@ export interface TransactionItem {
   totalBuyPrice: number; // COGS
 }
 
+export interface SaleItem {
+  id?: string;
+  saleId?: string;
+  productId?: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  costPrice: number;
+  lineTotal: number;
+  lineCogs: number;
+  createdAt?: string;
+}
+
+export interface Sale {
+  id: string;
+  businessId?: string;
+  customerId?: string;
+  userId?: string;
+  referenceNo?: string;
+  saleDate: string;
+  subtotal: number;
+  discount: number;
+  tax: number;
+  total: number;
+  cogs: number;
+  grossProfit: number;
+  paymentMethod: PaymentMethod;
+  paymentStatus: 'paid' | 'pending' | 'partial' | 'refunded';
+  customerName?: string;
+  notes?: string;
+  items?: SaleItem[];
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface PurchaseItem {
+  id?: string;
+  purchaseId?: string;
+  productId?: string;
+  productName: string;
+  quantity: number;
+  unitCost: number;
+  lineTotal: number;
+  createdAt?: string;
+}
+
+export interface Purchase {
+  id: string;
+  businessId?: string;
+  supplierId?: string;
+  userId?: string;
+  referenceNo?: string;
+  purchaseDate: string;
+  subtotal: number;
+  tax: number;
+  total: number;
+  paymentStatus: 'paid' | 'pending' | 'partial';
+  paymentMethod: PaymentMethod;
+  notes?: string;
+  items?: PurchaseItem[];
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface Expense {
+  id: string;
+  businessId?: string;
+  userId?: string;
+  category: string;
+  amount: number;
+  description: string;
+  paymentMethod: PaymentMethod;
+  date: string;
+  referenceNo?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface OwnerCapital {
+  id: string;
+  businessId?: string;
+  userId?: string;
+  type: 'contribution' | 'drawing';
+  amount: number;
+  description: string;
+  date: string;
+  paymentMethod: PaymentMethod;
+  createdAt: string;
+}
+
 export interface Transaction {
   id: string;
+  businessId?: string;
   type: TransactionType;
   amount: number; // Net amount (for sales = total revenue, for expense = expense amount, for capital = capital amount)
   cogs?: number; // Total Cost of Goods Sold (for sales)
@@ -48,6 +156,10 @@ export interface Transaction {
   paymentMethod?: PaymentMethod;
   referenceNo?: string;
   customerName?: string;
+  customerId?: string;
+  relatedSaleId?: string;
+  relatedPurchaseId?: string;
+  relatedExpenseId?: string;
   createdAt: string;
 }
 

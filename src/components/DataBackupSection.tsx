@@ -20,11 +20,7 @@ import {
   CloudOff,
   ExternalLink,
   Sparkles,
-  Copy,
-  Code2,
-  Terminal,
 } from 'lucide-react';
-import { SUPABASE_SCHEMA_SQL } from '../db/schemaSql';
 import {
   getLastBackupTimestamp,
   exportToExcel,
@@ -83,16 +79,6 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
 
   // Demo load state
   const [isDemoLoading, setIsDemoLoading] = useState<boolean>(false);
-
-  // SQL Schema view state
-  const [isSqlModalOpen, setIsSqlModalOpen] = useState<boolean>(false);
-  const [isCopiedSql, setIsCopiedSql] = useState<boolean>(false);
-
-  const handleCopySql = () => {
-    navigator.clipboard.writeText(SUPABASE_SCHEMA_SQL);
-    setIsCopiedSql(true);
-    setTimeout(() => setIsCopiedSql(false), 2500);
-  };
 
   useEffect(() => {
     setDriveConnected(isDriveConnected());
@@ -387,15 +373,6 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
         </div>
 
         <div className="flex flex-wrap gap-2.5">
-          {/* SQL Schema & Setup */}
-          <button
-            onClick={() => setIsSqlModalOpen(true)}
-            className="px-4 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-semibold text-xs sm:text-sm transition flex items-center gap-2 border border-slate-700 cursor-pointer"
-          >
-            <Code2 className="w-4 h-4 text-emerald-400" />
-            Supabase SQL Setup Script
-          </button>
-
           {/* Sync to Supabase */}
           <button
             onClick={handleSyncToSupabase}
@@ -713,66 +690,6 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 {isWiping ? 'Wiping...' : 'Wipe Live Database'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* MODAL 4: SUPABASE SQL SETUP SCRIPT MODAL */}
-      {isSqlModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60">
-              <div className="flex items-center gap-2.5">
-                <Terminal className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                    Supabase PostgreSQL Relational Schema
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Tables, Row Level Security (RLS) policies, indexes, and automatic auth triggers
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsSqlModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-4 bg-emerald-50/50 dark:bg-emerald-950/30 border-b border-emerald-100 dark:border-emerald-900/40 text-xs text-emerald-900 dark:text-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="space-y-1">
-                <span className="font-bold">How to apply this schema in Supabase:</span>
-                <ol className="list-decimal list-inside space-y-0.5 text-slate-600 dark:text-slate-300">
-                  <li>Open your Supabase Dashboard project</li>
-                  <li>Click on <strong>SQL Editor</strong> in the left sidebar</li>
-                  <li>Paste the script below and click <strong>Run</strong></li>
-                </ol>
-              </div>
-              <button
-                onClick={handleCopySql}
-                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs transition flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
-              >
-                {isCopiedSql ? <Check className="w-4 h-4 text-emerald-200" /> : <Copy className="w-4 h-4" />}
-                {isCopiedSql ? 'Copied to Clipboard!' : 'Copy SQL Script'}
-              </button>
-            </div>
-
-            <div className="p-4 overflow-y-auto flex-1 bg-slate-950 text-slate-200 font-mono text-xs leading-relaxed">
-              <pre className="whitespace-pre-wrap selection:bg-emerald-500 selection:text-white">
-                {SUPABASE_SCHEMA_SQL}
-              </pre>
-            </div>
-
-            <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
-              <span>File: /src/db/schema.sql & /supabase/migrations</span>
-              <button
-                onClick={() => setIsSqlModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-semibold transition cursor-pointer"
-              >
-                Done
               </button>
             </div>
           </div>

@@ -702,6 +702,65 @@ export async function recordSale(saleData: {
   if (isSupabaseConfigured) {
     try {
       const bizId = await getActiveBusinessId();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const currentUserId = sessionData?.session?.user?.id || null;
+
+      // 1. Insert into sales table
+      await supabase.from('sales').insert({
+        id: txId,
+        business_id: bizId,
+        customer_id: null,
+        user_id: currentUserId,
+        reference_no: txId,
+        sale_date: now,
+        subtotal: totalSellPrice,
+        discount: discount,
+        tax: 0,
+        total: netRevenue,
+        cogs: totalBuyPrice,
+        gross_profit: grossProfit,
+        payment_method: saleData.paymentMethod || 'cash',
+        payment_status: 'paid',
+        customer_name: saleData.customerName || 'Walk-in Customer',
+        notes: saleData.description || '',
+        created_at: now,
+        updated_at: now,
+      });
+
+      // 2. Insert into sale_items table
+      if (saleData.items.length > 0) {
+        const saleItemRows = saleData.items.map((item) => ({
+          sale_id: txId,
+          product_id: item.productId,
+          product_name: item.productName,
+          quantity: item.quantity,
+          unit_price: item.unitSellPrice,
+          cost_price: item.unitBuyPrice,
+          line_total: item.totalSellPrice,
+          line_cogs: item.totalBuyPrice,
+          created_at: now,
+        }));
+        await supabase.from('sale_items').insert(saleItemRows);
+      }
+
+      // 3. Log stock movements
+      for (const item of saleData.items) {
+        await supabase.from('stock_movements').insert({
+          id: `mov-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          business_id: bizId,
+          product_id: item.productId,
+          product_name: item.productName,
+          type: 'out',
+          quantity: item.quantity,
+          cost_per_unit: item.unitBuyPrice,
+          reference_id: txId,
+          reason: `Sale ${txId}`,
+          date: now,
+          created_at: now,
+        });
+      }
+
+      // 4. Insert into unified transactions ledger
       await supabase.from('transactions').insert({
         id: txId,
         business_id: bizId,
@@ -714,6 +773,7 @@ export async function recordSale(saleData: {
         description: transaction.description,
         payment_method: transaction.paymentMethod,
         customer_name: transaction.customerName,
+        related_sale_id: txId,
         items: transaction.items,
         created_at: now,
       });
@@ -756,6 +816,25 @@ export async function recordExpense(expenseData: {
   if (isSupabaseConfigured) {
     try {
       const bizId = await getActiveBusinessId();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const currentUserId = sessionData?.session?.user?.id || null;
+
+      // 1. Insert into expenses table
+      await supabase.from('expenses').insert({
+        id: txId,
+        business_id: bizId,
+        user_id: currentUserId,
+        category: transaction.category || 'General Expense',
+        amount: transaction.amount,
+        description: transaction.description,
+        payment_method: transaction.paymentMethod || 'cash',
+        date: now,
+        reference_no: txId,
+        created_at: now,
+        updated_at: now,
+      });
+
+      // 2. Insert into transactions table
       await supabase.from('transactions').insert({
         id: txId,
         business_id: bizId,
@@ -766,6 +845,7 @@ export async function recordExpense(expenseData: {
         description: transaction.description,
         category: transaction.category,
         payment_method: transaction.paymentMethod,
+        related_expense_id: txId,
         created_at: now,
       });
     } catch (e) {
@@ -805,6 +885,23 @@ export async function recordCapital(capitalData: {
   if (isSupabaseConfigured) {
     try {
       const bizId = await getActiveBusinessId();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const currentUserId = sessionData?.session?.user?.id || null;
+
+      // 1. Insert into owner_capital table
+      await supabase.from('owner_capital').insert({
+        id: txId,
+        business_id: bizId,
+        user_id: currentUserId,
+        type: 'contribution',
+        amount: transaction.amount,
+        description: transaction.description,
+        date: now,
+        payment_method: transaction.paymentMethod || 'transfer',
+        created_at: now,
+      });
+
+      // 2. Insert into transactions table
       await supabase.from('transactions').insert({
         id: txId,
         business_id: bizId,
@@ -852,10 +949,11 @@ export async function recordStockRefill(refillData: {
     setLocalCache(CACHE_KEYS.PRODUCTS, products);
 
     const txId = `tx-${Date.now()}`;
+    const totalRefillCost = refillData.quantityToAdd * newBuyPrice;
     const tx: Transaction = {
       id: txId,
       type: 'stock_refill',
-      amount: refillData.quantityToAdd * newBuyPrice,
+      amount: totalRefillCost,
       date: now,
       description: `Stock Refill: +${refillData.quantityToAdd} ${prod.unit} of ${prod.name}`,
       createdAt: now,
@@ -870,6 +968,10 @@ export async function recordStockRefill(refillData: {
     if (isSupabaseConfigured) {
       try {
         const bizId = await getActiveBusinessId();
+        const { data: sessionData } = await supabase.auth.getSession();
+        const currentUserId = sessionData?.session?.user?.id || null;
+
+        // 1. Update product stock and cost price
         await supabase
           .from('products')
           .update({
@@ -879,6 +981,35 @@ export async function recordStockRefill(refillData: {
           })
           .eq('id', prod.id);
 
+        // 2. Insert into purchases table
+        await supabase.from('purchases').insert({
+          id: txId,
+          business_id: bizId,
+          user_id: currentUserId,
+          reference_no: txId,
+          purchase_date: now,
+          subtotal: totalRefillCost,
+          tax: 0,
+          total: totalRefillCost,
+          payment_status: 'paid',
+          payment_method: 'cash',
+          notes: refillData.reason || `Stock Refill for ${prod.name}`,
+          created_at: now,
+          updated_at: now,
+        });
+
+        // 3. Insert into purchase_items table
+        await supabase.from('purchase_items').insert({
+          purchase_id: txId,
+          product_id: prod.id,
+          product_name: prod.name,
+          quantity: refillData.quantityToAdd,
+          unit_cost: newBuyPrice,
+          line_total: totalRefillCost,
+          created_at: now,
+        });
+
+        // 4. Insert into transactions table
         await supabase.from('transactions').insert({
           id: txId,
           business_id: bizId,
@@ -886,10 +1017,11 @@ export async function recordStockRefill(refillData: {
           amount: tx.amount,
           date: now,
           description: tx.description,
+          related_purchase_id: txId,
           created_at: now,
         });
 
-        // Insert into stock movements audit log
+        // 5. Insert into stock movements audit log
         await supabase.from('stock_movements').insert({
           id: `mov-${Date.now()}`,
           business_id: bizId,
@@ -899,6 +1031,7 @@ export async function recordStockRefill(refillData: {
           quantity: refillData.quantityToAdd,
           cost_per_unit: newBuyPrice,
           reason: refillData.reason || 'Stock Refill',
+          reference_id: txId,
           date: now,
           created_at: now,
         });

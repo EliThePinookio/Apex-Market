@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../supabase';
+import { cleanupSupabaseRealtime } from '../services/dbService';
 import { UserProfile, AppUserRole } from '../types';
 
 interface AuthContextType {
@@ -12,6 +13,7 @@ interface AuthContextType {
   isLoading: boolean;
   isConfigured: boolean;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   signUp: (
     email: string,
     password: string,
@@ -211,6 +213,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin,
+        },
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'An unexpected error occurred during Google sign in.' };
+    }
+  };
+
   const signUp = async (
     email: string,
     password: string,
@@ -270,6 +291,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
+      cleanupSupabaseRealtime();
       await supabase.auth.signOut();
     } catch (e) {
       console.warn('Sign out warning:', e);
@@ -298,6 +320,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         isConfigured: isSupabaseConfigured,
         signIn,
+        signInWithGoogle,
         signUp,
         resetPassword,
         signOut,
