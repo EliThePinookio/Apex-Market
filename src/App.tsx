@@ -239,6 +239,7 @@ function AppContent() {
                 <DashboardView
                   products={products}
                   transactions={transactions}
+                  customers={customers}
                   profile={profile}
                   summary={summary}
                   onNavigateToPOS={() => setActiveTab('pos')}

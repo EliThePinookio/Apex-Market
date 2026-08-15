@@ -37,6 +37,18 @@ const DEFAULT_CATEGORIES: Category[] = [
   { id: 'cat-essentials', name: 'Essentials', color: '#8b5cf6' },
 ];
 
+// Default clean initial business profile
+const DEFAULT_BUSINESS_PROFILE: BusinessProfile = {
+  businessName: 'BEANNEL',
+  ownerName: 'Store Owner',
+  currencySymbol: '$',
+  ownerPin: '1234',
+  isPinLocked: false,
+  taxRate: 0,
+  lowStockAlertEnabled: true,
+  allowNegativeStock: false,
+};
+
 // Subscriber sets for local + online UI reactivity
 const productSubscribers = new Set<(products: Product[]) => void>();
 const categorySubscribers = new Set<(categories: Category[]) => void>();
@@ -100,21 +112,22 @@ export function notifyCustomers(): void {
 }
 
 export function notifyProfile(): void {
-  const current = getLocalCache<BusinessProfile>(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
+  const current = getLocalCache<BusinessProfile>(CACHE_KEYS.PROFILE, DEFAULT_BUSINESS_PROFILE);
   profileSubscribers.forEach((cb) => cb(current));
 }
 
 /**
- * Get active business ID for multi-tenant data isolation
+ * Get active business ID for multi-tenant data isolation using authenticated user
  */
 export async function getActiveBusinessId(): Promise<string | null> {
   if (!isSupabaseConfigured) {
-    return localStorage.getItem(CACHE_KEYS.CURRENT_BIZ_ID) || 'local-biz';
+    return localStorage.getItem(CACHE_KEYS.CURRENT_BIZ_ID) || null;
   }
   try {
-    const { data } = await supabase.auth.getSession();
-    if (data?.session?.user) {
-      const uId = data.session.user.id;
+    const { data: userData, error: userErr } = await supabase.auth.getUser();
+    const currentUser = userData?.user;
+    if (currentUser && !userErr) {
+      const uId = currentUser.id;
       // Fetch profile to get assigned business_id
       const { data: prof, error } = await supabase
         .from('profiles')
@@ -130,7 +143,7 @@ export async function getActiveBusinessId(): Promise<string | null> {
       return uId;
     }
   } catch (e) {
-    // In network disruption, fallback to cached ID
+    console.warn('Network notice during active business ID check:', e);
   }
   return localStorage.getItem(CACHE_KEYS.CURRENT_BIZ_ID) || null;
 }
@@ -205,6 +218,43 @@ export function initSupabaseRealtime(bizId: string): () => void {
         { event: '*', schema: 'public', table: 'businesses' },
         () => {
           fetchSupabaseProfile();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'sales' },
+        () => {
+          fetchSupabaseTransactions();
+          fetchSupabaseProducts();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'purchases' },
+        () => {
+          fetchSupabaseTransactions();
+          fetchSupabaseProducts();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'expenses' },
+        () => {
+          fetchSupabaseTransactions();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'owner_capital' },
+        () => {
+          fetchSupabaseTransactions();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'stock_movements' },
+        () => {
+          fetchSupabaseProducts();
         }
       );
 
@@ -381,7 +431,7 @@ export async function fetchSupabaseTransactions(): Promise<Transaction[]> {
  * Fetch and synchronize Business Profile from Supabase PostgreSQL
  */
 export async function fetchSupabaseProfile(): Promise<BusinessProfile> {
-  const local = getLocalCache<BusinessProfile>(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE);
+  const local = getLocalCache<BusinessProfile>(CACHE_KEYS.PROFILE, DEFAULT_BUSINESS_PROFILE);
   if (!isSupabaseConfigured) return local;
 
   try {
@@ -494,7 +544,7 @@ export function subscribeTransactions(callback: (transactions: Transaction[]) =>
 
 export function subscribeProfile(callback: (profile: BusinessProfile) => void): () => void {
   profileSubscribers.add(callback);
-  callback(getLocalCache<BusinessProfile>(CACHE_KEYS.PROFILE, INITIAL_BUSINESS_PROFILE));
+  callback(getLocalCache<BusinessProfile>(CACHE_KEYS.PROFILE, DEFAULT_BUSINESS_PROFILE));
   return () => {
     profileSubscribers.delete(callback);
   };

@@ -39,58 +39,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loadOrCreateProfile = useCallback(async (currentUser: User) => {
     if (!currentUser) return;
     try {
-      // 1. Try to fetch profile from Supabase 'profiles' table
+      // 1. Retrieve profile from Supabase 'profiles' table
       const { data: profData, error: profErr } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', currentUser.id)
         .maybeSingle();
 
-      if (profData) {
+      if (profData && !profErr) {
+        const bId = profData.business_id || currentUser.id;
         setProfile({
           id: profData.id,
           email: profData.email || currentUser.email || '',
-          fullName: profData.full_name || currentUser.user_metadata?.full_name || '',
-          businessId: profData.business_id,
+          fullName: profData.full_name || currentUser.user_metadata?.full_name || 'Store Owner',
+          businessId: bId,
           role: (profData.role as AppUserRole) || 'owner',
           createdAt: profData.created_at || new Date().toISOString(),
         });
-        setBusinessId(profData.business_id || currentUser.id);
+        setBusinessId(bId);
         setRole((profData.role as AppUserRole) || 'owner');
         return;
       }
 
-      // If no profile exists yet (new registration), create one
-      let bId = currentUser.id;
+      // 2. If profile genuinely does not exist yet, create minimum required record once
+      const bId = currentUser.id;
       const bName = currentUser.user_metadata?.business_name || 'BEANNEL';
       const fName = currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || 'Store Owner';
 
-      // Check if business exists or create it
+      // Check if business already exists
       const { data: bData } = await supabase
         .from('businesses')
         .select('id')
-        .eq('owner_id', currentUser.id)
+        .eq('id', bId)
         .maybeSingle();
 
-      if (bData?.id) {
-        bId = bData.id;
-      } else {
-        const { data: newB, error: newBErr } = await supabase
+      if (!bData) {
+        await supabase
           .from('businesses')
           .insert({
+            id: bId,
             name: bName,
             owner_name: fName,
-            owner_id: currentUser.id,
             currency_symbol: '$',
-          })
-          .select('id')
-          .maybeSingle();
-        if (newB?.id) {
-          bId = newB.id;
-        }
+            tax_rate: 0,
+            low_stock_alert_enabled: true,
+            allow_negative_stock: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
       }
 
-      // Upsert profile
+      // Insert corresponding profile
       const newProfile: UserProfile = {
         id: currentUser.id,
         email: currentUser.email || '',
@@ -100,12 +99,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         createdAt: new Date().toISOString(),
       };
 
-      await supabase.from('profiles').upsert({
+      await supabase.from('profiles').insert({
         id: currentUser.id,
-        email: currentUser.email,
+        email: currentUser.email || '',
         full_name: fName,
         business_id: bId,
         role: 'owner',
+        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
 
@@ -113,8 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setBusinessId(bId);
       setRole('owner');
     } catch (err) {
-      console.warn('Profile initialization note:', err);
-      // Set resilient default from user metadata
+      console.warn('Profile retrieval note:', err);
       const fallbackProfile: UserProfile = {
         id: currentUser.id,
         email: currentUser.email || '',

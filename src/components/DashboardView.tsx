@@ -19,7 +19,7 @@ import {
   Flame,
 } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts';
-import { Product, Transaction, BusinessProfile, FinancialSummary } from '../types';
+import { Product, Transaction, BusinessProfile, FinancialSummary, Customer } from '../types';
 import { recordStockRefill } from '../services/dbService';
 import { GeminiProfitAdvisor } from './GeminiProfitAdvisor';
 
@@ -28,6 +28,7 @@ interface DashboardViewProps {
   profile: BusinessProfile;
   products: Product[];
   transactions: Transaction[];
+  customers?: Customer[];
   onNavigateToPOS: () => void;
   onNavigateToInventory: (filterLowStock?: boolean) => void;
   onNavigateToTransactions: () => void;
@@ -40,6 +41,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   profile,
   products,
   transactions,
+  customers = [],
   onNavigateToPOS,
   onNavigateToInventory,
   onNavigateToTransactions,
