@@ -85,7 +85,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
     setEditingProduct({
       name: '',
       sku: `SKU-${Math.floor(1000 + Math.random() * 9000)}`,
-      category: categories[0]?.name || 'General',
+      category: categories[0]?.name || 'Apparels',
       buyPrice: 0,
       sellPrice: 0,
       stockQuantity: 10,
@@ -505,7 +505,6 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                           {c.name}
                         </option>
                       ))}
-                      <option value="General" className="bg-white dark:bg-[#151D2A] text-slate-900 dark:text-white">General</option>
                     </select>
                   </div>
                   <div>

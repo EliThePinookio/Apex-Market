@@ -4,7 +4,7 @@ import {
   ShoppingCart,
   Package,
   Receipt,
-  PieChart,
+  Sparkles,
   Users,
   Settings,
   Store,
@@ -77,8 +77,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       id: 'analytics',
-      label: 'Profit & Analytics',
-      icon: <PieChart className="w-4 h-4 shrink-0" />,
+      label: 'Business Advisor',
+      icon: <Sparkles className="w-4 h-4 shrink-0" />,
     },
     {
       id: 'customers',

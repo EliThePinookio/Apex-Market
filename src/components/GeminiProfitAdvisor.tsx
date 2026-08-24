@@ -19,12 +19,18 @@ export const GeminiProfitAdvisor: React.FC<GeminiProfitAdvisorProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [customPrompt, setCustomPrompt] = useState('');
 
-  const cur = profile.currencySymbol;
+  const cur = profile.currencySymbol || '$';
 
   // Prepare top products payload
   const topProducts = products
-    .slice(0, 5)
-    .map((p) => ({ name: p.name, buyPrice: p.buyPrice, sellPrice: p.sellPrice, stock: p.stockQuantity }));
+    .slice(0, 8)
+    .map((p) => ({
+      name: p.name,
+      category: p.category,
+      buyPrice: p.buyPrice,
+      sellPrice: p.sellPrice,
+      stock: p.stockQuantity,
+    }));
 
   const fetchAiAnalysis = async (overridePrompt?: string) => {
     setLoading(true);
@@ -45,6 +51,8 @@ export const GeminiProfitAdvisor: React.FC<GeminiProfitAdvisorProps> = ({
         totalInventoryValuation: Number(summary.totalInventoryValuation) || 0,
         totalPotentialRevenue: Number(summary.totalPotentialRevenue) || 0,
         lowStockCount: Number(summary.lowStockCount) || 0,
+        outOfStockCount: Number(summary.outOfStockCount) || 0,
+        transactionCount: Number(summary.transactionCount) || 0,
       };
 
       const response = await fetch('/api/gemini/profit-advisor', {
@@ -57,7 +65,11 @@ export const GeminiProfitAdvisor: React.FC<GeminiProfitAdvisorProps> = ({
           summary: sanitizedSummary,
           topProducts,
           currency: cur,
+          businessName: profile.businessName || 'My Store',
+          ownerName: profile.ownerName || 'Store Owner',
           customPrompt: promptToUse,
+          preferredProvider: 'openrouter',
+          selectedModel: 'z-ai/glm-5.2:free',
         }),
       });
 
@@ -97,14 +109,14 @@ export const GeminiProfitAdvisor: React.FC<GeminiProfitAdvisorProps> = ({
           <div>
             <div className="flex items-center space-x-2">
               <h3 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight">
-                Gemini AI Profit Advisor
+                Gemini Business Advisor
               </h3>
               <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-blue-500/15 to-purple-500/15 border border-blue-500/25 text-[10px] font-black text-blue-700 dark:text-blue-300">
-                Gemini 3.6
+                Personal AI
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
-              AI-driven margin optimization & expense strategy
+              Practical growth steps & plain-English profit recommendations
             </p>
           </div>
         </div>
@@ -124,21 +136,21 @@ export const GeminiProfitAdvisor: React.FC<GeminiProfitAdvisorProps> = ({
       {/* Financial Snapshot Bar */}
       <div className="grid grid-cols-3 gap-2.5 p-3.5 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.04] dark:border-white/[0.06] text-xs">
         <div>
-          <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-extrabold tracking-wider">Revenue</span>
+          <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-extrabold tracking-wider">Total Sales</span>
           <span className="font-black text-blue-600 dark:text-blue-400 tabular-nums text-xs sm:text-sm">
             {cur}{summary.totalRevenue.toFixed(2)}
           </span>
         </div>
         <div>
-          <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-extrabold tracking-wider">Net Profit</span>
+          <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-extrabold tracking-wider">Take-Home Profit</span>
           <span className={`font-black tabular-nums text-xs sm:text-sm ${summary.netProfit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
             {cur}{summary.netProfit.toFixed(2)}
           </span>
         </div>
         <div>
-          <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-extrabold tracking-wider">Net Margin</span>
+          <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-extrabold tracking-wider">Profit Kept</span>
           <span className="font-black text-purple-600 dark:text-purple-400 tabular-nums text-xs sm:text-sm">
-            {summary.totalRevenue > 0 ? ((summary.netProfit / summary.totalRevenue) * 100).toFixed(1) : '0.0'}%
+            {summary.totalRevenue > 0 ? ((summary.netProfit / summary.totalRevenue) * 100).toFixed(0) : '0'}¢ / $1
           </span>
         </div>
       </div>
@@ -147,26 +159,26 @@ export const GeminiProfitAdvisor: React.FC<GeminiProfitAdvisorProps> = ({
       {!analysis && !loading && (
         <div className="space-y-2.5">
           <p className="text-xs font-extrabold text-slate-700 dark:text-slate-300">
-            Select an analysis topic or ask a question:
+            Select an advisor topic or ask anything:
           </p>
           <div className="flex flex-wrap gap-2 text-xs">
             <button
-              onClick={() => fetchAiAnalysis('Focus on increasing net profit margin and pricing strategy.')}
+              onClick={() => fetchAiAnalysis('Focus on practical steps to increase take-home profit and smart pricing adjustments.')}
               className="px-3.5 py-2 rounded-2xl bg-blue-500/10 hover:bg-blue-500/15 border border-blue-500/20 text-blue-800 dark:text-blue-300 font-extrabold transition-all active:scale-[0.97] cursor-pointer"
             >
-              📈 Boost Net Margin
+              📈 Increase Profit
             </button>
             <button
-              onClick={() => fetchAiAnalysis('Focus on identifying expense reduction opportunities.')}
+              onClick={() => fetchAiAnalysis('Focus on identifying ways to trim daily store bills and overhead.')}
               className="px-3.5 py-2 rounded-2xl bg-rose-500/10 hover:bg-rose-500/15 border border-rose-500/20 text-rose-800 dark:text-rose-300 font-extrabold transition-all active:scale-[0.97] cursor-pointer"
             >
-              ✂️ Cut Overhead Costs
+              ✂️ Lower Store Bills
             </button>
             <button
-              onClick={() => fetchAiAnalysis('Focus on inventory turnover and cash flow optimization.')}
+              onClick={() => fetchAiAnalysis('Focus on turning slow inventory into cash and restocking bestsellers.')}
               className="px-3.5 py-2 rounded-2xl bg-teal-500/10 hover:bg-teal-500/15 border border-teal-500/20 text-teal-800 dark:text-teal-300 font-extrabold transition-all active:scale-[0.97] cursor-pointer"
             >
-              📦 Inventory Turnover
+              📦 Faster Stock Sales
             </button>
           </div>
         </div>

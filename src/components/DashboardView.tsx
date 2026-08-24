@@ -17,6 +17,7 @@ import {
   X,
   ChevronRight,
   Flame,
+  Sparkles,
 } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts';
 import { Product, Transaction, BusinessProfile, FinancialSummary, Customer } from '../types';
@@ -386,8 +387,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {cur}{summary.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <div className="mt-3 pt-2.5 border-t border-black/[0.05] dark:border-white/[0.06] flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 tabular-nums font-semibold">
-            <span>COGS: {cur}{summary.totalCOGS.toFixed(0)}</span>
-            <span className="text-blue-600 dark:text-blue-400 font-bold">Gross: {cur}{summary.grossProfit.toFixed(0)}</span>
+            <span>Goods Cost: {cur}{summary.totalCOGS.toFixed(0)}</span>
+            <span className="text-blue-600 dark:text-blue-400 font-bold">Profit: {cur}{summary.grossProfit.toFixed(0)}</span>
           </div>
         </div>
 
@@ -539,9 +540,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 hover:from-amber-500/20 hover:to-orange-500/20 border border-amber-500/20 text-amber-900 dark:text-amber-200 transition-all active:scale-[0.96] cursor-pointer shadow-2xs backdrop-blur-md"
             >
               <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-xs mb-1.5">
-                <BarChart3 className="w-4 h-4" />
+                <Sparkles className="w-4 h-4" />
               </div>
-              <span className="text-xs font-bold">P&L Report</span>
+              <span className="text-xs font-bold">Advisor</span>
             </button>
           </div>
         </div>

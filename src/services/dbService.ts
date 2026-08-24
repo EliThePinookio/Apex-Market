@@ -31,10 +31,16 @@ const CACHE_KEYS = {
 
 // Default clean initial categories for new businesses
 const DEFAULT_CATEGORIES: Category[] = [
-  { id: 'cat-general', name: 'General', color: '#10b981' },
-  { id: 'cat-beverages', name: 'Beverages', color: '#06b6d4' },
-  { id: 'cat-snacks', name: 'Snacks', color: '#f59e0b' },
-  { id: 'cat-essentials', name: 'Essentials', color: '#8b5cf6' },
+  { id: 'cat-apparels', name: 'Apparels', color: '#3b82f6' },
+  { id: 'cat-costumes', name: 'Costumes', color: '#8b5cf6' },
+  { id: 'cat-mens-top', name: 'Men’s Top', color: '#06b6d4' },
+  { id: 'cat-trousers', name: 'Trousers', color: '#10b981' },
+  { id: 'cat-singlet', name: 'Singlet', color: '#6366f1' },
+  { id: 'cat-bracelet', name: 'Bracelet', color: '#f59e0b' },
+  { id: 'cat-rings', name: 'Rings', color: '#ec4899' },
+  { id: 'cat-watches', name: 'Watches', color: '#14b8a6' },
+  { id: 'cat-sprays', name: 'Sprays', color: '#f43f5e' },
+  { id: 'cat-belts', name: 'Belts', color: '#eab308' },
 ];
 
 // Default clean initial business profile
@@ -80,7 +86,19 @@ export function getProductsCache(): Product[] {
 }
 
 export function getCategoriesCache(): Category[] {
-  return getLocalCache<Category[]>(CACHE_KEYS.CATEGORIES, DEFAULT_CATEGORIES);
+  const cached = getLocalCache<Category[]>(CACHE_KEYS.CATEGORIES, DEFAULT_CATEGORIES);
+  // If cached categories contain old default categories (e.g. Beverages, Snacks), migrate to new categories
+  const hasOldCategories = cached.some((c) => 
+    c.name.toLowerCase() === 'beverages' || 
+    c.name.toLowerCase() === 'snacks' || 
+    c.name.toLowerCase() === 'essentials' ||
+    c.name.toLowerCase() === 'general'
+  );
+  if (hasOldCategories || cached.length === 0) {
+    setLocalCache(CACHE_KEYS.CATEGORIES, DEFAULT_CATEGORIES);
+    return DEFAULT_CATEGORIES;
+  }
+  return cached;
 }
 
 export function getTransactionsCache(): Transaction[] {

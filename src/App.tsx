@@ -288,6 +288,12 @@ function AppContent() {
                   products={products}
                   profile={profile}
                   summary={summary}
+                  onNavigateToPOS={() => setActiveTab('pos')}
+                  onNavigateToInventory={(filterLowStock) => {
+                    if (filterLowStock) setInventoryLowStockFilter(true);
+                    setActiveTab('inventory');
+                  }}
+                  onNavigateToTransactions={() => setActiveTab('transactions')}
                 />
               )}
 

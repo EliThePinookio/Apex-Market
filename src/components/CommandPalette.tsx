@@ -67,7 +67,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     { id: 'pos', label: 'Open POS Register', icon: ShoppingCart, tab: 'pos' as NavTab },
     { id: 'inventory', label: 'Manage Inventory', icon: Package, tab: 'inventory' as NavTab },
     { id: 'transactions', label: 'View Transactions', icon: Receipt, tab: 'transactions' as NavTab },
-    { id: 'analytics', label: 'Financial Analytics', icon: TrendingUp, tab: 'analytics' as NavTab },
+    { id: 'analytics', label: 'Business Advisor', icon: Sparkles, tab: 'analytics' as NavTab },
     { id: 'customers', label: 'Customer Directory & CRM', icon: Users, tab: 'customers' as NavTab },
     { id: 'settings', label: 'Business Settings', icon: Settings, tab: 'settings' as NavTab },
   ].filter((item) => item.label.toLowerCase().includes(query.toLowerCase()));
