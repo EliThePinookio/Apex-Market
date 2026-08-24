@@ -268,23 +268,23 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
   };
 
   return (
-    <div className="ios-card rounded-2xl p-6 space-y-6">
+    <div className="ios-card rounded-3xl p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-black/[0.05] dark:border-white/[0.06]">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-xs">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/25">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">Data Architecture & Off-Site Backups</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight">Data Architecture & Off-Site Backups</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
               Authoritative Supabase PostgreSQL database with offline resilience & Google Drive versioned backups
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
             Supabase Authoritative
           </span>
         </div>
@@ -296,13 +296,13 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
         <div className="p-4 rounded-2xl ios-subcard flex flex-col justify-between space-y-2">
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
             <span>Primary Database</span>
-            <Database className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <Database className="w-4 h-4 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <div className="text-sm font-bold text-slate-900 dark:text-white">
+            <div className="text-sm font-extrabold text-slate-900 dark:text-white">
               {isSupabaseConfigured ? 'Supabase PostgreSQL' : 'Local Fast DB'}
             </div>
-            <div className="text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
+            <div className="text-xs text-blue-600 dark:text-blue-400 font-bold flex items-center gap-1 mt-0.5">
               <CheckCircle2 className="w-3.5 h-3.5" />
               Connected & Active
             </div>
@@ -313,11 +313,11 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
         <div className="p-4 rounded-2xl ios-subcard flex flex-col justify-between space-y-2">
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
             <span>Synchronization</span>
-            <RefreshCw className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <RefreshCw className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div>
-            <div className="text-sm font-bold text-slate-900 dark:text-white">Offline Resilient</div>
-            <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 font-medium">Auto-synced on reconnect</div>
+            <div className="text-sm font-extrabold text-slate-900 dark:text-white">Offline Resilient</div>
+            <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 font-semibold">Auto-synced on reconnect</div>
           </div>
         </div>
 
@@ -325,13 +325,13 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
         <div className="p-4 rounded-2xl ios-subcard flex flex-col justify-between space-y-2">
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
             <span>Last Drive Backup</span>
-            <Clock className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            <Clock className="w-4 h-4 text-purple-600 dark:text-purple-400" />
           </div>
           <div>
-            <div className="text-sm font-bold text-slate-900 dark:text-white truncate">
+            <div className="text-sm font-extrabold text-slate-900 dark:text-white truncate">
               {lastBackup ? new Date(lastBackup).toLocaleString() : 'No Drive Backups Yet'}
             </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">Versioned JSON payload</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-semibold">Versioned JSON payload</div>
           </div>
         </div>
 
@@ -342,13 +342,13 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
             <Cloud className="w-4 h-4 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <div className="text-sm font-bold text-slate-900 dark:text-white">
+            <div className="text-sm font-extrabold text-slate-900 dark:text-white">
               {driveConnected ? 'Connected' : 'Not Connected'}
             </div>
             {driveConnected ? (
               <button
                 onClick={handleDisconnectDrive}
-                className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 underline font-bold mt-0.5 cursor-pointer"
+                className="text-xs text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 font-bold mt-0.5 cursor-pointer underline"
               >
                 Disconnect
               </button>
@@ -376,7 +376,7 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
           <button
             onClick={handleSyncToSupabase}
             disabled={isSyncingSupabase}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-bold text-xs sm:text-sm shadow-xs active:scale-[0.97] transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+            className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-blue-500/20 active:scale-[0.97] transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${isSyncingSupabase ? 'animate-spin' : ''}`} />
             {isSyncingSupabase ? 'Syncing to Supabase...' : 'Sync to Supabase'}
@@ -386,7 +386,7 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
           <button
             onClick={handleBackUpNow}
             disabled={isBackingUp}
-            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-[0.97] text-white font-bold text-xs sm:text-sm shadow-xs transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+            className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-[0.97] text-white font-extrabold text-xs sm:text-sm shadow-md shadow-purple-500/20 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
           >
             <Cloud className={`w-4 h-4 ${isBackingUp ? 'animate-bounce' : ''}`} />
             {isBackingUp ? 'Backing Up...' : 'Back Up to Google Drive'}
@@ -395,7 +395,7 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
           {/* Export Excel */}
           <button
             onClick={exportToExcel}
-            className="px-4 py-2.5 rounded-xl ios-subcard hover:bg-black/[0.05] dark:hover:bg-white/[0.08] text-slate-800 dark:text-slate-200 font-bold text-xs sm:text-sm transition flex items-center gap-2 cursor-pointer active:scale-[0.97]"
+            className="px-4 py-2.5 rounded-2xl ios-subcard hover:bg-black/[0.05] dark:hover:bg-white/[0.08] text-slate-800 dark:text-slate-200 font-extrabold text-xs sm:text-sm transition flex items-center gap-2 cursor-pointer active:scale-[0.97]"
           >
             <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             Export Excel
@@ -404,7 +404,7 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
           {/* Export JSON */}
           <button
             onClick={exportToJSON}
-            className="px-4 py-2.5 rounded-xl ios-subcard hover:bg-black/[0.05] dark:hover:bg-white/[0.08] text-slate-800 dark:text-slate-200 font-bold text-xs sm:text-sm transition flex items-center gap-2 cursor-pointer active:scale-[0.97]"
+            className="px-4 py-2.5 rounded-2xl ios-subcard hover:bg-black/[0.05] dark:hover:bg-white/[0.08] text-slate-800 dark:text-slate-200 font-extrabold text-xs sm:text-sm transition flex items-center gap-2 cursor-pointer active:scale-[0.97]"
           >
             <FileJson className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             Export JSON
@@ -413,14 +413,14 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
           {/* View Backup History */}
           <button
             onClick={handleFetchHistory}
-            className="px-4 py-2.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 font-bold text-xs sm:text-sm transition flex items-center gap-2 border border-indigo-500/20 cursor-pointer active:scale-[0.97]"
+            className="px-4 py-2.5 rounded-2xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-extrabold text-xs sm:text-sm transition flex items-center gap-2 border border-indigo-500/20 cursor-pointer active:scale-[0.97]"
           >
             <History className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             Drive Backup History
           </button>
 
           {/* Restore Backup */}
-          <label className="px-4 py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/15 text-amber-800 dark:text-amber-300 font-bold text-xs sm:text-sm transition flex items-center gap-2 border border-amber-500/20 cursor-pointer active:scale-[0.97]">
+          <label className="px-4 py-2.5 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-extrabold text-xs sm:text-sm transition flex items-center gap-2 border border-amber-500/20 cursor-pointer active:scale-[0.97]">
             <Upload className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             Restore from JSON
             <input
@@ -449,13 +449,13 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
           <button
             onClick={handleLoadDemoData}
             disabled={isDemoLoading}
-            className="px-3.5 py-2 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 text-xs font-bold transition cursor-pointer active:scale-[0.97]"
+            className="px-3.5 py-2 rounded-2xl bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 text-xs font-bold transition cursor-pointer active:scale-[0.97]"
           >
             {isDemoLoading ? 'Loading...' : 'Load Demo Sample Data'}
           </button>
           <button
             onClick={() => setIsWipeModalOpen(true)}
-            className="px-3.5 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 text-xs font-bold transition border border-rose-500/20 flex items-center gap-1.5 cursor-pointer active:scale-[0.97]"
+            className="px-3.5 py-2 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 text-xs font-bold transition border border-rose-500/20 flex items-center gap-1.5 cursor-pointer active:scale-[0.97]"
           >
             <Trash2 className="w-3.5 h-3.5" />
             Wipe All Data
@@ -465,12 +465,12 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
 
       {/* MODAL 1: BACKUP HISTORY DRAWER / MODAL */}
       {isHistoryOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#1C1C1E] rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-black/[0.08] dark:border-white/[0.1] overflow-hidden">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white/90 dark:bg-[#0F172A]/90 backdrop-blur-2xl rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-white/80 dark:border-white/[0.12] overflow-hidden">
             <div className="p-4 sm:p-5 border-b border-black/[0.05] dark:border-white/[0.06] flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <Cloud className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">Google Drive Backup History</h3>
+                <Cloud className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Google Drive Backup History</h3>
               </div>
               <button
                 onClick={() => setIsHistoryOpen(false)}
@@ -483,7 +483,7 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
             <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-3">
               {isLoadingHistory ? (
                 <div className="py-12 text-center text-slate-500 dark:text-slate-400 text-sm flex flex-col items-center gap-2">
-                  <RefreshCw className="w-6 h-6 animate-spin text-indigo-600 dark:text-indigo-400" />
+                  <RefreshCw className="w-6 h-6 animate-spin text-blue-600 dark:text-blue-400" />
                   Loading versioned backups from Google Drive...
                 </div>
               ) : historyFiles.length === 0 ? (
@@ -492,7 +492,7 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
                   <div>No off-site backups found in Google Drive yet.</div>
                   <button
                     onClick={handleBackUpNow}
-                    className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs transition cursor-pointer"
+                    className="px-4 py-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-extrabold text-xs transition cursor-pointer shadow-md shadow-blue-500/25"
                   >
                     Create First Backup Now
                   </button>
@@ -501,7 +501,7 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
                 historyFiles.map((file) => (
                   <div
                     key={file.id}
-                    className="p-3.5 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] hover:border-indigo-500/40 bg-black/[0.02] dark:bg-white/[0.03] transition flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    className="p-3.5 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] hover:border-blue-500/40 bg-black/[0.02] dark:bg-white/[0.03] transition flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                   >
                     <div>
                       <div className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -516,7 +516,7 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleSelectDriveBackupForRestore(file)}
-                        className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition cursor-pointer active:scale-[0.97]"
+                        className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs transition cursor-pointer active:scale-[0.97] shadow-xs"
                       >
                         Restore
                       </button>
@@ -533,11 +533,11 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
               )}
             </div>
 
-            <div className="p-4 border-t border-black/[0.05] dark:border-white/[0.06] flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
+            <div className="p-4 border-t border-black/[0.05] dark:border-white/[0.06] flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 font-medium">
               <span>Path: Google Drive / BEANNEL BUSINESS BACKUPS</span>
               <button
                 onClick={() => setIsHistoryOpen(false)}
-                className="px-4 py-2 rounded-xl bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.08] text-slate-800 dark:text-slate-200 font-bold transition cursor-pointer"
+                className="px-4 py-2 rounded-2xl bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.08] text-slate-800 dark:text-slate-200 font-bold transition cursor-pointer"
               >
                 Close
               </button>
@@ -548,12 +548,12 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
 
       {/* MODAL 2: RESTORE CONFIRMATION PREVIEW */}
       {isRestoreModalOpen && selectedBackupForRestore && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#1C1C1E] rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-black/[0.08] dark:border-white/[0.1] space-y-5">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white/90 dark:bg-[#0F172A]/90 backdrop-blur-2xl rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-white/80 dark:border-white/[0.12] space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-black/[0.05] dark:border-white/[0.06]">
               <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
                 <AlertTriangle className="w-5 h-5" />
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">Confirm Database Restoration</h3>
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Confirm Database Restoration</h3>
               </div>
               <button
                 onClick={() => setIsRestoreModalOpen(false)}
@@ -592,25 +592,25 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
               </div>
 
               <div className="pt-3 border-t border-black/[0.05] dark:border-white/[0.06] grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
-                <div className="p-2.5 rounded-xl bg-white dark:bg-[#1C1C1E] border border-black/[0.06] dark:border-white/[0.08]">
+                <div className="p-2.5 rounded-2xl bg-white/60 dark:bg-[#151D2A]/60 border border-black/[0.06] dark:border-white/[0.08]">
                   <div className="text-lg font-extrabold text-slate-900 dark:text-white tabular-nums">
                     {validationInfo?.counts?.products ?? 0}
                   </div>
                   <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Products</div>
                 </div>
-                <div className="p-2.5 rounded-xl bg-white dark:bg-[#1C1C1E] border border-black/[0.06] dark:border-white/[0.08]">
+                <div className="p-2.5 rounded-2xl bg-white/60 dark:bg-[#151D2A]/60 border border-black/[0.06] dark:border-white/[0.08]">
                   <div className="text-lg font-extrabold text-slate-900 dark:text-white tabular-nums">
                     {validationInfo?.counts?.customers ?? 0}
                   </div>
                   <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Customers</div>
                 </div>
-                <div className="p-2.5 rounded-xl bg-white dark:bg-[#1C1C1E] border border-black/[0.06] dark:border-white/[0.08]">
+                <div className="p-2.5 rounded-2xl bg-white/60 dark:bg-[#151D2A]/60 border border-black/[0.06] dark:border-white/[0.08]">
                   <div className="text-lg font-extrabold text-slate-900 dark:text-white tabular-nums">
                     {validationInfo?.counts?.transactions ?? 0}
                   </div>
                   <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Transactions</div>
                 </div>
-                <div className="p-2.5 rounded-xl bg-white dark:bg-[#1C1C1E] border border-black/[0.06] dark:border-white/[0.08]">
+                <div className="p-2.5 rounded-2xl bg-white/60 dark:bg-[#151D2A]/60 border border-black/[0.06] dark:border-white/[0.08]">
                   <div className="text-lg font-extrabold text-slate-900 dark:text-white tabular-nums">
                     {validationInfo?.counts?.expenses ?? 0}
                   </div>
@@ -622,14 +622,14 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
             <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={() => setIsRestoreModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.08] text-slate-700 dark:text-slate-300 font-bold text-xs transition cursor-pointer"
+                className="px-4 py-2 rounded-2xl bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.08] text-slate-700 dark:text-slate-300 font-bold text-xs transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleExecuteRestore}
                 disabled={isRestoring}
-                className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-xs transition flex items-center gap-2 disabled:opacity-50 cursor-pointer active:scale-[0.97]"
+                className="px-5 py-2 rounded-2xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-extrabold text-xs shadow-md shadow-amber-500/20 transition flex items-center gap-2 disabled:opacity-50 cursor-pointer active:scale-[0.97]"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isRestoring ? 'animate-spin' : ''}`} />
                 {isRestoring ? 'Restoring Database...' : 'Confirm & Restore Data'}
@@ -641,15 +641,15 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
 
       {/* MODAL 3: WIPE ALL DATA CONFIRMATION */}
       {isWipeModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#1C1C1E] rounded-3xl max-w-md w-full p-6 shadow-2xl border border-rose-500/30 space-y-4">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white/90 dark:bg-[#0F172A]/90 backdrop-blur-2xl rounded-3xl max-w-md w-full p-6 shadow-2xl border border-rose-500/30 space-y-4">
             <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400">
-              <div className="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
                 <Trash2 className="w-5 h-5 text-rose-600 dark:text-rose-400" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">Wipe All Business Data</h3>
-                <p className="text-xs text-rose-600 dark:text-rose-400 font-bold">High Destructive Action</p>
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Wipe All Business Data</h3>
+                <p className="text-xs text-rose-600 dark:text-rose-400 font-extrabold">High Destructive Action</p>
               </div>
             </div>
 
@@ -668,7 +668,7 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
                 value={wipeConfirmText}
                 onChange={(e) => setWipeConfirmText(e.target.value)}
                 placeholder="DELETE"
-                className="w-full px-3.5 py-2 rounded-xl border border-black/[0.08] dark:border-white/[0.1] bg-black/[0.03] dark:bg-white/[0.05] text-slate-900 dark:text-white text-sm font-mono focus:outline-none focus:border-rose-500"
+                className="w-full px-3.5 py-2.5 rounded-2xl border border-black/[0.08] dark:border-white/[0.1] bg-black/[0.03] dark:bg-white/[0.05] text-slate-900 dark:text-white text-sm font-mono focus:outline-none focus:border-rose-500"
               />
             </div>
 
@@ -678,14 +678,14 @@ export const DataBackupSection: React.FC<DataBackupSectionProps> = ({
                   setIsWipeModalOpen(false);
                   setWipeConfirmText('');
                 }}
-                className="px-4 py-2 rounded-xl bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.08] text-slate-700 dark:text-slate-300 font-bold text-xs transition cursor-pointer"
+                className="px-4 py-2 rounded-2xl bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.08] text-slate-700 dark:text-slate-300 font-bold text-xs transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleExecuteWipe}
                 disabled={isWiping || wipeConfirmText.trim().toUpperCase() !== 'DELETE'}
-                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition disabled:opacity-50 flex items-center gap-2 cursor-pointer active:scale-[0.97]"
+                className="px-4 py-2 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-extrabold text-xs shadow-md shadow-rose-500/20 transition disabled:opacity-50 flex items-center gap-2 cursor-pointer active:scale-[0.97]"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 {isWiping ? 'Wiping...' : 'Wipe Live Database'}

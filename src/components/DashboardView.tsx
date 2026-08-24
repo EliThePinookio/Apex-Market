@@ -161,22 +161,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto">
       {/* 1. LOW STOCK REPLENISHMENT ALERT */}
       {rankedLowStockProducts.length > 0 && (
-        <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/[0.08] dark:bg-amber-500/[0.12] border border-amber-500/20 text-slate-900 dark:text-slate-100 space-y-4">
+        <div className="p-4 sm:p-5 rounded-3xl bg-amber-500/[0.10] dark:bg-amber-500/[0.14] border border-amber-500/25 backdrop-blur-xl text-slate-900 dark:text-slate-100 space-y-4 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-500/15 pb-3">
             <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-300 shrink-0">
+              <div className="p-2.5 rounded-2xl bg-amber-500/20 text-amber-700 dark:text-amber-300 shrink-0 shadow-xs">
                 <AlertTriangle className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center space-x-2">
-                  <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                  <h2 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight">
                     Inventory Replenishment Alert
                   </h2>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/20">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/25 shadow-2xs">
                     Action Required
                   </span>
                 </div>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 font-medium">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 font-semibold">
                   {outOfStockCount > 0 && `${outOfStockCount} Out of Stock • `}
                   {criticalWarningCount > 0 && `${criticalWarningCount} Low Stock • `}
                   Ranked by shortage severity
@@ -186,14 +186,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             <button
               onClick={() => onNavigateToInventory(true)}
-              className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 active:scale-[0.97] text-white font-semibold text-xs flex items-center space-x-1 shrink-0 cursor-pointer self-start sm:self-auto transition shadow-xs"
+              className="px-4 py-2 rounded-2xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 active:scale-[0.97] text-white font-bold text-xs flex items-center space-x-1.5 shrink-0 cursor-pointer self-start sm:self-auto transition shadow-xs"
             >
               <span>View All ({rankedLowStockProducts.length}) Low Stock</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
             {rankedLowStockProducts.slice(0, 3).map((prod) => {
               const isOut = prod.stockQuantity <= 0;
               const ratio = prod.stockQuantity / (prod.minStockThreshold || 1);
@@ -202,25 +202,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               return (
                 <div
                   key={prod.id}
-                  className="p-3.5 rounded-xl bg-white dark:bg-[#1C1C1E] border border-black/[0.06] dark:border-white/[0.08] shadow-xs flex flex-col justify-between space-y-3"
+                  className="p-4 rounded-2xl bg-white/70 dark:bg-[#151D2A]/80 border border-white/80 dark:border-white/[0.08] shadow-xs backdrop-blur-md flex flex-col justify-between space-y-3.5"
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block mb-0.5">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 block mb-0.5">
                         {prod.category}
                       </span>
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate max-w-[170px]">
+                      <h3 className="text-sm font-extrabold text-slate-900 dark:text-white truncate max-w-[170px]">
                         {prod.name}
                       </h3>
                     </div>
 
                     {isOut ? (
-                      <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-600 text-white shadow-2xs">
+                      <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white shadow-xs">
                         <Flame className="w-3 h-3" />
                         <span>Out of Stock</span>
                       </span>
                     ) : (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/25 shadow-2xs">
                         {pct}% Stock Left
                       </span>
                     )}
@@ -228,14 +228,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs tabular-nums text-slate-600 dark:text-slate-400">
-                      <span className="font-medium">Current Stock:</span>
-                      <span className={isOut ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-slate-900 dark:text-white font-bold'}>
+                      <span className="font-semibold">Current Stock:</span>
+                      <span className={isOut ? 'text-rose-600 dark:text-rose-400 font-extrabold' : 'text-slate-900 dark:text-white font-extrabold'}>
                         {prod.stockQuantity} / {prod.minStockThreshold} {prod.unit}
                       </span>
                     </div>
-                    <div className="w-full h-1.5 rounded-full bg-black/[0.06] dark:bg-white/[0.1] overflow-hidden">
+                    <div className="w-full h-2 rounded-full bg-black/[0.06] dark:bg-white/[0.1] overflow-hidden">
                       <div
-                        className={`h-full rounded-full ${isOut ? 'bg-rose-500' : 'bg-amber-500'}`}
+                        className={`h-full rounded-full transition-all duration-300 ${isOut ? 'bg-rose-500' : 'bg-gradient-to-r from-amber-500 to-orange-500'}`}
                         style={{ width: `${Math.max(5, pct)}%` }}
                       />
                     </div>
@@ -243,7 +243,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                   <button
                     onClick={() => openRefillModal(prod)}
-                    className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-semibold text-xs flex items-center justify-center space-x-1.5 cursor-pointer transition shadow-2xs"
+                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.98] text-white font-bold text-xs flex items-center justify-center space-x-1.5 cursor-pointer transition shadow-xs"
                   >
                     <PackagePlus className="w-3.5 h-3.5" />
                     <span>Quick Refill Stock</span>
@@ -255,28 +255,32 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       )}
 
-      {/* 2. MAIN OVERVIEW HERO CARD */}
-      <div className="rounded-2xl bg-gradient-to-br from-slate-900 via-[#131722] to-slate-950 text-white p-5 sm:p-6 border border-white/[0.08] shadow-lg shadow-black/20 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
+      {/* 2. MAIN OVERVIEW HERO CARD (Messenger Glass / Vision OS aesthetic) */}
+      <div className="rounded-3xl bg-gradient-to-br from-[#0F172A] via-[#161F33] to-[#0A0F1D] text-white p-6 sm:p-7 border border-white/[0.12] shadow-2xl shadow-blue-950/30 space-y-6 relative overflow-hidden backdrop-blur-2xl">
+        {/* Soft background ambient light blooms */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/15 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-violet-500/15 rounded-full blur-3xl pointer-events-none -mb-20" />
+
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.1]">
           <div>
-            <div className="inline-flex items-center space-x-1.5 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-1">
+            <div className="inline-flex items-center space-x-1.5 text-blue-400 text-xs font-black uppercase tracking-wider mb-1">
               <Zap className="w-3.5 h-3.5" />
               <span>Executive Business Monitor</span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
               {profile.businessName} Overview
             </h1>
           </div>
 
-          {/* iOS Segmented Control */}
-          <div className="flex items-center bg-black/40 p-1 rounded-xl border border-white/[0.08] text-xs font-semibold self-start sm:self-auto backdrop-blur-xs">
+          {/* Segmented Control with rounded glass pills */}
+          <div className="flex items-center bg-black/40 p-1.5 rounded-2xl border border-white/[0.1] text-xs font-bold self-start sm:self-auto backdrop-blur-md shadow-inner">
             {(['today', 'week', 'month', 'all'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setTimeframe(tab)}
-                className={`px-3 py-1.5 rounded-lg transition-all capitalize cursor-pointer active:scale-[0.96] ${
+                className={`px-3.5 py-1.5 rounded-xl transition-all capitalize cursor-pointer active:scale-[0.95] ${
                   timeframe === tab
-                    ? 'bg-white text-slate-950 font-bold shadow-xs'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-extrabold shadow-md shadow-blue-500/30'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -286,60 +290,60 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
           <div className="lg:col-span-5 space-y-2">
-            <div className="text-slate-400 text-xs font-semibold uppercase tracking-wider">
+            <div className="text-slate-400 text-xs font-bold uppercase tracking-wider">
               Period Revenue
             </div>
-            <div className="text-3xl sm:text-4xl font-bold text-white tabular-nums tracking-tight">
+            <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tabular-nums tracking-tight">
               {cur}{periodRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <div className="flex items-center space-x-3 text-xs pt-1 text-slate-300">
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-semibold border border-emerald-500/30">
+              <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 font-extrabold border border-blue-500/30 shadow-2xs">
                 <ArrowUpRight className="w-3.5 h-3.5 mr-1" />
                 {periodSalesCount} Sales Logged
               </span>
-              <span className="font-medium text-slate-400">
-                Avg Basket: <strong className="text-white tabular-nums font-bold">{cur}{avgBasket.toFixed(2)}</strong>
+              <span className="font-semibold text-slate-400">
+                Avg Basket: <strong className="text-white tabular-nums font-black">{cur}{avgBasket.toFixed(2)}</strong>
               </span>
             </div>
           </div>
 
           <div className="lg:col-span-3">
-            <div className="p-3.5 rounded-xl bg-white/[0.04] border border-white/[0.08] space-y-2.5">
+            <div className="p-4 rounded-2xl bg-white/[0.05] border border-white/[0.08] space-y-2.5 backdrop-blur-md">
               <div className="flex items-center space-x-1.5 text-xs text-slate-300 font-bold">
-                <Target className="w-4 h-4 text-emerald-400" />
+                <Target className="w-4 h-4 text-blue-400" />
                 <span>Daily Revenue Target</span>
               </div>
-              <div className="text-base font-bold text-white tabular-nums">
+              <div className="text-base font-extrabold text-white tabular-nums">
                 {cur}{periodRevenue.toFixed(0)} / {cur}{dailyTarget}
               </div>
-              <div className="w-full h-1.5 rounded-full bg-white/[0.1] overflow-hidden">
+              <div className="w-full h-2 rounded-full bg-white/[0.1] overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-emerald-400 transition-all duration-300"
+                  className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-400 transition-all duration-300"
                   style={{ width: `${Math.min(100, targetProgress)}%` }}
                 />
               </div>
-              <p className="text-[11px] text-slate-400 font-medium">
+              <p className="text-[11px] text-slate-400 font-semibold">
                 {targetProgress >= 100 ? 'Goal Achieved!' : `${targetProgress}% of target reached`}
               </p>
             </div>
           </div>
 
-          <div className="lg:col-span-4 h-24 bg-white/[0.04] p-3 rounded-xl border border-white/[0.08] flex flex-col justify-between">
-            <div className="flex items-center justify-between text-xs text-slate-300 font-semibold">
+          <div className="lg:col-span-4 h-28 bg-white/[0.05] p-3.5 rounded-2xl border border-white/[0.08] flex flex-col justify-between backdrop-blur-md">
+            <div className="flex items-center justify-between text-xs text-slate-300 font-bold">
               <span>Sales Velocity</span>
-              <span className="text-[10px] text-slate-400 font-medium">Recent 10 Sales</span>
+              <span className="text-[10px] text-slate-400 font-semibold">Recent 10 Sales</span>
             </div>
             {sparklineData.length > 0 ? (
-              <div className="w-full h-14">
+              <div className="w-full h-16">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={sparklineData}>
                     <Tooltip
                       content={({ active, payload }) => {
                         if (active && payload && payload.length) {
                           return (
-                            <div className="bg-[#1C1C1E] border border-white/[0.12] text-white p-1 rounded-md text-[10px] tabular-nums font-semibold">
+                            <div className="bg-[#151D2A] border border-white/[0.15] text-white px-2 py-1 rounded-xl text-[10px] tabular-nums font-bold shadow-lg">
                               {cur}{payload[0].value}
                             </div>
                           );
@@ -350,40 +354,40 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     <Area
                       type="monotone"
                       dataKey="amount"
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      fill="#10b981"
+                      stroke="#38bdf8"
+                      strokeWidth={2.5}
+                      fill="#38bdf8"
                       fillOpacity={0.25}
                     />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="text-center py-2 text-xs text-slate-500 font-medium">No sales logged yet</div>
+              <div className="text-center py-3 text-xs text-slate-500 font-semibold">No sales logged yet</div>
             )}
           </div>
         </div>
       </div>
 
-      {/* 3. METRICS GRID */}
+      {/* 3. METRICS GRID (Messenger Floating Glass Cards) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 md:gap-4">
         {/* Total Revenue */}
         <div
           onClick={onNavigateToAnalytics}
           className="ios-card ios-card-interactive p-4 sm:p-5 flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">
             <span>Total Revenue</span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-500 to-cyan-500 text-white flex items-center justify-center shadow-xs">
               <TrendingUp className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tabular-nums tracking-tight">
+          <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tabular-nums tracking-tight">
             {cur}{summary.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
-          <div className="mt-3 pt-2 border-t border-black/[0.05] dark:border-white/[0.06] flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 tabular-nums font-medium">
+          <div className="mt-3 pt-2.5 border-t border-black/[0.05] dark:border-white/[0.06] flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 tabular-nums font-semibold">
             <span>COGS: {cur}{summary.totalCOGS.toFixed(0)}</span>
-            <span className="text-emerald-600 dark:text-emerald-400 font-bold">Gross: {cur}{summary.grossProfit.toFixed(0)}</span>
+            <span className="text-blue-600 dark:text-blue-400 font-bold">Gross: {cur}{summary.grossProfit.toFixed(0)}</span>
           </div>
         </div>
 
@@ -392,18 +396,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           onClick={onNavigateToAnalytics}
           className="ios-card ios-card-interactive p-4 sm:p-5 flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">
             <span>Net Profit</span>
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${summary.netProfit >= 0 ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20' : 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/20'}`}>
+            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${summary.netProfit >= 0 ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25' : 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/25'}`}>
               {profitMarginPercent}% Margin
             </span>
           </div>
-          <div className={`text-xl sm:text-2xl font-bold tabular-nums tracking-tight ${summary.netProfit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+          <div className={`text-xl sm:text-2xl font-black tabular-nums tracking-tight ${summary.netProfit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
             {cur}{summary.netProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
-          <div className="mt-3 pt-2 border-t border-black/[0.05] dark:border-white/[0.06] flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
+          <div className="mt-3 pt-2.5 border-t border-black/[0.05] dark:border-white/[0.06] flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-semibold">
             <span>Profit Margin</span>
-            <span className="font-bold text-slate-900 dark:text-white">{profitMarginPercent}% Net</span>
+            <span className="font-extrabold text-slate-900 dark:text-white">{profitMarginPercent}% Net</span>
           </div>
         </div>
 
@@ -412,18 +416,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           onClick={onNavigateToTransactions}
           className="ios-card ios-card-interactive p-4 sm:p-5 flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">
             <span>Total Expenses</span>
-            <div className="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white flex items-center justify-center shadow-xs">
               <ArrowDownRight className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-xl sm:text-2xl font-bold text-rose-600 dark:text-rose-400 tabular-nums tracking-tight">
+          <div className="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 tabular-nums tracking-tight">
             {cur}{summary.totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
-          <div className="mt-3 pt-2 border-t border-black/[0.05] dark:border-white/[0.06] flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
+          <div className="mt-3 pt-2.5 border-t border-black/[0.05] dark:border-white/[0.06] flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-semibold">
             <span>Expense Logs</span>
-            <span className="font-bold text-slate-900 dark:text-white">{transactions.filter(t => t.type === 'expense').length} items</span>
+            <span className="font-extrabold text-slate-900 dark:text-white">{transactions.filter(t => t.type === 'expense').length} items</span>
           </div>
         </div>
 
@@ -432,18 +436,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           onClick={onNavigateToTransactions}
           className="ios-card ios-card-interactive p-4 sm:p-5 flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">
             <span>Owner Capital</span>
-            <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-violet-500 to-indigo-500 text-white flex items-center justify-center shadow-xs">
               <PiggyBank className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-xl sm:text-2xl font-bold text-amber-700 dark:text-amber-400 tabular-nums tracking-tight">
+          <div className="text-xl sm:text-2xl font-black text-violet-700 dark:text-violet-400 tabular-nums tracking-tight">
             {cur}{summary.totalCapital.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
-          <div className="mt-3 pt-2 border-t border-black/[0.05] dark:border-white/[0.06] flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
+          <div className="mt-3 pt-2.5 border-t border-black/[0.05] dark:border-white/[0.06] flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-semibold">
             <span>Capital Reserve</span>
-            <span className="font-bold text-amber-700 dark:text-amber-400">Active</span>
+            <span className="font-extrabold text-violet-700 dark:text-violet-400">Active</span>
           </div>
         </div>
       </div>
@@ -453,82 +457,90 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Inventory Stock Valuation Card */}
         <div
           onClick={() => onNavigateToInventory()}
-          className="lg:col-span-2 ios-card ios-card-interactive p-5 flex flex-col justify-between space-y-4"
+          className="lg:col-span-2 ios-card ios-card-interactive p-5 sm:p-6 flex flex-col justify-between space-y-4"
         >
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
+            <div className="flex items-center space-x-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-500/25">
                 <Boxes className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">Inventory Asset Valuation</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{products.length} Active Catalog SKUs</p>
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight">Inventory Asset Valuation</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">{products.length} Active Catalog SKUs</p>
               </div>
             </div>
-            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center space-x-1">
+            <span className="text-xs text-blue-600 dark:text-blue-400 font-bold flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-blue-500/10 dark:bg-blue-400/15 border border-blue-500/20">
               <span>Manage Inventory</span>
               <ArrowUpRight className="w-3.5 h-3.5" />
             </span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2 border-t border-black/[0.05] dark:border-white/[0.06]">
-            <div className="ios-subcard p-3">
-              <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-bold tracking-wider mb-0.5">Asset Cost Value</span>
-              <span className="text-base font-bold text-slate-900 dark:text-white tabular-nums">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-3 border-t border-black/[0.05] dark:border-white/[0.06]">
+            <div className="ios-subcard p-3.5">
+              <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-extrabold tracking-wider mb-0.5">Asset Cost Value</span>
+              <span className="text-base font-black text-slate-900 dark:text-white tabular-nums">
                 {cur}{summary.totalInventoryValuation.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
-            <div className="ios-subcard p-3">
-              <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-bold tracking-wider mb-0.5">Potential Revenue</span>
-              <span className="text-base font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+            <div className="ios-subcard p-3.5">
+              <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-extrabold tracking-wider mb-0.5">Potential Revenue</span>
+              <span className="text-base font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
                 {cur}{summary.totalPotentialRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
-            <div className="ios-subcard p-3 col-span-2 sm:col-span-1">
-              <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-bold tracking-wider mb-0.5">Stock Status</span>
-              <span className={`text-base font-bold ${rankedLowStockProducts.length > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+            <div className="ios-subcard p-3.5 col-span-2 sm:col-span-1">
+              <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-extrabold tracking-wider mb-0.5">Stock Status</span>
+              <span className={`text-base font-black ${rankedLowStockProducts.length > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                 {rankedLowStockProducts.length > 0 ? `${rankedLowStockProducts.length} Low Stock` : 'Healthy Stock'}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Quick Launch Actions */}
-        <div className="ios-card p-5 flex flex-col justify-between space-y-3">
-          <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+        {/* Quick Launch Actions (Messenger Bubble Style) */}
+        <div className="ios-card p-5 sm:p-6 flex flex-col justify-between space-y-3.5">
+          <h3 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
             Quick Actions
           </h3>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2.5">
             <button
               onClick={onNavigateToPOS}
-              className="flex flex-col items-center justify-center p-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 transition-all active:scale-[0.96] cursor-pointer"
+              className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 hover:from-blue-500/20 hover:to-indigo-500/20 border border-blue-500/20 text-blue-900 dark:text-blue-200 transition-all active:scale-[0.96] cursor-pointer shadow-2xs backdrop-blur-md"
             >
-              <ShoppingBag className="w-5 h-5 mb-1 text-emerald-600 dark:text-emerald-400" />
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-xs mb-1.5">
+                <ShoppingBag className="w-4 h-4" />
+              </div>
               <span className="text-xs font-bold">POS Terminal</span>
             </button>
 
             <button
               onClick={() => onNavigateToInventory()}
-              className="flex flex-col items-center justify-center p-3 rounded-xl bg-teal-500/10 hover:bg-teal-500/15 border border-teal-500/20 text-teal-800 dark:text-teal-300 transition-all active:scale-[0.96] cursor-pointer"
+              className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-gradient-to-br from-teal-500/10 to-emerald-500/10 hover:from-teal-500/20 hover:to-emerald-500/20 border border-teal-500/20 text-teal-900 dark:text-teal-200 transition-all active:scale-[0.96] cursor-pointer shadow-2xs backdrop-blur-md"
             >
-              <Package className="w-5 h-5 mb-1 text-teal-600 dark:text-teal-400" />
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-teal-500 to-emerald-600 text-white flex items-center justify-center shadow-xs mb-1.5">
+                <Package className="w-4 h-4" />
+              </div>
               <span className="text-xs font-bold">Inventory</span>
             </button>
 
             <button
               onClick={onOpenQuickAction}
-              className="flex flex-col items-center justify-center p-3 rounded-xl bg-black/[0.03] dark:bg-white/[0.06] hover:bg-black/[0.06] dark:hover:bg-white/[0.09] border border-black/[0.04] dark:border-white/[0.06] text-slate-800 dark:text-slate-200 transition-all active:scale-[0.96] cursor-pointer"
+              className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-gradient-to-br from-violet-500/10 to-purple-500/10 hover:from-violet-500/20 hover:to-purple-500/20 border border-violet-500/20 text-violet-900 dark:text-violet-200 transition-all active:scale-[0.96] cursor-pointer shadow-2xs backdrop-blur-md"
             >
-              <PlusCircle className="w-5 h-5 mb-1 text-emerald-600 dark:text-emerald-400" />
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-violet-600 to-purple-600 text-white flex items-center justify-center shadow-xs mb-1.5">
+                <PlusCircle className="w-4 h-4" />
+              </div>
               <span className="text-xs font-bold">Quick Entry</span>
             </button>
 
             <button
               onClick={onNavigateToAnalytics}
-              className="flex flex-col items-center justify-center p-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/15 border border-amber-500/20 text-amber-800 dark:text-amber-300 transition-all active:scale-[0.96] cursor-pointer"
+              className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 hover:from-amber-500/20 hover:to-orange-500/20 border border-amber-500/20 text-amber-900 dark:text-amber-200 transition-all active:scale-[0.96] cursor-pointer shadow-2xs backdrop-blur-md"
             >
-              <BarChart3 className="w-5 h-5 mb-1 text-amber-600 dark:text-amber-400" />
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-xs mb-1.5">
+                <BarChart3 className="w-4 h-4" />
+              </div>
               <span className="text-xs font-bold">P&L Report</span>
             </button>
           </div>
@@ -541,12 +553,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* 6. BOTTOM ROW: TOP PERFORMING PRODUCTS & RECENT LEDGER */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Top Selling Products */}
-        <div className="ios-card p-5 space-y-3">
-          <div className="flex items-center justify-between border-b border-black/[0.05] dark:border-white/[0.06] pb-3">
-            <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+        <div className="ios-card p-5 sm:p-6 space-y-3.5">
+          <div className="flex items-center justify-between border-b border-black/[0.05] dark:border-white/[0.06] pb-3.5">
+            <h3 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               Top Catalog Performers
             </h3>
-            <span className="text-slate-400 text-[10px] font-bold uppercase">Volume Ranked</span>
+            <span className="text-blue-600 dark:text-blue-400 text-[10px] font-extrabold uppercase bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">Volume Ranked</span>
           </div>
 
           {topSellingList.length > 0 ? (
@@ -554,40 +566,40 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               {topSellingList.map((item, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between p-2.5 rounded-xl ios-subcard text-xs"
+                  className="flex items-center justify-between p-3 rounded-2xl ios-subcard text-xs hover:border-blue-500/30 transition-all"
                 >
-                  <div className="flex items-center space-x-2.5 min-w-0">
-                    <span className="w-6 h-6 rounded-lg bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 flex items-center justify-center text-xs font-bold shrink-0">
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <span className="w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-xs font-black shrink-0 shadow-2xs">
                       #{idx + 1}
                     </span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+                    <span className="font-bold text-slate-800 dark:text-slate-200 truncate">
                       {item.name}
                     </span>
                   </div>
                   <div className="text-right shrink-0">
-                    <span className="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums text-xs sm:text-sm">{cur}{item.total.toFixed(2)}</span>
-                    <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-medium">{item.qty} units sold</span>
+                    <span className="font-black text-blue-600 dark:text-blue-400 tabular-nums text-xs sm:text-sm">{cur}{item.total.toFixed(2)}</span>
+                    <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-semibold">{item.qty} units sold</span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-xs text-slate-400 py-6 text-center flex flex-col items-center justify-center space-y-1">
-              <ShoppingBag className="w-6 h-6 text-slate-300 dark:text-slate-600 mb-1" />
-              <span>No sales logged yet. Complete a checkout in POS!</span>
+            <div className="text-xs text-slate-400 py-8 text-center flex flex-col items-center justify-center space-y-1.5">
+              <ShoppingBag className="w-8 h-8 text-slate-300 dark:text-slate-600 mb-1" />
+              <span className="font-semibold">No sales logged yet. Complete a checkout in POS!</span>
             </div>
           )}
         </div>
 
         {/* Recent Activity Log */}
-        <div className="ios-card p-5 space-y-3">
-          <div className="flex items-center justify-between border-b border-black/[0.05] dark:border-white/[0.06] pb-3">
-            <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+        <div className="ios-card p-5 sm:p-6 space-y-3.5">
+          <div className="flex items-center justify-between border-b border-black/[0.05] dark:border-white/[0.06] pb-3.5">
+            <h3 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               Recent Transactions
             </h3>
             <button
               onClick={onNavigateToTransactions}
-              className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline font-bold cursor-pointer"
+              className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-bold cursor-pointer"
             >
               View Full Ledger ({transactions.length}) &rarr;
             </button>
@@ -597,29 +609,29 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {transactions.slice(0, 5).map((tx) => (
               <div
                 key={tx.id}
-                className="flex items-center justify-between p-2.5 rounded-xl ios-subcard text-xs"
+                className="flex items-center justify-between p-3 rounded-2xl ios-subcard text-xs hover:border-blue-500/30 transition-all"
               >
-                <div className="flex items-center space-x-2.5 min-w-0">
+                <div className="flex items-center space-x-3 min-w-0">
                   <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase shrink-0 ${
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase shrink-0 shadow-2xs ${
                       tx.type === 'sale'
-                        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
+                        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25'
                         : tx.type === 'expense'
-                        ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/20'
-                        : 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/20'
+                        ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/25'
+                        : 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/25'
                     }`}
                   >
                     {tx.type}
                   </span>
                   <div className="min-w-0">
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 truncate">{tx.description}</p>
-                    <p className="text-[10px] text-slate-400 font-medium">
+                    <p className="font-bold text-slate-800 dark:text-slate-200 truncate">{tx.description}</p>
+                    <p className="text-[10px] text-slate-400 font-semibold">
                       {new Date(tx.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                 </div>
 
-                <div className="text-right font-bold tabular-nums text-xs sm:text-sm shrink-0">
+                <div className="text-right font-black tabular-nums text-xs sm:text-sm shrink-0">
                   <span
                     className={
                       tx.type === 'sale'
@@ -640,35 +652,35 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* REFILL MODAL */}
       {refillProduct && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#1C1C1E] border border-black/[0.08] dark:border-white/[0.12] rounded-2xl w-full max-w-md p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-black/[0.05] dark:border-white/[0.06] pb-3">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white/90 dark:bg-[#0F172A]/90 border border-white/80 dark:border-white/[0.12] rounded-3xl w-full max-w-md p-6 shadow-2xl backdrop-blur-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-black/[0.05] dark:border-white/[0.06] pb-3.5">
               <div>
-                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
+                <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider block">
                   {refillProduct.category}
                 </span>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight">
                   Refill Stock: {refillProduct.name}
                 </h3>
               </div>
               <button
                 onClick={() => setRefillProduct(null)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] cursor-pointer"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleConfirmDashboardRefill} className="space-y-3.5 text-xs">
-              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex justify-between items-center text-amber-900 dark:text-amber-200">
-                <span className="font-medium">Current Stock:</span>
-                <span className="font-bold text-sm tabular-nums">
+            <form onSubmit={handleConfirmDashboardRefill} className="space-y-4 text-xs">
+              <div className="p-3.5 rounded-2xl bg-amber-500/15 border border-amber-500/25 flex justify-between items-center text-amber-900 dark:text-amber-200">
+                <span className="font-bold">Current Stock:</span>
+                <span className="font-black text-sm tabular-nums">
                   {refillProduct.stockQuantity} / {refillProduct.minStockThreshold} {refillProduct.unit}
                 </span>
               </div>
 
               <div>
-                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+                <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">
                   Units to Add *
                 </label>
                 <input
@@ -677,12 +689,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   required
                   value={refillQty}
                   onChange={(e) => setRefillQty(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-xl px-3 py-2.5 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-emerald-500 text-sm"
+                  className="w-full bg-white/70 dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-2xl px-3.5 py-3 text-slate-900 dark:text-white font-extrabold focus:outline-none focus:border-blue-500 text-sm shadow-xs"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+                <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">
                   Cost Price Per Unit ({cur}) *
                 </label>
                 <input
@@ -691,28 +703,28 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   required
                   value={refillCost}
                   onChange={(e) => setRefillCost(e.target.value)}
-                  className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-xl px-3 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 text-xs font-semibold tabular-nums"
+                  className="w-full bg-white/70 dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-2xl px-3.5 py-3 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 text-xs font-bold tabular-nums shadow-xs"
                 />
               </div>
 
-              <div className="p-3 rounded-xl ios-subcard flex justify-between">
-                <span className="text-slate-500 dark:text-slate-400 font-medium">New Total Stock:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">
+              <div className="p-3.5 rounded-2xl ios-subcard flex justify-between">
+                <span className="text-slate-500 dark:text-slate-400 font-semibold">New Total Stock:</span>
+                <span className="font-black text-emerald-600 dark:text-emerald-400">
                   {refillProduct.stockQuantity + Number(refillQty)} {refillProduct.unit}
                 </span>
               </div>
 
-              <div className="pt-2 flex justify-end space-x-2">
+              <div className="pt-2 flex justify-end space-x-2.5">
                 <button
                   type="button"
                   onClick={() => setRefillProduct(null)}
-                  className="px-4 py-2.5 rounded-xl text-slate-700 dark:text-slate-300 font-semibold bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.1] active:scale-[0.97] cursor-pointer"
+                  className="px-4 py-2.5 rounded-2xl text-slate-700 dark:text-slate-300 font-bold bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.1] active:scale-[0.97] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.97] text-white font-bold cursor-pointer shadow-xs"
+                  className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.97] text-white font-bold cursor-pointer shadow-md shadow-blue-500/25"
                 >
                   Confirm Refill
                 </button>

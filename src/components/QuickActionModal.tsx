@@ -143,29 +143,29 @@ export const QuickActionModal: React.FC<QuickActionModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white dark:bg-[#1C1C1E] border border-black/[0.08] dark:border-white/[0.1] rounded-3xl w-full max-w-md p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+      <div className="bg-white/90 dark:bg-[#0F172A]/90 backdrop-blur-2xl border border-white/80 dark:border-white/[0.12] rounded-3xl w-full max-w-md p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
         <div className="flex items-center justify-between pb-3 border-b border-black/[0.05] dark:border-white/[0.06]">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center space-x-2 tracking-tight">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+          <h2 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center space-x-2.5 tracking-tight">
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
             <span>Quick Business Entry</span>
           </h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-black/[0.05] dark:hover:bg-white/[0.08] cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-black/[0.05] dark:hover:bg-white/[0.08] cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Mode Selector Tabs */}
-        <div className="grid grid-cols-4 gap-1 mt-4 p-1 bg-black/[0.04] dark:bg-white/[0.06] rounded-2xl border border-black/[0.04] dark:border-white/[0.06] text-xs font-bold">
+        <div className="grid grid-cols-4 gap-1.5 mt-4 p-1.5 bg-black/[0.04] dark:bg-white/[0.06] rounded-2xl border border-black/[0.04] dark:border-white/[0.06] text-xs font-bold">
           <button
             type="button"
             onClick={() => setMode('sale')}
             className={`flex flex-col items-center py-2 rounded-xl transition-all cursor-pointer ${
               mode === 'sale'
-                ? 'bg-white dark:bg-[#2C2C2E] text-emerald-600 dark:text-emerald-400 shadow-xs'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -177,7 +177,7 @@ export const QuickActionModal: React.FC<QuickActionModalProps> = ({
             onClick={() => setMode('expense')}
             className={`flex flex-col items-center py-2 rounded-xl transition-all cursor-pointer ${
               mode === 'expense'
-                ? 'bg-white dark:bg-[#2C2C2E] text-rose-600 dark:text-rose-400 shadow-xs'
+                ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white shadow-md shadow-rose-500/25'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -189,7 +189,7 @@ export const QuickActionModal: React.FC<QuickActionModalProps> = ({
             onClick={() => setMode('capital')}
             className={`flex flex-col items-center py-2 rounded-xl transition-all cursor-pointer ${
               mode === 'capital'
-                ? 'bg-white dark:bg-[#2C2C2E] text-amber-600 dark:text-amber-400 shadow-xs'
+                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/25'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -201,7 +201,7 @@ export const QuickActionModal: React.FC<QuickActionModalProps> = ({
             onClick={() => setMode('refill')}
             className={`flex flex-col items-center py-2 rounded-xl transition-all cursor-pointer ${
               mode === 'refill'
-                ? 'bg-white dark:bg-[#2C2C2E] text-blue-600 dark:text-blue-400 shadow-xs'
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/25'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -222,7 +222,7 @@ export const QuickActionModal: React.FC<QuickActionModalProps> = ({
                   value={selectedProductId}
                   onChange={(e) => setSelectedProductId(e.target.value)}
                   required
-                  className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500 font-medium"
+                  className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-2xl px-3.5 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-semibold"
                 >
                   <option value="">-- Choose Item --</option>
                   {products.map((p) => (
@@ -243,7 +243,7 @@ export const QuickActionModal: React.FC<QuickActionModalProps> = ({
                     min="1"
                     value={saleQty}
                     onChange={(e) => setSaleQty(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500 font-medium"
+                    className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-2xl px-3.5 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-semibold"
                   />
                 </div>
                 <div>
@@ -253,7 +253,7 @@ export const QuickActionModal: React.FC<QuickActionModalProps> = ({
                   <select
                     value={salePaymentMethod}
                     onChange={(e) => setSalePaymentMethod(e.target.value)}
-                    className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500 font-medium"
+                    className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-2xl px-3.5 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-semibold"
                   >
                     <option value="cash">Cash</option>
                     <option value="card">Card / POS</option>
@@ -264,9 +264,9 @@ export const QuickActionModal: React.FC<QuickActionModalProps> = ({
               </div>
 
               {selectedProductId && (
-                <div className="p-3 rounded-2xl ios-subcard flex justify-between items-center text-sm">
-                  <span className="text-slate-500 dark:text-slate-400 font-medium">Total Revenue:</span>
-                  <span className="font-extrabold text-emerald-600 dark:text-emerald-400 text-base font-mono">
+                <div className="p-3.5 rounded-2xl ios-subcard flex justify-between items-center text-sm">
+                  <span className="text-slate-500 dark:text-slate-400 font-semibold">Total Revenue:</span>
+                  <span className="font-extrabold text-blue-600 dark:text-blue-400 text-base font-mono">
                     {cur}
                     {(
                       (products.find((p) => p.id === selectedProductId)?.sellPrice || 0) *
@@ -292,7 +292,7 @@ export const QuickActionModal: React.FC<QuickActionModalProps> = ({
                   placeholder="0.00"
                   value={expenseAmount}
                   onChange={(e) => setExpenseAmount(e.target.value)}
-                  className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-rose-500 font-medium"
+                  className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-2xl px-3.5 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 font-semibold"
                 />
               </div>
 
@@ -303,7 +303,7 @@ export const QuickActionModal: React.FC<QuickActionModalProps> = ({
                 <select
                   value={expenseCategory}
                   onChange={(e) => setExpenseCategory(e.target.value)}
-                  className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-rose-500 font-medium"
+                  className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-2xl px-3.5 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 font-semibold"
                 >
                   <option value="Rent & Space">Rent & Space</option>
                   <option value="Utilities & Internet">Utilities & Internet</option>
@@ -324,7 +324,7 @@ export const QuickActionModal: React.FC<QuickActionModalProps> = ({
                   placeholder="e.g. Electric bill for August"
                   value={expenseDesc}
                   onChange={(e) => setExpenseDesc(e.target.value)}
-                  className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-rose-500 font-medium"
+                  className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-2xl px-3.5 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 font-semibold"
                 />
               </div>
             </>
@@ -344,7 +344,7 @@ export const QuickActionModal: React.FC<QuickActionModalProps> = ({
                   placeholder="0.00"
                   value={capitalAmount}
                   onChange={(e) => setCapitalAmount(e.target.value)}
-                  className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-amber-500 font-medium"
+                  className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-2xl px-3.5 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 font-semibold"
                 />
               </div>
 
@@ -357,7 +357,7 @@ export const QuickActionModal: React.FC<QuickActionModalProps> = ({
                   placeholder="e.g. Owner Investment / Bank Loan"
                   value={capitalDesc}
                   onChange={(e) => setCapitalDesc(e.target.value)}
-                  className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-amber-500 font-medium"
+                  className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-2xl px-3.5 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 font-semibold"
                 />
               </div>
             </>
@@ -374,7 +374,7 @@ export const QuickActionModal: React.FC<QuickActionModalProps> = ({
                   value={refillProductId}
                   onChange={(e) => setRefillProductId(e.target.value)}
                   required
-                  className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 font-medium"
+                  className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-2xl px-3.5 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 font-semibold"
                 >
                   <option value="">-- Choose Item --</option>
                   {products.map((p) => (
@@ -395,7 +395,7 @@ export const QuickActionModal: React.FC<QuickActionModalProps> = ({
                     min="1"
                     value={refillQty}
                     onChange={(e) => setRefillQty(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 font-medium"
+                    className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-2xl px-3.5 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 font-semibold"
                   />
                 </div>
                 <div>
@@ -408,7 +408,7 @@ export const QuickActionModal: React.FC<QuickActionModalProps> = ({
                     placeholder="Optional new cost"
                     value={refillCost}
                     onChange={(e) => setRefillCost(e.target.value)}
-                    className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-xl px-3 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 font-medium"
+                    className="w-full bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-2xl px-3.5 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 font-semibold"
                   />
                 </div>
               </div>
@@ -420,14 +420,14 @@ export const QuickActionModal: React.FC<QuickActionModalProps> = ({
               type="button"
               disabled={isSubmitting}
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.08] text-slate-600 dark:text-slate-300 text-xs font-bold cursor-pointer disabled:opacity-50"
+              className="px-4 py-2.5 rounded-2xl bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.08] text-slate-600 dark:text-slate-300 text-xs font-bold cursor-pointer disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center space-x-1.5 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs active:scale-[0.97] transition-all cursor-pointer disabled:opacity-50"
+              className="flex items-center space-x-1.5 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-extrabold shadow-md shadow-blue-500/25 active:scale-[0.97] transition-all cursor-pointer disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>

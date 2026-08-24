@@ -81,30 +81,30 @@ export const PinModal: React.FC<PinModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-[#1C1C1E] border border-black/[0.08] dark:border-white/[0.1] rounded-3xl w-full max-w-xs p-6 shadow-2xl text-center space-y-4">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="bg-white/90 dark:bg-[#0F172A]/90 border border-white/80 dark:border-white/[0.12] rounded-3xl w-full max-w-xs p-6 shadow-2xl backdrop-blur-2xl text-center space-y-4">
         <div className="flex justify-end">
           <button
             onClick={onClose}
-            className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-black/[0.05] dark:hover:bg-white/[0.08] cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-black/[0.05] dark:hover:bg-white/[0.08] cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-xs">
-          <KeyRound className="w-6 h-6" />
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-blue-500/25">
+          <KeyRound className="w-7 h-7" />
         </div>
 
         <div>
           <h3 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight">
             {title}
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold">
             {subtitle ? (
               <span>{subtitle}</span>
             ) : (
-              <>Enter 4-digit PIN code (Default: <span className="font-bold text-emerald-600 dark:text-emerald-400">1234</span>)</>
+              <>Enter 4-digit PIN code (Default: <span className="font-black text-blue-600 dark:text-blue-400">1234</span>)</>
             )}
           </p>
         </div>
@@ -115,16 +115,16 @@ export const PinModal: React.FC<PinModalProps> = ({
             type="button"
             onClick={handleBiometricAuth}
             disabled={isVerifyingBio}
-            className="w-full py-2.5 px-3 rounded-2xl bg-gradient-to-r from-slate-900 to-emerald-950 hover:from-slate-800 hover:to-emerald-900 text-white text-xs font-bold shadow-md flex items-center justify-center space-x-2 active:scale-[0.97] transition-all cursor-pointer border border-emerald-500/30"
+            className="w-full py-2.5 px-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-blue-500/25 flex items-center justify-center space-x-2 active:scale-[0.97] transition-all cursor-pointer"
           >
             {isVerifyingBio ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                <Loader2 className="w-4 h-4 animate-spin text-white" />
                 <span>Verifying Biometrics...</span>
               </>
             ) : (
               <>
-                <ScanFace className="w-4 h-4 text-emerald-400" />
+                <ScanFace className="w-4 h-4 text-white" />
                 <span>Unlock with {biometricInfo.deviceLabel || 'Face ID'}</span>
               </>
             )}
@@ -138,7 +138,7 @@ export const PinModal: React.FC<PinModalProps> = ({
               key={idx}
               className={`w-3.5 h-3.5 rounded-full border transition-all ${
                 pinInput.length > idx
-                  ? 'bg-emerald-600 border-emerald-600 dark:bg-emerald-500 dark:border-emerald-500 scale-125'
+                  ? 'bg-blue-600 border-blue-600 dark:bg-blue-500 dark:border-blue-500 scale-125 shadow-xs shadow-blue-500/50'
                   : 'bg-black/[0.05] dark:bg-white/[0.08] border-black/[0.1] dark:border-white/[0.15]'
               }`}
             />
@@ -163,7 +163,7 @@ export const PinModal: React.FC<PinModalProps> = ({
                   else if (btn === '⌫') handleBackspace();
                   else handleKeyPress(btn);
                 }}
-                className="py-3 rounded-2xl bg-black/[0.03] dark:bg-white/[0.05] hover:bg-black/[0.06] dark:hover:bg-white/[0.1] border border-black/[0.06] dark:border-white/[0.08] text-slate-900 dark:text-slate-100 text-base font-bold active:scale-[0.95] transition-all cursor-pointer"
+                className="py-3 rounded-2xl bg-white/60 dark:bg-[#151D2A]/60 hover:bg-white dark:hover:bg-[#1E293B] border border-white/80 dark:border-white/[0.08] text-slate-900 dark:text-slate-100 text-base font-extrabold active:scale-[0.93] transition-all cursor-pointer shadow-xs"
               >
                 {btn}
               </button>

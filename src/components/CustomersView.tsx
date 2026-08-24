@@ -116,104 +116,113 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto p-4 sm:p-6">
       {/* iOS Atmospheric Hero Bar */}
-      <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-[#131722] to-slate-950 text-white p-6 sm:p-8 shadow-xl border border-white/[0.08] relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-teal-400/10 blur-3xl pointer-events-none" />
+      <div className="relative overflow-hidden p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#0F172A] via-[#1E1B4B] to-[#1E293B] text-white border border-white/[0.12] shadow-2xl backdrop-blur-xl flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+        <div className="absolute top-0 right-1/3 w-72 h-72 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-10 -right-10 w-60 h-60 bg-violet-500/15 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
-          <div>
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-teal-500/20 border border-teal-400/30 text-teal-300 text-[11px] font-bold tracking-wider uppercase mb-2">
-              <Users className="w-3.5 h-3.5 text-teal-300" />
-              <span>Customer Relationship Management (CRM)</span>
+        <div className="relative z-10 space-y-1.5">
+          <div className="inline-flex items-center space-x-2 text-blue-400 text-xs font-black uppercase tracking-wider">
+            <div className="w-6 h-6 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center">
+              <Users className="w-3.5 h-3.5 text-blue-400" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              Directory & Loyalty Rewards
-            </h1>
-            <p className="text-xs text-slate-300 mt-1 max-w-xl font-medium leading-relaxed">
-              Track customer purchase velocity, store credit accounts, loyalty reward points, and profile details.
-            </p>
+            <span>CRM & Loyalty Engine</span>
           </div>
-
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="px-5 py-3 rounded-2xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs flex items-center space-x-2 shadow-lg shadow-teal-500/20 cursor-pointer self-start sm:self-auto shrink-0 active:scale-[0.97] transition-all"
-          >
-            <UserPlus className="w-4 h-4" />
-            <span>Add New Customer</span>
-          </button>
+          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+            Directory & Loyalty Rewards
+          </h1>
+          <p className="text-xs text-slate-300 font-semibold max-w-xl leading-relaxed">
+            Track customer purchase velocity, store credit accounts, loyalty reward points, and profile details.
+          </p>
         </div>
+
+        <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="relative z-10 px-5 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center space-x-2 shadow-lg shadow-blue-500/25 cursor-pointer self-start sm:self-auto shrink-0 active:scale-[0.97] transition-all"
+        >
+          <UserPlus className="w-4 h-4" />
+          <span>Add New Customer</span>
+        </button>
       </div>
 
       {/* CRM Summary KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
-        <div className="p-4 rounded-2xl ios-card">
-          <div className="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="p-5 rounded-3xl ios-card">
+          <div className="flex items-center justify-between text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
             <span>Total Customers</span>
-            <Users className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+            <div className="w-7 h-7 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+              <Users className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight tabular-nums">
+          <div className="text-2xl font-black text-slate-900 dark:text-white tracking-tight tabular-nums">
             {customers.length}
           </div>
-          <p className="text-[10px] text-teal-600 dark:text-teal-400 font-bold mt-1">{vipCount} VIP/Gold Tier</p>
+          <p className="text-[10px] text-blue-600 dark:text-blue-400 font-black mt-1">{vipCount} VIP/Gold Tier</p>
         </div>
 
-        <div className="p-4 rounded-2xl ios-card">
-          <div className="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+        <div className="p-5 rounded-3xl ios-card">
+          <div className="flex items-center justify-between text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
             <span>Lifetime Revenue</span>
-            <DollarSign className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <div className="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+              <DollarSign className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight tabular-nums">
+          <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight tabular-nums">
             {cur}{totalSpentAll.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
-          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-1">Across all profiles</p>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mt-1">Across all profiles</p>
         </div>
 
-        <div className="p-4 rounded-2xl ios-card">
-          <div className="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+        <div className="p-5 rounded-3xl ios-card">
+          <div className="flex items-center justify-between text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
             <span>Outstanding Debt</span>
-            <CreditCard className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+            <div className="w-7 h-7 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
+              <CreditCard className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-rose-600 dark:text-rose-400 tracking-tight tabular-nums">
+          <div className="text-2xl font-black text-rose-600 dark:text-rose-400 tracking-tight tabular-nums">
             {cur}{totalDebtAll.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
-          <p className="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-1">Store Credit Tab</p>
+          <p className="text-[10px] text-rose-600 dark:text-rose-400 font-black mt-1">Store Credit Tab</p>
         </div>
 
-        <div className="p-4 rounded-2xl ios-card">
-          <div className="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+        <div className="p-5 rounded-3xl ios-card">
+          <div className="flex items-center justify-between text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
             <span>Avg Loyalty Points</span>
-            <Award className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <div className="w-7 h-7 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+              <Award className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 tracking-tight tabular-nums">
+          <div className="text-2xl font-black text-amber-600 dark:text-amber-400 tracking-tight tabular-nums">
             {Math.round(avgLoyaltyPoints)} pts
           </div>
-          <p className="text-[10px] text-amber-600 dark:text-amber-400 font-bold mt-1">Active Rewards</p>
+          <p className="text-[10px] text-amber-600 dark:text-amber-400 font-black mt-1">Active Rewards</p>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="p-4 rounded-2xl ios-card flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="p-4 rounded-3xl ios-card flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by name, phone or email..."
-            className="w-full pl-9 pr-4 py-2 text-xs bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-xl focus:outline-none focus:border-teal-500 text-slate-900 dark:text-white"
+            className="w-full pl-10 pr-4 py-2.5 text-xs bg-white/70 dark:bg-[#151D2A]/80 border border-white/80 dark:border-white/[0.1] rounded-2xl focus:outline-none focus:border-blue-500 text-slate-900 dark:text-white font-semibold backdrop-blur-md transition-all"
           />
         </div>
 
-        <div className="flex items-center space-x-1 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 bg-black/[0.03] dark:bg-white/[0.04] p-1 rounded-xl">
+        <div className="flex items-center space-x-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 bg-black/[0.03] dark:bg-white/[0.04] p-1.5 rounded-2xl backdrop-blur-md">
           {['all', 'VIP', 'Gold', 'Silver', 'Bronze'].map((tier) => (
             <button
               key={tier}
               onClick={() => setSelectedTier(tier)}
-              className={`px-3 py-1.5 rounded-lg text-xs capitalize transition-all cursor-pointer whitespace-nowrap active:scale-[0.96] ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs capitalize transition-all cursor-pointer whitespace-nowrap active:scale-[0.96] ${
                 selectedTier === tier
-                  ? 'bg-white dark:bg-[#1C1C1E] text-slate-950 dark:text-white font-bold shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-semibold'
               }`}
             >
               {tier}
@@ -224,15 +233,15 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
 
       {/* Customer Directory Cards Grid / Empty States */}
       {filteredCustomers.length === 0 ? (
-        <div className="py-16 text-center space-y-4 ios-card p-8 max-w-md mx-auto">
-          <div className="w-16 h-16 rounded-2xl bg-teal-500/10 text-teal-600 flex items-center justify-center mx-auto">
+        <div className="py-16 text-center space-y-4 ios-card p-8 max-w-md mx-auto rounded-3xl">
+          <div className="w-16 h-16 rounded-3xl bg-blue-500/10 text-blue-500 flex items-center justify-center mx-auto shadow-inner">
             <Users className="w-8 h-8" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
               {customers.length === 0 ? 'Your CRM is ready' : 'No matching customers found'}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
               {customers.length === 0
                 ? 'No customers have been added yet.'
                 : 'Try adjusting your search query or tier filter.'}
@@ -241,7 +250,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
           {customers.length === 0 && (
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs inline-flex items-center space-x-2 shadow-sm cursor-pointer active:scale-[0.96]"
+              className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs inline-flex items-center space-x-2 shadow-md shadow-blue-500/25 cursor-pointer active:scale-[0.96]"
             >
               <UserPlus className="w-4 h-4" />
               <span>+ Add Customer</span>
@@ -254,16 +263,16 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
             <div
               key={cust.id}
               onClick={() => setSelectedCustomer(cust)}
-              className="p-5 rounded-2xl ios-card hover:border-teal-500/40 transition-all cursor-pointer space-y-4 flex flex-col justify-between group active:scale-[0.99]"
+              className="p-5 rounded-3xl ios-card hover:border-blue-500/40 transition-all cursor-pointer space-y-4 flex flex-col justify-between group active:scale-[0.99]"
             >
               <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 rounded-2xl bg-teal-500/15 text-teal-700 dark:text-teal-300 font-bold flex items-center justify-center text-base border border-teal-500/20 shadow-xs">
+                <div className="flex items-center space-x-3.5">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-black flex items-center justify-center text-base shadow-md shadow-blue-500/25">
                     {cust.name.split(' ').map((n) => n[0]).join('')}
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">{cust.name}</h3>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center space-x-1 mt-0.5 font-medium">
+                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">{cust.name}</h3>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center space-x-1.5 mt-0.5 font-semibold">
                       <Phone className="w-3 h-3 text-slate-400" />
                       <span>{cust.phone}</span>
                     </p>
@@ -272,17 +281,17 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
 
                 <div className="flex items-center space-x-1.5">
                   <span
-                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
                       cust.tier === 'VIP'
                         ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30'
                         : cust.tier === 'Gold'
                         ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20'
                         : cust.tier === 'Silver'
                         ? 'bg-slate-500/10 text-slate-700 dark:text-slate-300 border border-slate-500/20'
-                        : 'bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/20'
+                        : 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20'
                     }`}
                   >
-                    {cust.tier} Tier
+                    {cust.tier}
                   </span>
                   <button
                     onClick={(e) => {
@@ -290,46 +299,46 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
                       handleDeleteCustomer(cust.id, cust.name);
                     }}
                     title="Delete Customer"
-                    className="p-1 rounded-lg text-slate-300 hover:text-rose-600 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                    className="p-1.5 rounded-xl text-slate-300 hover:text-rose-600 hover:bg-rose-500/10 transition-colors cursor-pointer"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 py-2 px-3 rounded-xl ios-subcard text-center">
+              <div className="grid grid-cols-3 gap-2 py-2.5 px-3 rounded-2xl ios-subcard text-center">
                 <div>
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Spent</span>
-                  <span className="text-xs font-bold text-slate-900 dark:text-white tabular-nums">{cur}{cust.totalSpent.toFixed(0)}</span>
+                  <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider block">Spent</span>
+                  <span className="text-xs font-black text-slate-900 dark:text-white tabular-nums">{cur}{cust.totalSpent.toFixed(0)}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Orders</span>
-                  <span className="text-xs font-bold text-teal-600 dark:text-teal-400 tabular-nums">{cust.orderCount}</span>
+                  <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider block">Orders</span>
+                  <span className="text-xs font-black text-blue-600 dark:text-blue-400 tabular-nums">{cust.orderCount}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Points</span>
-                  <span className="text-xs font-bold text-amber-600 dark:text-amber-400 tabular-nums">{cust.loyaltyPoints}</span>
+                  <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider block">Points</span>
+                  <span className="text-xs font-black text-amber-600 dark:text-amber-400 tabular-nums">{cust.loyaltyPoints}</span>
                 </div>
               </div>
 
               {cust.debtBalance > 0 && (
-                <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center justify-between">
+                <div className="p-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 text-xs font-black flex items-center justify-between">
                   <span>Tab Debt: {cur}{cust.debtBalance.toFixed(2)}</span>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleSettleDebt(cust.id);
                     }}
-                    className="px-2 py-0.5 rounded-lg bg-rose-600 text-white font-bold text-[10px] hover:bg-rose-700 cursor-pointer active:scale-[0.96]"
+                    className="px-2.5 py-1 rounded-xl bg-rose-600 text-white font-black text-[10px] hover:bg-rose-700 cursor-pointer active:scale-[0.96]"
                   >
                     Clear Debt
                   </button>
                 </div>
               )}
 
-              <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-black/[0.04] dark:border-white/[0.05] font-medium">
+              <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1.5 border-t border-black/[0.04] dark:border-white/[0.05] font-semibold">
                 <span>Last visit: {cust.lastVisit}</span>
-                <span className="text-teal-600 dark:text-teal-400 font-semibold flex items-center space-x-1 group-hover:underline">
+                <span className="text-blue-600 dark:text-blue-400 font-bold flex items-center space-x-1 group-hover:underline">
                   <span>Profile & Logs</span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </span>
@@ -342,52 +351,52 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
       {/* Customer Detail Drawer Modal */}
       <AnimatePresence>
         {selectedCustomer && (
-          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-[#1C1C1E] border border-black/[0.08] dark:border-white/[0.1] rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto"
+              className="bg-white/90 dark:bg-[#0F172A]/90 border border-white/80 dark:border-white/[0.12] rounded-3xl w-full max-w-lg p-6 sm:p-7 shadow-2xl backdrop-blur-2xl space-y-5 max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-start justify-between border-b border-black/[0.05] dark:border-white/[0.06] pb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-14 h-14 rounded-2xl bg-teal-500/15 text-teal-700 dark:text-teal-300 font-bold flex items-center justify-center text-xl border border-teal-500/20 shadow-sm">
+                <div className="flex items-center space-x-3.5">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-black flex items-center justify-center text-xl shadow-lg shadow-blue-500/25">
                     {selectedCustomer.name.split(' ').map((n) => n[0]).join('')}
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">{selectedCustomer.name}</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">{selectedCustomer.phone} • {selectedCustomer.email}</p>
+                    <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">{selectedCustomer.name}</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">{selectedCustomer.phone} • {selectedCustomer.email}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setSelectedCustomer(null)}
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-black/[0.05] dark:hover:bg-white/[0.08] cursor-pointer"
+                  className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-black/[0.05] dark:hover:bg-white/[0.08] cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-teal-500/10 rounded-2xl border border-teal-500/20">
-                  <span className="text-[10px] font-bold text-teal-700 dark:text-teal-300 uppercase tracking-wider">Lifetime Spent</span>
-                  <div className="text-xl font-bold text-slate-900 dark:text-white tabular-nums mt-0.5">{cur}{selectedCustomer.totalSpent.toFixed(2)}</div>
+                <div className="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+                  <span className="text-[10px] font-black text-blue-700 dark:text-blue-300 uppercase tracking-wider">Lifetime Spent</span>
+                  <div className="text-xl font-black text-slate-900 dark:text-white tabular-nums mt-0.5">{cur}{selectedCustomer.totalSpent.toFixed(2)}</div>
                 </div>
 
-                <div className="p-3 bg-amber-500/10 rounded-2xl border border-amber-500/20">
-                  <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider">Reward Points</span>
-                  <div className="text-xl font-bold text-amber-600 dark:text-amber-400 tabular-nums mt-0.5">{selectedCustomer.loyaltyPoints} pts</div>
+                <div className="p-4 bg-amber-500/10 rounded-2xl border border-amber-500/20">
+                  <span className="text-[10px] font-black text-amber-700 dark:text-amber-300 uppercase tracking-wider">Reward Points</span>
+                  <div className="text-xl font-black text-amber-600 dark:text-amber-400 tabular-nums mt-0.5">{selectedCustomer.loyaltyPoints} pts</div>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Quick Actions</h3>
-                <div className="grid grid-cols-2 gap-2">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Quick Actions</h3>
+                <div className="grid grid-cols-2 gap-2.5">
                   <button
                     onClick={() => {
                       setSelectedCustomer(null);
                       onNavigateToPOS();
                     }}
-                    className="p-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center space-x-2 cursor-pointer shadow-xs active:scale-[0.97]"
+                    className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center space-x-2 cursor-pointer shadow-md shadow-blue-500/25 active:scale-[0.97]"
                   >
                     <ShoppingBag className="w-4 h-4" />
                     <span>Create POS Order</span>
@@ -396,7 +405,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
                   {selectedCustomer.debtBalance > 0 ? (
                     <button
                       onClick={() => handleSettleDebt(selectedCustomer.id)}
-                      className="p-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center justify-center space-x-2 cursor-pointer shadow-xs active:scale-[0.97]"
+                      className="p-3.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center justify-center space-x-2 cursor-pointer shadow-md shadow-rose-500/25 active:scale-[0.97]"
                     >
                       <CreditCard className="w-4 h-4" />
                       <span>Settle Debt ({cur}{selectedCustomer.debtBalance})</span>
@@ -404,7 +413,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
                   ) : (
                     <button
                       onClick={() => onNotification('Customer account is in good standing')}
-                      className="p-3 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center space-x-2 cursor-pointer"
+                      className="p-3.5 rounded-2xl bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center space-x-2 cursor-pointer"
                     >
                       <UserCheck className="w-4 h-4" />
                       <span>Account Good Standing</span>
@@ -416,7 +425,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
               <div className="pt-2 border-t border-black/[0.05] dark:border-white/[0.06] flex justify-end">
                 <button
                   onClick={() => setSelectedCustomer(null)}
-                  className="px-4 py-2 rounded-xl bg-black/[0.05] dark:bg-white/[0.08] text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-black/[0.08] cursor-pointer"
+                  className="px-5 py-2.5 rounded-2xl bg-black/[0.05] dark:bg-white/[0.08] text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-black/[0.08] cursor-pointer"
                 >
                   Close Profile
                 </button>
@@ -429,16 +438,19 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
       {/* Add New Customer Modal */}
       <AnimatePresence>
         {isAddModalOpen && (
-          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-[#1C1C1E] border border-black/[0.08] dark:border-white/[0.1] rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-4"
+              className="bg-white/90 dark:bg-[#0F172A]/90 border border-white/80 dark:border-white/[0.12] rounded-3xl w-full max-w-md p-6 sm:p-7 shadow-2xl backdrop-blur-2xl space-y-4"
             >
-              <div className="flex items-center justify-between border-b border-black/[0.05] dark:border-white/[0.06] pb-3">
-                <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">Add New Customer</h3>
-                <button onClick={() => setIsAddModalOpen(false)} className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
+              <div className="flex items-center justify-between border-b border-black/[0.05] dark:border-white/[0.06] pb-3.5">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-500 dark:text-blue-400">Customer CRM</span>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight">Add New Customer</h3>
+                </div>
+                <button onClick={() => setIsAddModalOpen(false)} className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -452,7 +464,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
                     placeholder="e.g. John Doe"
-                    className="w-full px-3.5 py-2.5 text-xs bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-xl focus:outline-none focus:border-teal-500 text-slate-900 dark:text-white font-medium"
+                    className="w-full px-4 py-3 text-xs bg-white/70 dark:bg-[#151D2A]/80 border border-white/80 dark:border-white/[0.1] rounded-2xl focus:outline-none focus:border-blue-500 text-slate-900 dark:text-white font-semibold backdrop-blur-md"
                   />
                 </div>
 
@@ -464,7 +476,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
                       value={newPhone}
                       onChange={(e) => setNewPhone(e.target.value)}
                       placeholder="+1 (555) 000-0000"
-                      className="w-full px-3 py-2 text-xs bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-xl focus:outline-none focus:border-teal-500 text-slate-900 dark:text-white font-medium"
+                      className="w-full px-3.5 py-2.5 text-xs bg-white/70 dark:bg-[#151D2A]/80 border border-white/80 dark:border-white/[0.1] rounded-2xl focus:outline-none focus:border-blue-500 text-slate-900 dark:text-white font-semibold backdrop-blur-md"
                     />
                   </div>
                   <div>
@@ -474,7 +486,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
                       value={newEmail}
                       onChange={(e) => setNewEmail(e.target.value)}
                       placeholder="john@example.com"
-                      className="w-full px-3 py-2 text-xs bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-xl focus:outline-none focus:border-teal-500 text-slate-900 dark:text-white font-medium"
+                      className="w-full px-3.5 py-2.5 text-xs bg-white/70 dark:bg-[#151D2A]/80 border border-white/80 dark:border-white/[0.1] rounded-2xl focus:outline-none focus:border-blue-500 text-slate-900 dark:text-white font-semibold backdrop-blur-md"
                     />
                   </div>
                 </div>
@@ -487,23 +499,23 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
                     value={initialDebt}
                     onChange={(e) => setInitialDebt(e.target.value)}
                     placeholder="0.00"
-                    className="w-full px-3.5 py-2 text-xs bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-xl focus:outline-none focus:border-teal-500 text-slate-900 dark:text-white font-medium"
+                    className="w-full px-4 py-3 text-xs bg-white/70 dark:bg-[#151D2A]/80 border border-white/80 dark:border-white/[0.1] rounded-2xl focus:outline-none focus:border-blue-500 text-slate-900 dark:text-white font-semibold backdrop-blur-md"
                   />
                 </div>
 
-                <div className="pt-3 border-t border-black/[0.05] dark:border-white/[0.06] flex items-center justify-end space-x-2">
+                <div className="pt-3 border-t border-black/[0.05] dark:border-white/[0.06] flex items-center justify-end space-x-2.5">
                   <button
                     type="button"
                     disabled={isAddingCustomer}
                     onClick={() => setIsAddModalOpen(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-black/[0.05] dark:bg-white/[0.08] text-slate-700 dark:text-slate-300 hover:bg-black/[0.08] disabled:opacity-50 cursor-pointer"
+                    className="px-4 py-2.5 rounded-2xl text-xs font-bold bg-black/[0.05] dark:bg-white/[0.08] text-slate-700 dark:text-slate-300 hover:bg-black/[0.08] disabled:opacity-50 cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isAddingCustomer}
-                    className="px-5 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5 cursor-pointer active:scale-[0.97]"
+                    className="px-5 py-2.5 rounded-2xl text-xs font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-md shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5 cursor-pointer active:scale-[0.97]"
                   >
                     {isAddingCustomer ? (
                       <>
