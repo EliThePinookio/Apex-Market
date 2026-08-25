@@ -36,9 +36,10 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import ReactMarkdown from 'react-markdown';
-import { Transaction, Product, BusinessProfile, FinancialSummary, WhatIfSimulationParams } from '../types';
+import { Transaction, Product, BusinessProfile, FinancialSummary, WhatIfSimulationParams, Category } from '../types';
 import { computeActualVsForecast, simulateWhatIf } from '../services/financialEngine';
 import { generateForecast, DEFAULT_FORECAST_CONFIG } from '../utils/forecastingEngine';
+import { SalesTrendVisualizer } from './SalesTrendVisualizer';
 
 export interface AIModelOption {
   id: string;
@@ -95,6 +96,7 @@ export const AVAILABLE_AI_MODELS: AIModelOption[] = [
 interface BusinessAdvisorViewProps {
   transactions: Transaction[];
   products: Product[];
+  categories?: Category[];
   profile: BusinessProfile;
   summary: FinancialSummary;
   onNavigateToPOS?: () => void;
@@ -114,6 +116,7 @@ interface ChatMessage {
 export const BusinessAdvisorView: React.FC<BusinessAdvisorViewProps> = ({
   transactions,
   products,
+  categories = [],
   profile,
   summary,
   onNavigateToPOS,
@@ -123,7 +126,7 @@ export const BusinessAdvisorView: React.FC<BusinessAdvisorViewProps> = ({
   const cur = profile.currencySymbol || '$';
 
   // Sub-tabs
-  const [advisorViewTab, setAdvisorViewTab] = useState<'overview' | 'simulator' | 'ask_advisor'>('overview');
+  const [advisorViewTab, setAdvisorViewTab] = useState<'overview' | 'trends' | 'ask_advisor' | 'simulator'>('overview');
 
   // Selected AI Model (Defaults to OpenRouter free model z-ai/glm-5.2:free)
   const [selectedModelId, setSelectedModelId] = useState<string>('z-ai/glm-5.2:free');
@@ -662,6 +665,18 @@ export const BusinessAdvisorView: React.FC<BusinessAdvisorViewProps> = ({
           </button>
 
           <button
+            onClick={() => setAdvisorViewTab('trends')}
+            className={`px-4 py-2.5 rounded-2xl transition-all cursor-pointer flex items-center space-x-2 active:scale-[0.97] ${
+              advisorViewTab === 'trends'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-extrabold shadow-md shadow-indigo-500/25'
+                : 'text-slate-300 hover:text-white bg-white/[0.05] hover:bg-white/[0.1]'
+            }`}
+          >
+            <TrendingUp className="w-4 h-4" />
+            <span>Sales Trends & Velocity</span>
+          </button>
+
+          <button
             onClick={() => setAdvisorViewTab('ask_advisor')}
             className={`px-4 py-2.5 rounded-2xl transition-all cursor-pointer flex items-center space-x-2 active:scale-[0.97] ${
               advisorViewTab === 'ask_advisor'
@@ -1088,10 +1103,42 @@ export const BusinessAdvisorView: React.FC<BusinessAdvisorViewProps> = ({
               </div>
             </div>
           )}
+
+          {/* D. VISUAL SALES TRENDS & INTELLIGENCE */}
+          <SalesTrendVisualizer
+            transactions={transactions}
+            products={products}
+            categories={categories}
+            profile={profile}
+            onNavigateToPOS={onNavigateToPOS}
+            onNavigateToInventory={onNavigateToInventory}
+            onAskAdvisorAboutTrend={(question) => {
+              setAdvisorViewTab('ask_advisor');
+              handleSendChatMessage(question);
+            }}
+          />
         </div>
       )}
 
-      {/* 3. LIVE Q&A TAB (ASK YOUR ADVISOR) */}
+      {/* 3. DEDICATED SALES TRENDS TAB */}
+      {advisorViewTab === 'trends' && (
+        <div className="space-y-6">
+          <SalesTrendVisualizer
+            transactions={transactions}
+            products={products}
+            categories={categories}
+            profile={profile}
+            onNavigateToPOS={onNavigateToPOS}
+            onNavigateToInventory={onNavigateToInventory}
+            onAskAdvisorAboutTrend={(question) => {
+              setAdvisorViewTab('ask_advisor');
+              handleSendChatMessage(question);
+            }}
+          />
+        </div>
+      )}
+
+      {/* 4. LIVE Q&A TAB (ASK YOUR ADVISOR) */}
       {advisorViewTab === 'ask_advisor' && (
         <div className="glass-card p-6 sm:p-7 rounded-3xl space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/60 dark:border-white/[0.06] pb-4">

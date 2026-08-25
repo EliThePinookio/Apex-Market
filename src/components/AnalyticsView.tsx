@@ -1,10 +1,11 @@
 import React from 'react';
-import { Transaction, Product, BusinessProfile, FinancialSummary } from '../types';
+import { Transaction, Product, BusinessProfile, FinancialSummary, Category } from '../types';
 import { BusinessAdvisorView } from './BusinessAdvisorView';
 
 interface AnalyticsViewProps {
   transactions: Transaction[];
   products: Product[];
+  categories?: Category[];
   profile: BusinessProfile;
   summary: FinancialSummary;
   onNavigateToPOS?: () => void;

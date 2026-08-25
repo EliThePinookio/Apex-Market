@@ -286,6 +286,7 @@ function AppContent() {
                 <AnalyticsView
                   transactions={transactions}
                   products={products}
+                  categories={categories}
                   profile={profile}
                   summary={summary}
                   onNavigateToPOS={() => setActiveTab('pos')}
