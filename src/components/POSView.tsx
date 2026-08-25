@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search,
   ShoppingCart,
@@ -13,10 +13,14 @@ import {
   User,
   Tag,
   Loader2,
+  Brain,
+  Sparkles,
+  Zap,
 } from 'lucide-react';
 import { Product, TransactionItem, BusinessProfile, Category } from '../types';
 import { recordSale } from '../services/dbService';
 import { printReceipt } from '../services/exportService';
+import { getPosSmartUpsell, PosUpsellRecommendation } from '../services/centralBrainService';
 
 interface POSViewProps {
   products: Product[];
@@ -44,6 +48,10 @@ export const POSView: React.FC<POSViewProps> = ({
   const [completedTx, setCompletedTx] = useState<any | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Central Brain Smart Upsell State
+  const [upsellRec, setUpsellRec] = useState<PosUpsellRecommendation | null>(null);
+  const [isUpsellLoading, setIsUpsellLoading] = useState(false);
+
   const cur = profile.currencySymbol;
 
   // Filter products
@@ -64,6 +72,41 @@ export const POSView: React.FC<POSViewProps> = ({
   const subtotalSell = cartItemsList.reduce((sum, item) => sum + item.totalSellPrice, 0);
   const totalItemsCount = cartItemsList.reduce((sum, item) => sum + item.quantity, 0);
   const finalTotal = Math.max(0, subtotalSell - discountAmount);
+
+  // Trigger OpenRouter Brain upsell analysis when cart items change
+  useEffect(() => {
+    let isMounted = true;
+    if (cartItemsList.length > 0) {
+      setIsUpsellLoading(true);
+      const timer = setTimeout(() => {
+        getPosSmartUpsell(cartItemsList, products, profile)
+          .then((res) => {
+            if (isMounted) setUpsellRec(res);
+          })
+          .catch(() => {
+            if (isMounted) setUpsellRec(null);
+          })
+          .finally(() => {
+            if (isMounted) setIsUpsellLoading(false);
+          });
+      }, 300);
+      return () => {
+        isMounted = false;
+        clearTimeout(timer);
+      };
+    } else {
+      setUpsellRec(null);
+      setIsUpsellLoading(false);
+    }
+  }, [cartItemsList.length, Object.keys(cart).join(',')]);
+
+  const handleAddUpsellToCart = (productId?: string) => {
+    if (!productId) return;
+    const prod = products.find((p) => p.id === productId);
+    if (prod) {
+      addToCart(prod);
+    }
+  };
 
   const addToCart = (product: Product) => {
     const existing = cart[product.id];
@@ -387,6 +430,37 @@ export const POSView: React.FC<POSViewProps> = ({
                   </div>
                 ))}
               </div>
+
+              {/* Central Brain Autonomous Smart Upsell Suggestion */}
+              {upsellRec && (
+                <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-violet-500/10 border border-blue-500/25 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-1.5 text-blue-600 dark:text-blue-400">
+                      <Brain className="w-3.5 h-3.5" />
+                      <span className="text-[11px] font-extrabold">{upsellRec.headline}</span>
+                    </div>
+                    {upsellRec.estimatedMarginBoost && (
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/25">
+                        {upsellRec.estimatedMarginBoost}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-700 dark:text-slate-300 font-medium">
+                    {upsellRec.pitch}
+                  </p>
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[150px]">
+                      {upsellRec.suggestedProductName}
+                    </span>
+                    <button
+                      onClick={() => handleAddUpsellToCart(upsellRec.suggestedProductId)}
+                      className="px-2.5 py-1 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1 active:scale-95"
+                    >
+                      <Plus className="w-3 h-3" /> Add to Order
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div className="pt-3 border-t border-black/[0.05] dark:border-white/[0.06] space-y-2.5 text-xs">
                 <div className="flex justify-between font-semibold text-slate-500 dark:text-slate-400">

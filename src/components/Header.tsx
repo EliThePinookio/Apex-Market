@@ -11,9 +11,12 @@ import {
   Sun,
   Moon,
   Laptop,
+  Brain,
+  Sparkles,
 } from 'lucide-react';
 import { BusinessProfile } from '../types';
 import { useTheme } from '../hooks/useTheme';
+import { getStoredBrainModel } from '../services/centralBrainService';
 
 interface HeaderProps {
   profile: BusinessProfile;
@@ -24,6 +27,7 @@ interface HeaderProps {
   onOpenQuickAction: () => void;
   onNavigateToLowStock: () => void;
   onOpenCommandPalette?: () => void;
+  onOpenCentralBrain?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -35,8 +39,10 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenQuickAction,
   onNavigateToLowStock,
   onOpenCommandPalette,
+  onOpenCentralBrain,
 }) => {
   const { mode, isDark, toggleTheme } = useTheme();
+  const currentModel = getStoredBrainModel().split('/')[1] || 'GLM 5.2';
 
   return (
     <header className="sticky top-0 z-30 ios-glass border-b border-slate-200/60 dark:border-white/[0.06] px-4 md:px-7 py-3 flex items-center justify-between transition-colors duration-200 safe-area-top backdrop-blur-2xl">
@@ -76,6 +82,21 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="flex items-center space-x-2 shrink-0">
+        {/* Ask BEANNEL Trigger Button */}
+        {onOpenCentralBrain && (
+          <button
+            onClick={onOpenCentralBrain}
+            id="header-central-brain-btn"
+            className="flex items-center space-x-1.5 px-3 py-2 rounded-2xl bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-violet-600/10 hover:from-blue-600/20 hover:to-violet-600/20 text-blue-600 dark:text-blue-400 border border-blue-500/20 dark:border-blue-400/20 shadow-xs backdrop-blur-md transition-all text-xs font-bold active:scale-[0.95] cursor-pointer"
+            title="Ask BEANNEL Business Intelligence"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+            <span className="hidden sm:inline text-xs font-bold tracking-tight">
+              Ask BEANNEL
+            </span>
+          </button>
+        )}
+
         {/* Quick Theme Toggle Button */}
         <button
           onClick={toggleTheme}

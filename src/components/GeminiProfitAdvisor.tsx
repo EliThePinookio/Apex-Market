@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Sparkles, Bot, RefreshCw, AlertCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { FinancialSummary, BusinessProfile, Product } from '../types';
+import { AIController } from '../services/aiControllerService';
 
 interface GeminiProfitAdvisorProps {
   summary: FinancialSummary;
@@ -37,8 +38,6 @@ export const GeminiProfitAdvisor: React.FC<GeminiProfitAdvisorProps> = ({
     setError(null);
 
     const promptToUse = overridePrompt !== undefined ? overridePrompt : customPrompt;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
 
     try {
       const sanitizedSummary = {
@@ -60,7 +59,6 @@ export const GeminiProfitAdvisor: React.FC<GeminiProfitAdvisorProps> = ({
         headers: {
           'Content-Type': 'application/json',
         },
-        signal: controller.signal,
         body: JSON.stringify({
           summary: sanitizedSummary,
           topProducts,
@@ -73,8 +71,6 @@ export const GeminiProfitAdvisor: React.FC<GeminiProfitAdvisorProps> = ({
         }),
       });
 
-      clearTimeout(timeoutId);
-
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
         throw new Error(errData.error || 'Failed to generate AI profit insights.');
@@ -86,13 +82,8 @@ export const GeminiProfitAdvisor: React.FC<GeminiProfitAdvisorProps> = ({
       }
       setAnalysis(data.analysis);
     } catch (err: any) {
-      clearTimeout(timeoutId);
       console.error('AI Profit Advisor Error:', err);
-      if (err.name === 'AbortError') {
-        setError('Request timed out. Please check your network connection and try again.');
-      } else {
-        setError(err?.message || 'Unable to connect to Gemini AI Profit Advisor.');
-      }
+      setError(err?.message || 'Unable to connect to Gemini AI Profit Advisor.');
     } finally {
       setLoading(false);
     }

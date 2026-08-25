@@ -23,6 +23,7 @@ import { SettingsView } from './components/SettingsView';
 import { QuickActionModal } from './components/QuickActionModal';
 import { PinModal } from './components/PinModal';
 import { CommandPalette } from './components/CommandPalette';
+import { CentralBrainAssistantModal } from './components/CentralBrainAssistantModal';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuthScreen } from './components/AuthScreen';
 import { CheckCircle2, Loader2, Store } from 'lucide-react';
@@ -51,16 +52,21 @@ function AppContent() {
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [isQuickActionOpen, setIsQuickActionOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isCentralBrainOpen, setIsCentralBrainOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [inventoryLowStockFilter, setInventoryLowStockFilter] = useState(false);
   const [notificationMsg, setNotificationMsg] = useState<string | null>(null);
 
-  // Global CMD+K shortcut listener
+  // Global CMD+K and CMD+B shortcut listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setIsCommandPaletteOpen((prev) => !prev);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        setIsCentralBrainOpen((prev) => !prev);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -222,6 +228,7 @@ function AppContent() {
           onOpenQuickAction={() => setIsQuickActionOpen(true)}
           onNavigateToLowStock={handleNavigateToLowStock}
           onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+          onOpenCentralBrain={() => setIsCentralBrainOpen(true)}
         />
 
         {/* Dynamic Main Viewport with Smooth Motion Transitions */}
@@ -250,6 +257,7 @@ function AppContent() {
                   onNavigateToTransactions={() => setActiveTab('transactions')}
                   onNavigateToAnalytics={() => setActiveTab('analytics')}
                   onOpenQuickAction={() => setIsQuickActionOpen(true)}
+                  onOpenCentralBrain={() => setIsCentralBrainOpen(true)}
                 />
               )}
 
@@ -365,6 +373,16 @@ function AppContent() {
             setIsOwnerUnlocked(true);
             showNotification('Owner Mode Unlocked');
           }}
+        />
+
+        {/* Global OpenRouter Central Brain Assistant Modal */}
+        <CentralBrainAssistantModal
+          isOpen={isCentralBrainOpen}
+          onClose={() => setIsCentralBrainOpen(false)}
+          products={products}
+          transactions={transactions}
+          profile={profile}
+          summary={summary}
         />
 
         {/* Floating Notification Toast */}

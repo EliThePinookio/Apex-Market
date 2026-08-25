@@ -40,6 +40,7 @@ import { Transaction, Product, BusinessProfile, FinancialSummary, WhatIfSimulati
 import { computeActualVsForecast, simulateWhatIf } from '../services/financialEngine';
 import { generateForecast, DEFAULT_FORECAST_CONFIG } from '../utils/forecastingEngine';
 import { SalesTrendVisualizer } from './SalesTrendVisualizer';
+import { getStoredOpenRouterKey } from '../services/centralBrainService';
 
 export interface AIModelOption {
   id: string;
@@ -52,44 +53,44 @@ export interface AIModelOption {
 
 export const AVAILABLE_AI_MODELS: AIModelOption[] = [
   {
-    id: 'z-ai/glm-5.2:free',
-    name: 'GLM 5.2 (Free)',
-    provider: 'openrouter',
-    badge: 'OpenRouter Free',
-    tag: '⚡ Default',
-    description: 'Balanced, fast business intelligence model via OpenRouter.',
-  },
-  {
-    id: 'nvidia/nemotron-3-ultra-550b-a55b:free',
-    name: 'Nemotron 3 Ultra 550B (Free)',
-    provider: 'openrouter',
-    badge: 'OpenRouter Free',
-    tag: '🧠 Deep Reasoning',
-    description: 'High-parameter business reasoning engine via OpenRouter.',
-  },
-  {
-    id: 'meta-llama/llama-3.3-70b-instruct:free',
-    name: 'Llama 3.3 70B (Free)',
-    provider: 'openrouter',
-    badge: 'OpenRouter Free',
-    tag: '🚀 Llama 3.3',
-    description: 'Open-weight instruction model via OpenRouter.',
-  },
-  {
-    id: 'gemini-2.5-flash',
-    name: 'Gemini 2.5 Flash',
-    provider: 'gemini',
-    badge: 'Google Gemini',
-    tag: '⚡ Ultra Fast',
-    description: 'High-availability, ultra-responsive Google Gemini model.',
-  },
-  {
     id: 'gemini-3.7-flash',
     name: 'Gemini 3.7 Flash',
     provider: 'gemini',
     badge: 'Google Gemini',
-    tag: '✨ Gemini 3.7',
-    description: 'Direct server-side Google Gemini 3.7 multimodal model.',
+    tag: '⚡ Default',
+    description: 'High-availability, ultra-responsive Google Gemini 3.7 model.',
+  },
+  {
+    id: 'meta-llama/llama-3.3-70b-instruct',
+    name: 'Llama 3.3 70B',
+    provider: 'openrouter',
+    badge: 'OpenRouter',
+    tag: '🚀 Executive Advisor',
+    description: 'High-parameter instruction model via OpenRouter.',
+  },
+  {
+    id: 'mistralai/mistral-small-24b-instruct-2501',
+    name: 'Mistral Small 24B',
+    provider: 'openrouter',
+    badge: 'OpenRouter',
+    tag: '⚡ Fast & Sharp',
+    description: 'Sharp business reasoning model via OpenRouter.',
+  },
+  {
+    id: 'qwen/qwen-2.5-72b-instruct',
+    name: 'Qwen 2.5 72B',
+    provider: 'openrouter',
+    badge: 'OpenRouter',
+    tag: '🧠 Deep Analysis',
+    description: 'High-tier analytical reasoning model via OpenRouter.',
+  },
+  {
+    id: 'meta-llama/llama-3.1-8b-instruct',
+    name: 'Llama 3.1 8B',
+    provider: 'openrouter',
+    badge: 'OpenRouter',
+    tag: '⚡ Fast & Efficient',
+    description: 'Ultra-fast lightweight instruction model via OpenRouter.',
   },
 ];
 
@@ -128,8 +129,8 @@ export const BusinessAdvisorView: React.FC<BusinessAdvisorViewProps> = ({
   // Sub-tabs
   const [advisorViewTab, setAdvisorViewTab] = useState<'overview' | 'trends' | 'ask_advisor' | 'simulator'>('overview');
 
-  // Selected AI Model (Defaults to OpenRouter free model z-ai/glm-5.2:free)
-  const [selectedModelId, setSelectedModelId] = useState<string>('z-ai/glm-5.2:free');
+  // Selected AI Model (Defaults to Gemini 3.7 Flash)
+  const [selectedModelId, setSelectedModelId] = useState<string>('gemini-3.7-flash');
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const modelDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -412,9 +413,15 @@ export const BusinessAdvisorView: React.FC<BusinessAdvisorViewProps> = ({
     };
 
     try {
+      const customKey = getStoredOpenRouterKey();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (customKey) {
+        headers['x-openrouter-key'] = customKey;
+      }
+
       const res = await fetch('/api/business-advisor', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(payload),
       });
 
@@ -505,9 +512,15 @@ export const BusinessAdvisorView: React.FC<BusinessAdvisorViewProps> = ({
     };
 
     try {
+      const customKey = getStoredOpenRouterKey();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (customKey) {
+        headers['x-openrouter-key'] = customKey;
+      }
+
       const res = await fetch('/api/business-advisor', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(payload),
       });
 
@@ -733,73 +746,8 @@ export const BusinessAdvisorView: React.FC<BusinessAdvisorViewProps> = ({
                 </div>
               </div>
 
-              {/* Action Controls: Model Selector Dropdown & Refresh */}
-              <div className="flex items-center space-x-2.5 self-start md:self-auto flex-wrap">
-                {/* Clean Model Selector Dropdown */}
-                <div className="relative" ref={modelDropdownRef}>
-                  <button
-                    type="button"
-                    onClick={() => setIsModelDropdownOpen((prev) => !prev)}
-                    className="px-3.5 py-2 rounded-2xl bg-white/80 dark:bg-white/[0.06] hover:bg-white dark:hover:bg-white/[0.1] text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-white/[0.1] shadow-xs text-xs font-bold flex items-center space-x-2 transition-all active:scale-[0.97] cursor-pointer"
-                  >
-                    <Cpu className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                    <span className="font-extrabold truncate max-w-[140px] sm:max-w-[180px]">{selectedModel.name}</span>
-                    <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 font-extrabold">
-                      {selectedModel.tag}
-                    </span>
-                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isModelDropdownOpen ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {/* Dropdown Menu */}
-                  <AnimatePresence>
-                    {isModelDropdownOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 6, scale: 0.96 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 4, scale: 0.96 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute right-0 mt-2 w-72 sm:w-80 rounded-2xl floating-dock p-2 z-50 shadow-2xl border border-slate-200/80 dark:border-white/[0.1] space-y-1"
-                      >
-                        <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                          Select Intelligence Engine
-                        </div>
-                        {AVAILABLE_AI_MODELS.map((model) => {
-                          const isSelected = selectedModelId === model.id;
-                          return (
-                            <button
-                              key={model.id}
-                              type="button"
-                              onClick={() => {
-                                setSelectedModelId(model.id);
-                                setIsModelDropdownOpen(false);
-                                fetchExecutiveReview(true, model.id);
-                              }}
-                              className={`w-full text-left p-2.5 rounded-xl text-xs transition-all flex items-start justify-between gap-2 cursor-pointer ${
-                                isSelected
-                                  ? 'bg-blue-500/10 dark:bg-blue-400/15 text-blue-700 dark:text-blue-300 font-extrabold'
-                                  : 'hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-200'
-                              }`}
-                            >
-                              <div className="space-y-0.5 min-w-0">
-                                <div className="flex items-center space-x-2">
-                                  <span className="font-bold truncate">{model.name}</span>
-                                  <span className="text-[9px] px-1 py-0.2 rounded bg-black/[0.05] dark:bg-white/[0.08] text-slate-500 dark:text-slate-400 font-bold">
-                                    {model.badge}
-                                  </span>
-                                </div>
-                                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-normal leading-tight">
-                                  {model.description}
-                                </p>
-                              </div>
-                              {isSelected && <Check className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />}
-                            </button>
-                          );
-                        })}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
+              {/* Action Controls: Refresh */}
+              <div className="flex items-center space-x-2.5 self-start md:self-auto">
                 {/* Re-analyze Button */}
                 <button
                   onClick={() => fetchExecutiveReview(true)}
@@ -807,7 +755,7 @@ export const BusinessAdvisorView: React.FC<BusinessAdvisorViewProps> = ({
                   className="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold shadow-sm shadow-indigo-500/25 transition-all flex items-center space-x-1.5 cursor-pointer disabled:opacity-50 active:scale-[0.96]"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isExecutiveLoading ? 'animate-spin' : ''}`} />
-                  <span>Re-analyze</span>
+                  <span>Refresh Analysis</span>
                 </button>
               </div>
             </div>

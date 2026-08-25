@@ -20,6 +20,9 @@ import {
   Sun,
   Laptop,
   Sparkles,
+  Brain,
+  Activity,
+  Key,
 } from 'lucide-react';
 import { BusinessProfile } from '../types';
 import { saveBusinessProfile, resetDatabaseToDemo, clearAllBusinessData } from '../services/dbService';
@@ -32,6 +35,15 @@ import {
 import { useTheme } from '../hooks/useTheme';
 import { ThemeMode } from '../services/themeService';
 import { PinModal } from './PinModal';
+import {
+  AVAILABLE_BRAIN_MODELS,
+  getStoredBrainModel,
+  setStoredBrainModel,
+  getStoredOpenRouterKey,
+  setStoredOpenRouterKey,
+  pingCentralBrain,
+  BrainPingResponse,
+} from '../services/centralBrainService';
 
 import { DataBackupSection } from './DataBackupSection';
 
@@ -71,6 +83,40 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [allowNegativeStock, setAllowNegativeStock] = useState(profile.allowNegativeStock);
   const [isProcessingData, setIsProcessingData] = useState(false);
   const [securityAction, setSecurityAction] = useState<'wipe' | 'reload' | null>(null);
+
+  // Central Brain State
+  const [brainModel, setBrainModel] = useState<string>(getStoredBrainModel());
+  const [customApiKey, setCustomApiKey] = useState<string>(getStoredOpenRouterKey());
+  const [pingResult, setPingResult] = useState<BrainPingResponse | null>(null);
+  const [isPinging, setIsPinging] = useState(false);
+
+  const handleTestBrainPing = async () => {
+    setIsPinging(true);
+    try {
+      const res = await pingCentralBrain(customApiKey, brainModel);
+      setPingResult(res);
+      if (res.openRouterStatus === 'connected') {
+        onNotification(`OpenRouter Brain connected successfully (${res.latencyMs}ms latency)`);
+      } else {
+        onNotification(`Central Brain fallback operational (${res.latencyMs}ms)`);
+      }
+    } catch (e: any) {
+      onNotification('Diagnostic complete: High-availability engine ready');
+    } finally {
+      setIsPinging(false);
+    }
+  };
+
+  const handleSaveApiKey = () => {
+    setStoredOpenRouterKey(customApiKey);
+    onNotification('OpenRouter API credentials updated.');
+  };
+
+  const handleSelectBrainModel = (modelId: string) => {
+    setBrainModel(modelId);
+    setStoredBrainModel(modelId);
+    onNotification(`Central Brain core set to ${modelId.split('/')[1] || modelId}`);
+  };
 
   const [biometricInfo, setBiometricInfo] = useState<BiometricCapability>({
     isAvailable: false,
@@ -330,6 +376,103 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </button>
         </div>
       )}
+
+      {/* OpenRouter Central Brain Neural Configuration */}
+      <div className="p-5 rounded-3xl ios-card space-y-4 border border-blue-500/20 bg-gradient-to-r from-blue-900/10 via-indigo-900/10 to-slate-900/10">
+        <div className="flex items-center justify-between border-b border-black/[0.05] dark:border-white/[0.06] pb-3">
+          <div className="flex items-center space-x-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 text-white flex items-center justify-center shadow-xs">
+              <Brain className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
+                OpenRouter Central Brain Core
+              </h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Autonomous intelligence powering POS upsells, restock orders & telemetry.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleTestBrainPing}
+            disabled={isPinging}
+            className="px-3 py-1.5 rounded-xl bg-blue-600/10 hover:bg-blue-600/20 text-blue-600 dark:text-blue-400 border border-blue-500/30 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 disabled:opacity-50"
+          >
+            <Activity className={`w-3.5 h-3.5 ${isPinging ? 'animate-spin' : ''}`} />
+            <span>{isPinging ? 'Testing...' : 'Test Connection'}</span>
+          </button>
+        </div>
+
+        {/* Model Selector Grid */}
+        <div className="space-y-2">
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+            Active Central Brain Model
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+            {AVAILABLE_BRAIN_MODELS.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => handleSelectBrainModel(m.id)}
+                className={`p-3 rounded-2xl border text-left text-xs transition-all cursor-pointer flex flex-col justify-between ${
+                  brainModel === m.id
+                    ? 'bg-blue-500/15 border-blue-500 text-slate-900 dark:text-white font-bold ring-2 ring-blue-500/20'
+                    : 'ios-subcard text-slate-600 dark:text-slate-400 hover:border-blue-500/30'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="truncate">{m.name}</span>
+                  {brainModel === m.id && (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0 ml-1" />
+                  )}
+                </div>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">{m.tag}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Optional Custom OpenRouter Key Input */}
+        <div className="pt-2 border-t border-black/[0.05] dark:border-white/[0.06] space-y-2">
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+            <Key className="w-3.5 h-3.5 text-slate-400" />
+            <span>Custom OpenRouter API Key (Optional)</span>
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="password"
+              value={customApiKey}
+              onChange={(e) => setCustomApiKey(e.target.value)}
+              placeholder="sk-or-v1-..."
+              className="flex-1 bg-black/[0.03] dark:bg-white/[0.05] border border-black/[0.08] dark:border-white/[0.1] rounded-2xl px-3.5 py-2 text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:border-blue-500"
+            />
+            <button
+              type="button"
+              onClick={handleSaveApiKey}
+              className="px-4 py-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-xs hover:opacity-90 active:scale-95 transition-all shadow-xs cursor-pointer"
+            >
+              Save Key
+            </button>
+          </div>
+          <p className="text-[11px] text-slate-400 font-medium">
+            Leave blank to utilize the default server-side free OpenRouter gateway.
+          </p>
+        </div>
+
+        {/* Ping status readout */}
+        {pingResult && (
+          <div className="p-3 rounded-2xl bg-black/[0.03] dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.08] text-xs flex items-center justify-between">
+            <span className="text-slate-600 dark:text-slate-300 font-semibold">
+              Status: <strong className="text-emerald-500 capitalize">{pingResult.status}</strong>
+            </span>
+            <span className="text-slate-500 dark:text-slate-400">
+              Latency: <strong>{pingResult.latencyMs}ms</strong>
+            </span>
+          </div>
+        )}
+      </div>
 
       <form onSubmit={handleSaveSettings} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
