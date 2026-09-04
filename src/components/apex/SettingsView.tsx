@@ -8,7 +8,7 @@ import { Sheet } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { useApex } from "@/lib/apex/store";
 import { useBeannelAuth } from "@/lib/beannel/auth";
-import { readOpenRouterKey, writeOpenRouterKey } from "@/lib/beannel/keys";
+import { readOpenRouterKey, readPaystackSecret, writeOpenRouterKey, writePaystackSecret } from "@/lib/beannel/keys";
 import { pinIssue } from "@/lib/beannel/guard";
 
 const WIPE_PHRASE = "WIPE";
@@ -19,6 +19,7 @@ export function SettingsView() {
   const { user, signOut } = useBeannelAuth();
   const [form, setForm] = useState(profile);
   const [openrouter, setOpenrouter] = useState(() => readOpenRouterKey());
+  const [paystack, setPaystack] = useState(() => readPaystackSecret());
   const [busy, setBusy] = useState(false);
   const [wipeOpen, setWipeOpen] = useState(false);
 
@@ -34,6 +35,7 @@ export function SettingsView() {
     try {
       await saveProfile(form);
       writeOpenRouterKey(openrouter);
+      writePaystackSecret(paystack);
       toast.success("Settings saved");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not save");
@@ -157,6 +159,23 @@ export function SettingsView() {
           )}
         </Group>
         <p className="group-footer">PIN is stored on this device only. Advisor and settings stay locked until it is entered.</p>
+      </section>
+
+      <section>
+        <GroupLabel>Paystack</GroupLabel>
+        <Group footer="Secret key from Paystack (sk_live_… or sk_test_…). MoMo and card at checkout go through Paystack. Cash on delivery does not.">
+          <GroupRow>
+            <span className="shrink-0">Secret</span>
+            <input
+              type="password"
+              value={paystack}
+              onChange={(e) => setPaystack(e.target.value)}
+              className="group-input"
+              placeholder="sk_live_…"
+              autoComplete="off"
+            />
+          </GroupRow>
+        </Group>
       </section>
 
       <section>

@@ -105,7 +105,7 @@ export function isTerminalStatus(status: OrderStatus): boolean {
 }
 
 export function paymentLabel(method: PaymentMethod): string {
-  if (method === "mobile_money") return "Mobile money";
+  if (method === "mobile_money") return "Paystack · MoMo";
   if (method === "cash") return "Cash on delivery";
   if (method === "card") return "Card";
   if (method === "transfer") return "Transfer";
