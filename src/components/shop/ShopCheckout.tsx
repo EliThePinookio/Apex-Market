@@ -254,10 +254,11 @@ export function ShopCheckout() {
         </Field>
         <Field label="Delivery area">
           <input
+            required
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             className="field"
-            placeholder="Neighbourhood, city"
+            placeholder="House / landmark, neighbourhood, city"
             autoComplete="street-address"
           />
         </Field>

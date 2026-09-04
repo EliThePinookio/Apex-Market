@@ -120,6 +120,7 @@ export function OrdersView() {
                 <td>
                   <p className="font-medium">{order.name}</p>
                   {order.phone ? <p className="office-muted">{order.phone}</p> : null}
+                  {order.address ? <p className="office-muted">{order.address}</p> : null}
                 </td>
                 <td className="tabular font-medium">{money(order.amount, cur)}</td>
                 <td>
@@ -166,17 +167,26 @@ export function OrdersView() {
                         </Button>
                       ))}
                       {order.phone ? (
-                        <a
-                          className="btn-secondary-file"
-                          href={whatsappHref(
-                            order.phone,
-                            `BEANNEL: your order ${order.id.slice(-6).toUpperCase()} is ${STATUS_LABEL[order.status].toLowerCase()}.`,
-                          )}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <MessageCircle className="size-4" />
-                          WhatsApp
-                        </a>
+                        <>
+                          <a
+                            className="btn-secondary-file"
+                            href={`tel:${order.phone}`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Call {order.phone}
+                          </a>
+                          <a
+                            className="btn-secondary-file"
+                            href={whatsappHref(
+                              order.phone,
+                              `BEANNEL: your order ${order.id.slice(-6).toUpperCase()} is ${STATUS_LABEL[order.status].toLowerCase()}.`,
+                            )}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MessageCircle className="size-4" />
+                            WhatsApp
+                          </a>
+                        </>
                       ) : null}
                       {canCancel && (
                         <Button

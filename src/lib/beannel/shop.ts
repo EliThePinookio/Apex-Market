@@ -374,6 +374,7 @@ export async function placeShopOrder(args: {
   const address = sanitizeText(args.address, 200);
   if (name.length < 2) throw new Error("Please leave your name.");
   if (phone.length < 9) throw new Error("Please leave a working phone number.");
+  if (address.length < 4) throw new Error("Please leave a delivery area so the rider can find you.");
   if (!args.items.length) throw new Error("Your bag is empty.");
   if (args.items.length > 30) throw new Error("Your bag is too large.");
   if (args.items.some((i) => i.qty < 1 || i.qty > 20)) throw new Error("Quantity is not allowed.");
