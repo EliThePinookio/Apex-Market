@@ -43,7 +43,22 @@ export const startPaystackCheckout = createServerFn({ method: "POST" })
         currency: "GHS",
         channels: ["mobile_money", "card"],
         callback_url: data.callbackUrl,
-        metadata: data.metadata || {},
+        metadata: {
+          store: "BEANNEL",
+          description: "BEANNEL — clothes, jewelry and watches from the shop floor.",
+          cancel_action: data.callbackUrl,
+          custom_fields: [
+            { display_name: "Store", variable_name: "store", value: "BEANNEL" },
+            { display_name: "Shop", variable_name: "shop", value: "Clothes, jewelry and watches" },
+            ...(data.metadata?.name
+              ? [{ display_name: "Customer", variable_name: "customer", value: data.metadata.name }]
+              : []),
+            ...(data.metadata?.phone
+              ? [{ display_name: "Phone", variable_name: "phone", value: data.metadata.phone }]
+              : []),
+          ],
+          ...data.metadata,
+        },
       }),
     });
     const body = (await res.json()) as {
