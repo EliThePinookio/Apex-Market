@@ -1,4 +1,4 @@
-import { coverFor } from "@/lib/beannel/catalog";
+import { coverFor, shortFor } from "@/lib/beannel/catalog";
 import { cn } from "@/lib/cn";
 
 export function CategoryTile({
@@ -15,7 +15,7 @@ export function CategoryTile({
   className?: string;
 }) {
   return (
-    <button type="button" onClick={onClick} className={cn("cat-tile", className)}>
+    <button type="button" onClick={onClick} className={cn("cat-tile", className)} title={name}>
       <img src={coverFor(name)} alt="" />
       <span className="cat-tile-scrim" />
       <span className="cat-tile-body">
@@ -38,10 +38,11 @@ export function CategoryChip({
   onClick: () => void;
   plain?: boolean;
 }) {
+  const label = plain ? name : shortFor(name);
   return (
-    <button type="button" className="cat-chip" data-active={active} onClick={onClick}>
+    <button type="button" className="cat-chip" data-active={active} onClick={onClick} title={name}>
       {!plain && <img src={coverFor(name)} alt="" />}
-      <span>{name}</span>
+      <span className="cat-chip-label">{label}</span>
     </button>
   );
 }

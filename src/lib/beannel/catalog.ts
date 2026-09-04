@@ -3,6 +3,7 @@ import type { Category, Product, Transaction } from "@/types";
 export interface CatalogCategory {
   id: string;
   name: string;
+  short?: string;
   prefix: string;
   color: string;
   cover: string;
@@ -12,12 +13,12 @@ export const CATALOG: CatalogCategory[] = [
   { id: "cat-apparels", name: "Apparels", prefix: "AP", color: "#C4A35A", cover: "/brand/cats/apparels.jpg" },
   { id: "cat-trousers", name: "Trousers", prefix: "TR", color: "#6B7C5E", cover: "/brand/cats/trousers.jpg" },
   { id: "cat-tops", name: "Tops", prefix: "TO", color: "#8C6B4F", cover: "/brand/cats/tops.jpg" },
-  { id: "cat-mens-shirts", name: "Men's shirts", prefix: "MS", color: "#3E4A5C", cover: "/brand/cats/mens-shirts.jpg" },
+  { id: "cat-mens-shirts", name: "Men's shirts", short: "Shirts", prefix: "MS", color: "#3E4A5C", cover: "/brand/cats/mens-shirts.jpg" },
   { id: "cat-women", name: "Women", prefix: "WN", color: "#8A4A58", cover: "/brand/cats/women.jpg" },
   { id: "cat-watches", name: "Watches", prefix: "WA", color: "#B0893A", cover: "/brand/cats/watches.jpg" },
   { id: "cat-shoes", name: "Shoes", prefix: "SH", color: "#5C4636", cover: "/brand/cats/shoes.jpg" },
   { id: "cat-belts", name: "Belts", prefix: "BE", color: "#7A5C38", cover: "/brand/cats/belts.jpg" },
-  { id: "cat-accessories", name: "Clothing accessories", prefix: "CA", color: "#9A7B4F", cover: "/brand/cats/accessories.jpg" },
+  { id: "cat-accessories", name: "Clothing accessories", short: "Accessories", prefix: "CA", color: "#9A7B4F", cover: "/brand/cats/accessories.jpg" },
   { id: "cat-electronics", name: "Electronics", prefix: "EL", color: "#4A5A6A", cover: "/brand/cats/electronics.jpg" },
   { id: "cat-jewellery", name: "Jewellery", prefix: "JW", color: "#C4A35A", cover: "/brand/cats/jewellery.jpg" },
   { id: "cat-necklaces", name: "Necklaces", prefix: "NK", color: "#D4AF37", cover: "/brand/cats/necklaces.jpg" },
@@ -38,6 +39,11 @@ export function colorFor(category: string): string {
 export function coverFor(category: string): string {
   const found = CATALOG.find((c) => c.name.toLowerCase() === category.trim().toLowerCase());
   return found?.cover || "/brand/lifestyle.jpg";
+}
+
+export function shortFor(category: string): string {
+  const found = CATALOG.find((c) => c.name.toLowerCase() === category.trim().toLowerCase());
+  return found?.short || category;
 }
 
 export function isGeneratedSku(sku: string, category: string): boolean {
