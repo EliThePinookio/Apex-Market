@@ -45,11 +45,11 @@ export const startPaystackCheckout = createServerFn({ method: "POST" })
         callback_url: data.callbackUrl,
         metadata: {
           store: "BEANNEL",
-          description: "BEANNEL — clothes, jewelry and watches from the shop floor.",
+          description: "BEANNEL — an Accra fashion house for clothes, jewelry and watches. Pay on the floor, wear it with pride.",
           cancel_action: data.callbackUrl,
           custom_fields: [
             { display_name: "Store", variable_name: "store", value: "BEANNEL" },
-            { display_name: "Shop", variable_name: "shop", value: "Clothes, jewelry and watches" },
+            { display_name: "Shop", variable_name: "shop", value: "Accra fashion house — clothes, jewelry and watches" },
             ...(data.metadata?.name
               ? [{ display_name: "Customer", variable_name: "customer", value: data.metadata.name }]
               : []),
