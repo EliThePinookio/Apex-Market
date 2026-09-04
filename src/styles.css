@@ -84,8 +84,8 @@
     --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
     --ease-spring: cubic-bezier(0.22, 1.18, 0.36, 1);
     --ease-spring-soft: cubic-bezier(0.175, 0.885, 0.32, 1.12);
-    --ease-viscous: cubic-bezier(0.22, 1.5, 0.28, 1);
-    --motion-viscous: 740ms;
+    --ease-viscous: cubic-bezier(0.22, 1, 0.36, 1);
+    --motion-viscous: 160ms;
     --motion-scale-hover: 1.015;
     --motion-scale-press: 0.98;
     --motion-scale-press-tile: 0.985;
@@ -99,7 +99,7 @@
     --glass-fill: color-mix(in oklab, #fff 16%, transparent);
     --glass-tint: color-mix(in oklab, #fff 32%, transparent);
     --glass-stroke: color-mix(in oklab, #fff 48%, transparent);
-    --blur-liquid: 22px;
+    --blur-liquid: 14px;
     color-scheme: light;
   }
 
@@ -1510,7 +1510,7 @@ input[type="range"]::-moz-range-thumb {
   height: 0;
 }
 .cloth-photo {
-  filter: url(#beannel-liquid) blur(8px) saturate(1.12);
+  filter: blur(8px) saturate(1.12);
 }
 .cloth-caustic {
   position: absolute;
@@ -1533,7 +1533,7 @@ html.dark .cloth-caustic {
   70% { transform: translate3d(-3%, 4%, 0) scale(1.03); }
 }
 html.dark .cloth-photo {
-  filter: url(#beannel-liquid) blur(8px) brightness(0.28) contrast(1.18) saturate(0.7);
+  filter: blur(8px) brightness(0.28) contrast(1.18) saturate(0.7);
 }
 html.dark .cloth-veil {
   background:
@@ -3394,7 +3394,6 @@ html.dark .liquid-caustic {
   opacity: 0.38;
 }
 .liquid-root [data-liquid] {
-  will-change: transform;
   transform-origin: center center;
 }
 .liquid-root .mall-card,
@@ -3485,11 +3484,11 @@ html.dark .glass {
 .panel {
   transform: translateZ(0);
   transition:
-    transform var(--motion-viscous) var(--ease-viscous),
-    box-shadow var(--motion-viscous) var(--ease-viscous),
-    filter var(--motion-viscous) var(--ease-viscous),
-    background-color var(--motion-viscous) var(--ease-viscous);
-  animation: liquid-tile 640ms var(--ease-viscous) both;
+    transform 160ms var(--ease-out),
+    box-shadow 160ms var(--ease-out),
+    filter 160ms var(--ease-out),
+    background-color 160ms var(--ease-out);
+  animation: liquid-tile 280ms var(--ease-out) both;
 }
 .mall-grid > *:nth-child(1), .dept-grid > *:nth-child(1), .office-kpi > *:nth-child(1), .shop-order-list > *:nth-child(1) { animation-delay: 0ms; }
 .mall-grid > *:nth-child(2), .dept-grid > *:nth-child(2), .office-kpi > *:nth-child(2), .shop-order-list > *:nth-child(2) { animation-delay: 50ms; }
@@ -3512,7 +3511,7 @@ html.dark .glass {
 .shop-main,
 .office-page,
 .shop-body {
-  animation: liquid-page 520ms var(--ease-viscous) both;
+  animation: liquid-page 220ms var(--ease-out) both;
 }
 
 .liquid-root .mall-card:hover,
@@ -3535,18 +3534,18 @@ button:not(:disabled),
 .tag-chip,
 a.shop-line {
   transition:
-    transform var(--motion-viscous) var(--ease-viscous),
-    box-shadow var(--motion-viscous) var(--ease-viscous),
-    filter 320ms var(--ease-viscous),
-    background-color 320ms var(--ease-out),
-    color 240ms var(--ease-out);
+    transform 140ms var(--ease-out),
+    box-shadow 140ms var(--ease-out),
+    filter 140ms var(--ease-out),
+    background-color 140ms var(--ease-out),
+    color 120ms var(--ease-out);
 }
 
 ::view-transition-old(root) {
-  animation: 420ms var(--ease-viscous) both liquid-out;
+  animation: 160ms var(--ease-out) both liquid-out;
 }
 ::view-transition-new(root) {
-  animation: 700ms var(--ease-viscous) both liquid-in;
+  animation: 200ms var(--ease-out) both liquid-in;
 }
 @keyframes liquid-out {
   to { opacity: 0; filter: blur(16px); transform: scale(0.96) translateY(8px); }

@@ -1,51 +1,34 @@
 /** Event-driven liquid field. Still at rest; physics only when the user acts. */
 
 export const LIQUID = {
-  cols: 64,
-  rows: 36,
-  waveSpeed: 0.18,
-  waveDamp: 0.055,
-  waveVisc: 0.18,
-  spring: 0.22,
-  bodyDamp: 0.72,
-  viscosity: 0.88,
-  elasticity: 0.2,
-  surfaceTension: 0.018,
-  maxShift: 5.5,
-  maxScale: 1.045,
-  idle: 0.00035,
+  cols: 48,
+  rows: 28,
+  waveSpeed: 0.28,
+  waveDamp: 0.12,
+  waveVisc: 0.1,
+  spring: 0.42,
+  bodyDamp: 0.6,
+  viscosity: 0.68,
+  elasticity: 0.35,
+  surfaceTension: 0,
+  maxShift: 3,
+  maxScale: 1.03,
+  idle: 0.0008,
   intensity: {
-    rest: 0.015,
-    proximity: 0.08,
-    contact: 0.28,
-    press: 0.42,
-    drag: 0.5,
-    release: 0.22,
-    toggle: 0.3,
-    navigate: 0.2,
+    rest: 0.01,
+    proximity: 0.06,
+    contact: 0.32,
+    press: 0.4,
+    drag: 0.45,
+    release: 0.18,
+    toggle: 0.28,
+    navigate: 0.16,
   },
 } as const;
 
 type Phase = "rest" | "proximity" | "contact" | "press" | "drag" | "release";
 
-const SELECTOR = [
-  ".mall-card",
-  ".dept-tile",
-  ".office-kpi-card",
-  ".shop-order-card",
-  ".tag-chip",
-  ".shop-dock a",
-  ".office-icon-btn",
-  ".theme-toggle",
-  ".display-title",
-  "h1",
-  ".mall-name",
-  ".office-kpi-value",
-  ".shop-icon-btn",
-  ".shop-bag-btn",
-  "button:not(:disabled)",
-  ".switch",
-].join(",");
+const SELECTOR = [".mall-card", ".dept-tile", ".office-kpi-card", ".shop-order-card"].join(",");
 
 type Body = {
   el: HTMLElement;
@@ -407,7 +390,7 @@ export class LiquidWorld {
       fy += -LIQUID.spring * b.y * b.mass * LIQUID.elasticity * 8;
       b.vx = (b.vx + fx / b.mass) * LIQUID.bodyDamp * LIQUID.viscosity;
       b.vy = (b.vy + fy / b.mass) * LIQUID.bodyDamp * LIQUID.viscosity;
-      b.vs = b.vs * 0.7 + (targetScale - b.scale) * 0.22;
+      b.vs = b.vs * 0.45 + (targetScale - b.scale) * 0.5;
       b.x += b.vx;
       b.y += b.vy;
       b.scale += b.vs;
@@ -417,21 +400,23 @@ export class LiquidWorld {
     }
 
     const n = this.bodies.length;
-    for (let i = 0; i < n; i++) {
-      const a = this.bodies[i];
-      for (let j = i + 1; j < n; j++) {
-        const b = this.bodies[j];
-        const dx = a.cx - b.cx;
-        const dy = a.cy - b.cy;
-        const dist = Math.hypot(dx, dy);
-        if (dist > 130 || dist < 1) continue;
-        const fall = (1 - dist / 130) * LIQUID.surfaceTension * I;
-        const mx = (a.x - b.x) * fall;
-        const my = (a.y - b.y) * fall;
-        a.vx -= mx / a.mass;
-        a.vy -= my / a.mass;
-        b.vx += mx / b.mass;
-        b.vy += my / b.mass;
+    if (LIQUID.surfaceTension > 0) {
+      for (let i = 0; i < n; i++) {
+        const a = this.bodies[i];
+        for (let j = i + 1; j < n; j++) {
+          const b = this.bodies[j];
+          const dx = a.cx - b.cx;
+          const dy = a.cy - b.cy;
+          const dist = Math.hypot(dx, dy);
+          if (dist > 130 || dist < 1) continue;
+          const fall = (1 - dist / 130) * LIQUID.surfaceTension * I;
+          const mx = (a.x - b.x) * fall;
+          const my = (a.y - b.y) * fall;
+          a.vx -= mx / a.mass;
+          a.vy -= my / a.mass;
+          b.vx += mx / b.mass;
+          b.vy += my / b.mass;
+        }
       }
     }
 
