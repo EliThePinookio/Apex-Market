@@ -1,19 +1,32 @@
-/** Interactive liquid field: wave equation + spring bodies. */
+/** Event-driven liquid field. Still at rest; physics only when the user acts. */
 
-const COLS = 72;
-const ROWS = 42;
-const WAVE_SPEED = 0.22;
-const WAVE_DAMP = 0.028;
-const WAVE_VISC = 0.14;
-const SPRING = 0.085;
-const BODY_DAMP = 0.82;
-const PRESSURE = 18;
-const BUOYANCY = 10;
-const MAGNIFY = 0.09;
-const MAGNIFY_MAX = 0.12;
-const COUPLE = 0.012;
-const COUPLE_RADIUS = 170;
-const IDLE_EPS = 0.0008;
+export const LIQUID = {
+  cols: 64,
+  rows: 36,
+  waveSpeed: 0.18,
+  waveDamp: 0.055,
+  waveVisc: 0.18,
+  spring: 0.22,
+  bodyDamp: 0.72,
+  viscosity: 0.88,
+  elasticity: 0.2,
+  surfaceTension: 0.018,
+  maxShift: 5.5,
+  maxScale: 1.045,
+  idle: 0.00035,
+  intensity: {
+    rest: 0.015,
+    proximity: 0.08,
+    contact: 0.28,
+    press: 0.42,
+    drag: 0.5,
+    release: 0.22,
+    toggle: 0.3,
+    navigate: 0.2,
+  },
+} as const;
+
+type Phase = "rest" | "proximity" | "contact" | "press" | "drag" | "release";
 
 const SELECTOR = [
   ".mall-card",
@@ -30,43 +43,42 @@ const SELECTOR = [
   ".office-kpi-value",
   ".shop-icon-btn",
   ".shop-bag-btn",
-  ".shop-order-card",
   "button:not(:disabled)",
+  ".switch",
 ].join(",");
 
-export type LiquidBody = {
+type Body = {
   el: HTMLElement;
   mass: number;
+  magnify: number;
   x: number;
   y: number;
   vx: number;
   vy: number;
-  vs: number;
   scale: number;
+  vs: number;
   cx: number;
   cy: number;
-  magnify: number;
 };
 
 function massFor(el: HTMLElement): number {
-  if (el.matches("h1, .display-title")) return 2.6;
-  if (el.matches(".mall-card, .dept-tile, .shop-order-card")) return 1.5;
-  if (el.matches(".office-kpi-card, .office-kpi-value")) return 1.35;
-  if (el.matches(".tag-chip")) return 0.65;
-  if (el.matches("button, .shop-dock a, .shop-icon-btn")) return 0.9;
-  return 1.1;
+  if (el.matches("h1, .display-title")) return 2.8;
+  if (el.matches(".mall-card, .dept-tile, .shop-order-card")) return 1.6;
+  if (el.matches(".office-kpi-card")) return 1.4;
+  if (el.matches(".tag-chip, .switch")) return 0.7;
+  return 1;
 }
 
 function magnifyFor(el: HTMLElement): number {
   if (el.matches("h1, .display-title, .mall-name, .office-kpi-value")) return 1;
-  return 0.55;
+  return 0.4;
 }
 
 export class LiquidWorld {
-  private height = new Float32Array(COLS * ROWS);
-  private vel = new Float32Array(COLS * ROWS);
-  private scratch = new Float32Array(COLS * ROWS);
-  private bodies: LiquidBody[] = [];
+  private height = new Float32Array(LIQUID.cols * LIQUID.rows);
+  private vel = new Float32Array(LIQUID.cols * LIQUID.rows);
+  private scratch = new Float32Array(LIQUID.cols * LIQUID.rows);
+  private bodies: Body[] = [];
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
   private grid: HTMLCanvasElement | null = null;
@@ -75,14 +87,18 @@ export class LiquidWorld {
   private root: HTMLElement | null = null;
   private raf = 0;
   private last = 0;
+  private lastScan = 0;
   private px = -1;
   private py = -1;
   private pvx = 0;
   private pvy = 0;
   private down = false;
-  private dirty = true;
-  private paused = false;
-  private lastScan = 0;
+  private downAt = 0;
+  private downX = 0;
+  private downY = 0;
+  private phase: Phase = "rest";
+  private focus: Body | null = null;
+  private intensity: number = LIQUID.intensity.rest;
 
   attach(root: HTMLElement, canvas: HTMLCanvasElement) {
     this.root = root;
@@ -91,21 +107,27 @@ export class LiquidWorld {
     this.sizeCanvas();
     this.scan();
     this.bind();
-    this.last = performance.now();
-    this.loop(this.last);
   }
 
   detach() {
     cancelAnimationFrame(this.raf);
+    this.raf = 0;
     this.unbind();
-    this.bodies.forEach((b) => {
+    for (const b of this.bodies) {
       b.el.style.transform = "";
+      b.el.style.filter = "";
       b.el.removeAttribute("data-liquid");
-    });
+      b.el.removeAttribute("data-liquid-phase");
+    }
     this.bodies = [];
     this.root = null;
     this.canvas = null;
-    this.ctx = null;
+  }
+
+  private kick() {
+    if (this.raf) return;
+    this.last = performance.now();
+    this.raf = requestAnimationFrame(this.loop);
   }
 
   private onPointer = (e: PointerEvent) => {
@@ -117,30 +139,87 @@ export class LiquidWorld {
     }
     this.px = x;
     this.py = y;
-    if (e.type === "pointerdown") this.down = true;
-    if (e.type === "pointerup" || e.type === "pointercancel") this.down = false;
-    const force = e.type === "pointerdown" ? 1.15 : this.down ? 0.42 : 0.18;
     const speed = Math.hypot(this.pvx, this.pvy);
-    this.impulse(x, y, 0.07 + Math.min(0.08, speed / 400), force + Math.min(0.8, speed / 80));
-    this.dirty = true;
+    const over = this.bodyAt(x, y);
+
+    if (e.type === "pointerdown") {
+      this.down = true;
+      this.downAt = performance.now();
+      this.downX = x;
+      this.downY = y;
+      this.focus = over;
+      this.phase = "contact";
+      this.intensity = LIQUID.intensity.contact;
+      this.impulse(x, y, 0.055, 0.72);
+      this.kick();
+      return;
+    }
+
+    if (e.type === "pointerup" || e.type === "pointercancel") {
+      const wasToggle = this.focus?.el.matches(".switch, [role='switch'], .theme-toggle");
+      this.down = false;
+      this.phase = "release";
+      this.intensity = wasToggle ? LIQUID.intensity.toggle : LIQUID.intensity.release;
+      this.impulse(x, y, 0.05, wasToggle ? 0.55 : 0.28);
+      this.focus = null;
+      this.kick();
+      return;
+    }
+
+    if (this.down) {
+      const travel = Math.hypot(x - this.downX, y - this.downY);
+      const held = performance.now() - this.downAt;
+      if (travel > 10) {
+        this.phase = "drag";
+        const v = Math.min(1, speed / 28);
+        this.intensity = LIQUID.intensity.contact + (LIQUID.intensity.drag - LIQUID.intensity.contact) * v;
+        this.impulse(x, y, 0.04 + v * 0.04, 0.22 + v * 0.55);
+        this.kick();
+      } else if (held > 140) {
+        this.phase = "press";
+        this.intensity = LIQUID.intensity.press;
+        this.kick();
+      }
+      return;
+    }
+
+    if (over) {
+      this.focus = over;
+      this.phase = "proximity";
+      this.intensity = LIQUID.intensity.proximity;
+      this.kick();
+    } else if (this.phase === "proximity") {
+      this.focus = null;
+      this.phase = "release";
+      this.intensity = LIQUID.intensity.rest;
+      this.kick();
+    }
   };
 
   private onLeave = () => {
     this.down = false;
+    this.focus = null;
     this.px = -1;
     this.py = -1;
+    this.phase = "release";
+    this.kick();
   };
 
   private onResize = () => {
     this.sizeCanvas();
     this.lastScan = 0;
-    this.dirty = true;
   };
 
   private onScroll = () => {
     this.lastScan = 0;
-    this.dirty = true;
   };
+
+  pulse(kind: "navigate" | "toggle" = "navigate") {
+    this.phase = "release";
+    this.intensity = LIQUID.intensity[kind];
+    this.impulse(window.innerWidth * 0.5, window.innerHeight * 0.32, kind === "navigate" ? 0.14 : 0.06, kind === "navigate" ? 0.38 : 0.5);
+    this.kick();
+  }
 
   private bind() {
     window.addEventListener("pointerdown", this.onPointer, { passive: true });
@@ -170,11 +249,24 @@ export class LiquidWorld {
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     if (!this.grid) {
       this.grid = document.createElement("canvas");
-      this.grid.width = COLS;
-      this.grid.height = ROWS;
+      this.grid.width = LIQUID.cols;
+      this.grid.height = LIQUID.rows;
       this.gridCtx = this.grid.getContext("2d");
     }
-    this.pixels = this.gridCtx?.createImageData(COLS, ROWS) ?? null;
+    this.pixels = this.gridCtx?.createImageData(LIQUID.cols, LIQUID.rows) ?? null;
+  }
+
+  private bodyAt(x: number, y: number): Body | null {
+    let best: Body | null = null;
+    let bestD = 90;
+    for (const b of this.bodies) {
+      const d = Math.hypot(b.cx - x, b.cy - y);
+      if (d < bestD) {
+        bestD = d;
+        best = b;
+      }
+    }
+    return best;
   }
 
   scan() {
@@ -184,27 +276,28 @@ export class LiquidWorld {
     this.bodies = this.bodies.filter((b) => {
       if (seen.has(b.el) && b.el.isConnected) return true;
       b.el.style.transform = "";
+      b.el.style.filter = "";
       b.el.removeAttribute("data-liquid");
+      b.el.removeAttribute("data-liquid-phase");
       return false;
     });
     const have = new Set(this.bodies.map((b) => b.el));
     for (const el of nodes) {
-      if (have.has(el)) continue;
-      if (el.closest("[data-liquid-ignore]")) continue;
+      if (have.has(el) || el.closest("[data-liquid-ignore]")) continue;
       el.setAttribute("data-liquid", "");
       const rec = el.getBoundingClientRect();
       this.bodies.push({
         el,
         mass: massFor(el),
+        magnify: magnifyFor(el),
         x: 0,
         y: 0,
         vx: 0,
         vy: 0,
-        vs: 0,
         scale: 1,
+        vs: 0,
         cx: rec.left + rec.width / 2,
         cy: rec.top + rec.height / 2,
-        magnify: magnifyFor(el),
       });
     }
     for (const b of this.bodies) {
@@ -216,64 +309,57 @@ export class LiquidWorld {
   }
 
   private impulse(clientX: number, clientY: number, radius: number, force: number) {
-    const nx = clientX / window.innerWidth;
-    const ny = clientY / window.innerHeight;
-    const r = radius * COLS;
+    const { cols: w, rows: h } = LIQUID;
+    const cx = (clientX / window.innerWidth) * (w - 1);
+    const cy = (clientY / window.innerHeight) * (h - 1);
+    const r = radius * w;
     const r2 = r * r;
-    const cx = nx * (COLS - 1);
-    const cy = ny * (ROWS - 1);
-    const dirX = this.pvx / 24;
-    const dirY = this.pvy / 24;
-    for (let y = 0; y < ROWS; y++) {
-      for (let x = 0; x < COLS; x++) {
+    const dirX = this.pvx / 40;
+    const dirY = this.pvy / 40;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
         const dx = x - cx;
-        const dy = (y - cy) * (COLS / ROWS);
+        const dy = (y - cy) * (w / h);
         const d2 = dx * dx + dy * dy;
         if (d2 > r2) continue;
-        const falloff = Math.exp(-d2 / (r2 * 0.45));
-        const i = y * COLS + x;
-        this.vel[i] += force * falloff;
-        this.height[i] += force * 0.35 * falloff;
-        this.vel[i] += (dirX * dx + dirY * dy) * 0.02 * falloff;
+        const fall = Math.exp(-d2 / (r2 * 0.42));
+        const i = y * w + x;
+        this.vel[i] += force * fall;
+        this.height[i] += force * 0.25 * fall;
+        this.vel[i] += (dirX * dx + dirY * dy) * 0.015 * fall;
       }
     }
   }
 
   private sample(nx: number, ny: number) {
-    const fx = Math.max(0, Math.min(COLS - 1.001, nx * (COLS - 1)));
-    const fy = Math.max(0, Math.min(ROWS - 1.001, ny * (ROWS - 1)));
+    const w = LIQUID.cols;
+    const h = LIQUID.rows;
+    const fx = Math.max(0, Math.min(w - 1.001, nx * (w - 1)));
+    const fy = Math.max(0, Math.min(h - 1.001, ny * (h - 1)));
     const x0 = Math.floor(fx);
     const y0 = Math.floor(fy);
     const tx = fx - x0;
     const ty = fy - y0;
-    const i = y0 * COLS + x0;
+    const i = y0 * w + x0;
     const a = this.height[i];
     const b = this.height[i + 1] ?? a;
-    const c = this.height[i + COLS] ?? a;
-    const d = this.height[i + COLS + 1] ?? a;
+    const c = this.height[i + w] ?? a;
+    const d = this.height[i + w + 1] ?? a;
     return a * (1 - tx) * (1 - ty) + b * tx * (1 - ty) + c * (1 - tx) * ty + d * tx * ty;
   }
 
-  private grad(nx: number, ny: number) {
-    const e = 1 / COLS;
-    return {
-      x: (this.sample(nx + e, ny) - this.sample(nx - e, ny)) / (2 * e),
-      y: (this.sample(nx, ny + e) - this.sample(nx, ny - e)) / (2 * e),
-    };
-  }
-
   private stepWave() {
+    const w = LIQUID.cols;
+    const h = LIQUID.rows;
     const u = this.height;
     const v = this.vel;
     const next = this.scratch;
-    const w = COLS;
-    const h = ROWS;
     for (let y = 1; y < h - 1; y++) {
       for (let x = 1; x < w - 1; x++) {
         const i = y * w + x;
         const lap = u[i - 1] + u[i + 1] + u[i - w] + u[i + w] - 4 * u[i];
         const vlap = v[i - 1] + v[i + 1] + v[i - w] + v[i + w] - 4 * v[i];
-        v[i] = (v[i] + WAVE_SPEED * lap + WAVE_VISC * vlap) * (1 - WAVE_DAMP);
+        v[i] = (v[i] + LIQUID.waveSpeed * lap + LIQUID.waveVisc * vlap) * (1 - LIQUID.waveDamp);
         next[i] = u[i] + v[i];
       }
     }
@@ -290,42 +376,44 @@ export class LiquidWorld {
   }
 
   private stepBodies() {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    const vw = window.innerWidth || 1;
+    const vh = window.innerHeight || 1;
+    const I = this.intensity;
+    const cap = LIQUID.maxShift * I * 2.2;
+
     for (const b of this.bodies) {
       if (!b.el.isConnected) continue;
-      const nx = b.cx / vw;
-      const ny = b.cy / vh;
-      const h = this.sample(nx, ny);
-      const g = this.grad(nx, ny);
-      let fx = g.x * PRESSURE;
-      let fy = g.y * PRESSURE + h * BUOYANCY;
-      if (this.px >= 0) {
-        const dx = b.cx - this.px;
-        const dy = b.cy - this.py;
-        const dist = Math.hypot(dx, dy) || 1;
-        const sigma = this.down ? 140 : 190;
-        const gauss = Math.exp(-(dist * dist) / (2 * sigma * sigma));
-        const push = (this.down ? 28 : 14) * gauss;
-        fx += (dx / dist) * push;
-        fy += (dy / dist) * push * 0.7;
-        const mag = MAGNIFY * b.magnify * gauss * (this.down ? 1.35 : 1);
-        const targetScale = 1 + Math.min(MAGNIFY_MAX, mag) + h * 0.04;
-        b.vs += (targetScale - b.scale) * 0.16;
+      const h = this.sample(b.cx / vw, b.cy / vh);
+      const isFocus = this.focus === b;
+      let targetScale = 1;
+      let fx = 0;
+      let fy = h * 4 * I;
+
+      if (isFocus && this.phase === "proximity") {
+        targetScale = 1 + 0.018 * b.magnify;
+        fy -= 1.2;
+      } else if (isFocus && this.phase === "contact") {
+        targetScale = 0.985 - 0.01 * (1 - 1 / b.mass);
+      } else if (isFocus && this.phase === "press") {
+        targetScale = 0.97;
+        fy += 1.6;
+      } else if (isFocus && this.phase === "drag") {
+        targetScale = 0.99;
       } else {
-        b.vs += (1 - b.scale) * 0.12;
+        targetScale = 1 + Math.max(-0.015, Math.min(0.02, h * 0.05 * I));
       }
-      fx += -SPRING * b.x * b.mass;
-      fy += -SPRING * b.y * b.mass;
-      b.vx = (b.vx + fx / b.mass) * BODY_DAMP;
-      b.vy = (b.vy + fy / b.mass) * BODY_DAMP;
-      b.vs *= 0.78;
+
+      fx += -LIQUID.spring * b.x * b.mass * LIQUID.elasticity * 8;
+      fy += -LIQUID.spring * b.y * b.mass * LIQUID.elasticity * 8;
+      b.vx = (b.vx + fx / b.mass) * LIQUID.bodyDamp * LIQUID.viscosity;
+      b.vy = (b.vy + fy / b.mass) * LIQUID.bodyDamp * LIQUID.viscosity;
+      b.vs = b.vs * 0.7 + (targetScale - b.scale) * 0.22;
       b.x += b.vx;
       b.y += b.vy;
       b.scale += b.vs;
-      b.x = Math.max(-22, Math.min(22, b.x));
-      b.y = Math.max(-22, Math.min(22, b.y));
-      b.scale = Math.max(0.94, Math.min(1.12, b.scale));
+      b.x = Math.max(-cap, Math.min(cap, b.x));
+      b.y = Math.max(-cap, Math.min(cap, b.y));
+      b.scale = Math.max(0.96, Math.min(LIQUID.maxScale, b.scale));
     }
 
     const n = this.bodies.length;
@@ -333,14 +421,13 @@ export class LiquidWorld {
       const a = this.bodies[i];
       for (let j = i + 1; j < n; j++) {
         const b = this.bodies[j];
-        const dx = a.cx + a.x - (b.cx + b.x);
-        const dy = a.cy + a.y - (b.cy + b.y);
+        const dx = a.cx - b.cx;
+        const dy = a.cy - b.cy;
         const dist = Math.hypot(dx, dy);
-        if (dist > COUPLE_RADIUS || dist < 1) continue;
-        const fall = 1 - dist / COUPLE_RADIUS;
-        const share = COUPLE * fall * fall;
-        const mx = (a.x - b.x) * share;
-        const my = (a.y - b.y) * share;
+        if (dist > 130 || dist < 1) continue;
+        const fall = (1 - dist / 130) * LIQUID.surfaceTension * I;
+        const mx = (a.x - b.x) * fall;
+        const my = (a.y - b.y) * fall;
         a.vx -= mx / a.mass;
         a.vy -= my / a.mass;
         b.vx += mx / b.mass;
@@ -349,7 +436,16 @@ export class LiquidWorld {
     }
 
     for (const b of this.bodies) {
+      const settled = Math.abs(b.x) < 0.04 && Math.abs(b.y) < 0.04 && Math.abs(b.scale - 1) < 0.002;
+      if (settled && this.phase === "rest") {
+        b.el.style.transform = "";
+        b.el.style.filter = "";
+        b.el.removeAttribute("data-liquid-phase");
+        continue;
+      }
       b.el.style.transform = `translate3d(${b.x.toFixed(2)}px, ${b.y.toFixed(2)}px, 0) scale(${b.scale.toFixed(4)})`;
+      if (this.focus === b) b.el.setAttribute("data-liquid-phase", this.phase);
+      else b.el.removeAttribute("data-liquid-phase");
     }
   }
 
@@ -357,19 +453,18 @@ export class LiquidWorld {
     if (!this.ctx || !this.canvas || !this.pixels || !this.grid || !this.gridCtx) return;
     const data = this.pixels.data;
     const u = this.height;
+    const amp = 70 * Math.max(this.intensity, 0.04);
     for (let i = 0; i < u.length; i++) {
       const crest = Math.max(0, u[i]);
-      const trough = Math.max(0, -u[i]);
       const o = i * 4;
       data[o] = 255;
       data[o + 1] = 248;
       data[o + 2] = 226;
-      data[o + 3] = Math.min(120, crest * 100 + trough * 28);
+      data[o + 3] = Math.min(90, crest * amp);
     }
     this.gridCtx.putImageData(this.pixels, 0, 0);
     this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
     this.ctx.imageSmoothingEnabled = true;
-    this.ctx.imageSmoothingQuality = "high";
     this.ctx.globalCompositeOperation = "lighter";
     this.ctx.drawImage(this.grid, 0, 0, window.innerWidth, window.innerHeight);
     this.ctx.globalCompositeOperation = "source-over";
@@ -378,29 +473,40 @@ export class LiquidWorld {
   private energy() {
     let e = 0;
     for (let i = 0; i < this.vel.length; i++) e += this.vel[i] * this.vel[i] + this.height[i] * this.height[i];
-    for (const b of this.bodies) e += b.vx * b.vx + b.vy * b.vy + (b.scale - 1) * (b.scale - 1);
-    return e / (this.vel.length + this.bodies.length * 4);
+    for (const b of this.bodies) {
+      e += b.vx * b.vx + b.vy * b.vy + (b.scale - 1) * (b.scale - 1) * 8;
+    }
+    return e / (this.vel.length + this.bodies.length * 4 + 1);
   }
 
   private loop = (now: number) => {
-    this.raf = requestAnimationFrame(this.loop);
     const dt = Math.min(32, now - this.last);
     this.last = now;
-    if (now - this.lastScan > 900) this.scan();
-    const e = this.energy();
-    if (e < IDLE_EPS && !this.down && this.px < 0 && !this.dirty) {
-      if (!this.paused) {
-        this.paused = true;
-        this.paint();
-      }
-      return;
-    }
-    this.paused = false;
-    this.dirty = false;
+    if (now - this.lastScan > 1200) this.scan();
     const steps = dt > 24 ? 2 : 1;
-    for (let i = 0; i < steps; i++) this.stepWave();
+    for (let s = 0; s < steps; s++) this.stepWave();
     this.stepBodies();
     this.paint();
+
+    const e = this.energy();
+    if (!this.down && this.phase !== "proximity" && e < LIQUID.idle) {
+      this.phase = "rest";
+      this.intensity = LIQUID.intensity.rest;
+      this.px = this.phase === "rest" ? this.px : this.px;
+      if (e < LIQUID.idle * 0.4) {
+        this.ctx?.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        for (const b of this.bodies) {
+          b.x = b.y = b.vx = b.vy = b.vs = 0;
+          b.scale = 1;
+          b.el.style.transform = "";
+          b.el.style.filter = "";
+          b.el.removeAttribute("data-liquid-phase");
+        }
+        this.raf = 0;
+        return;
+      }
+    }
+    this.raf = requestAnimationFrame(this.loop);
   };
 }
 

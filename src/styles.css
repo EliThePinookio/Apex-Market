@@ -3489,59 +3489,43 @@ html.dark .glass {
     box-shadow var(--motion-viscous) var(--ease-viscous),
     filter var(--motion-viscous) var(--ease-viscous),
     background-color var(--motion-viscous) var(--ease-viscous);
-  animation: liquid-tile 780ms var(--ease-viscous) both, liquid-float 9s 780ms var(--ease-viscous) infinite;
+  animation: liquid-tile 640ms var(--ease-viscous) both;
 }
-.mall-grid > *:nth-child(1), .dept-grid > *:nth-child(1), .office-kpi > *:nth-child(1), .shop-order-list > *:nth-child(1) { animation-delay: 0ms, 780ms; }
-.mall-grid > *:nth-child(2), .dept-grid > *:nth-child(2), .office-kpi > *:nth-child(2), .shop-order-list > *:nth-child(2) { animation-delay: 70ms, 850ms; }
-.mall-grid > *:nth-child(3), .dept-grid > *:nth-child(3), .office-kpi > *:nth-child(3), .shop-order-list > *:nth-child(3) { animation-delay: 140ms, 920ms; }
-.mall-grid > *:nth-child(4), .dept-grid > *:nth-child(4), .office-kpi > *:nth-child(4), .shop-order-list > *:nth-child(4) { animation-delay: 210ms, 990ms; }
-.mall-grid > *:nth-child(5), .dept-grid > *:nth-child(5), .shop-order-list > *:nth-child(5) { animation-delay: 280ms, 1060ms; }
-.mall-grid > *:nth-child(6), .dept-grid > *:nth-child(6), .shop-order-list > *:nth-child(6) { animation-delay: 350ms, 1130ms; }
-.mall-grid > *:nth-child(7), .shop-order-list > *:nth-child(7) { animation-delay: 420ms, 1200ms; }
-.mall-grid > *:nth-child(8), .shop-order-list > *:nth-child(8) { animation-delay: 490ms, 1270ms; }
+.mall-grid > *:nth-child(1), .dept-grid > *:nth-child(1), .office-kpi > *:nth-child(1), .shop-order-list > *:nth-child(1) { animation-delay: 0ms; }
+.mall-grid > *:nth-child(2), .dept-grid > *:nth-child(2), .office-kpi > *:nth-child(2), .shop-order-list > *:nth-child(2) { animation-delay: 50ms; }
+.mall-grid > *:nth-child(3), .dept-grid > *:nth-child(3), .office-kpi > *:nth-child(3), .shop-order-list > *:nth-child(3) { animation-delay: 100ms; }
+.mall-grid > *:nth-child(4), .dept-grid > *:nth-child(4), .office-kpi > *:nth-child(4), .shop-order-list > *:nth-child(4) { animation-delay: 150ms; }
+.mall-grid > *:nth-child(5), .dept-grid > *:nth-child(5), .shop-order-list > *:nth-child(5) { animation-delay: 200ms; }
+.mall-grid > *:nth-child(6), .dept-grid > *:nth-child(6), .shop-order-list > *:nth-child(6) { animation-delay: 250ms; }
+.mall-grid > *:nth-child(7), .shop-order-list > *:nth-child(7) { animation-delay: 300ms; }
+.mall-grid > *:nth-child(8), .shop-order-list > *:nth-child(8) { animation-delay: 350ms; }
 
-@keyframes liquid-float {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(0, -6px, 0); }
-}
 @keyframes liquid-page {
   from { opacity: 0; filter: blur(14px); transform: translateY(16px) scale(0.975); }
   to { opacity: 1; filter: blur(0); transform: none; }
 }
 @keyframes liquid-tile {
-  from { opacity: 0; transform: translate3d(0, 18px, 0) scale(0.96); filter: blur(10px); }
-  to { opacity: 1; transform: none; filter: blur(0); }
+  from { opacity: 0; filter: blur(8px); }
+  to { opacity: 1; filter: blur(0); }
 }
 
 .shop-main,
 .office-page,
 .shop-body {
-  animation: liquid-page 760ms var(--ease-viscous) both;
+  animation: liquid-page 520ms var(--ease-viscous) both;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .mall-card:hover,
-  .dept-tile:hover,
-  .shop-order-card:hover,
-  .office-kpi-card:hover {
-    animation-play-state: paused;
-    transform: translate3d(0, -10px, 0) scale(1.025);
-    box-shadow:
-      inset 0 2px 2px color-mix(in oklab, #fff 85%, transparent),
-      0 28px 50px -16px color-mix(in oklab, #1c1612 42%, transparent);
-    filter: saturate(1.08);
-  }
-}
-.mall-card:active,
-.dept-tile:active,
-.shop-order-card:active,
-.office-kpi-card:active,
-button:not(:disabled):active,
-[role="button"]:not(:disabled):active {
-  animation-play-state: paused;
-  transform: translate3d(0, 3px, 0) scale(0.97);
-  transition-duration: 160ms;
-  filter: saturate(0.95);
+.liquid-root .mall-card:hover,
+.liquid-root .dept-tile:hover,
+.liquid-root .shop-order-card:hover,
+.liquid-root .office-kpi-card:hover,
+.liquid-root .mall-card:active,
+.liquid-root .dept-tile:active,
+.liquid-root .shop-order-card:active,
+.liquid-root .office-kpi-card:active {
+  transform: none;
+  filter: none;
+  animation: none;
 }
 
 button:not(:disabled),
