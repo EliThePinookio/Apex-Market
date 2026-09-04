@@ -4,6 +4,7 @@ import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { BeannelAuthProvider } from "@/lib/beannel/auth";
 import { ApexStoreProvider } from "@/lib/apex/store";
 import { AppShell } from "@/components/apex/AppShell";
+import { LiquidRoot } from "@/components/ui/liquid-root";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "BEANNEL";
@@ -52,7 +53,9 @@ function RootDocument() {
         <AuthProvider>
           <BeannelAuthProvider>
             <ApexStoreProvider>
-              <AppShell />
+              <LiquidRoot>
+                <AppShell />
+              </LiquidRoot>
             </ApexStoreProvider>
           </BeannelAuthProvider>
         </AuthProvider>

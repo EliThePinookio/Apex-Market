@@ -3376,6 +3376,43 @@ html.dark .office-frame {
 }
 .shop-thumb.is-on { border-color: var(--color-fg); }
 .shop-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.liquid-root {
+  min-height: 100dvh;
+}
+.liquid-caustic {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 25;
+  mix-blend-mode: overlay;
+  opacity: 0.5;
+}
+html.dark .liquid-caustic {
+  mix-blend-mode: screen;
+  opacity: 0.38;
+}
+.liquid-root [data-liquid] {
+  will-change: transform;
+  transform-origin: center center;
+}
+.liquid-root .mall-card,
+.liquid-root .dept-tile,
+.liquid-root .shop-order-card,
+.liquid-root .office-kpi-card,
+.liquid-root .cushion,
+.liquid-root .panel {
+  animation: none;
+}
+.liquid-root .mall-card:hover,
+.liquid-root .dept-tile:hover,
+.liquid-root .shop-order-card:hover,
+.liquid-root .office-kpi-card:hover {
+  transform: none;
+  filter: none;
+}
+
 .shop-desc {
   margin-top: 1.5rem;
   font-size: 0.9375rem;
