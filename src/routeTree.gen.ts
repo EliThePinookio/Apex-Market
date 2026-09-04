@@ -23,12 +23,15 @@ import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as PosRouteImport } from './routes/pos'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as TrackRouteImport } from './routes/track'
 import { Route as AccountIndexRouteImport } from './routes/account.index'
 import { Route as InventoryIndexRouteImport } from './routes/inventory.index'
 import { Route as InventoryProductIdRouteImport } from './routes/inventory.$productId'
 import { Route as InventoryNewRouteImport } from './routes/inventory.new'
 import { Route as ShopIndexRouteImport } from './routes/shop/index'
 import { Route as ShopProductIdRouteImport } from './routes/shop/$productId'
+import { Route as TrackIndexRouteImport } from './routes/track.index'
+import { Route as TrackOrderIdRouteImport } from './routes/track.$orderId'
 import { Route as AccountOrderOrderIdRouteImport } from './routes/account.order.$orderId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -101,6 +104,11 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TrackRoute = TrackRouteImport.update({
+  id: '/track',
+  path: '/track',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AccountIndexRoute = AccountIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -131,6 +139,16 @@ const ShopProductIdRoute = ShopProductIdRouteImport.update({
   path: '/shop/$productId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TrackIndexRoute = TrackIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TrackRoute,
+} as any)
+const TrackOrderIdRoute = TrackOrderIdRouteImport.update({
+  id: '/$orderId',
+  path: '/$orderId',
+  getParentRoute: () => TrackRoute,
+} as any)
 const AccountOrderOrderIdRoute = AccountOrderOrderIdRouteImport.update({
   id: '/order/$orderId',
   path: '/order/$orderId',
@@ -152,12 +170,15 @@ export interface FileRoutesByFullPath {
   '/pos': typeof PosRoute
   '/saved': typeof SavedRoute
   '/settings': typeof SettingsRoute
+  '/track': typeof TrackRouteWithChildren
   '/inventory/$productId': typeof InventoryProductIdRoute
   '/inventory/new': typeof InventoryNewRoute
   '/shop/$productId': typeof ShopProductIdRoute
+  '/track/$orderId': typeof TrackOrderIdRoute
   '/account/': typeof AccountIndexRoute
   '/inventory/': typeof InventoryIndexRoute
   '/shop/': typeof ShopIndexRoute
+  '/track/': typeof TrackIndexRoute
   '/account/order/$orderId': typeof AccountOrderOrderIdRoute
 }
 export interface FileRoutesByTo {
@@ -176,9 +197,11 @@ export interface FileRoutesByTo {
   '/inventory/$productId': typeof InventoryProductIdRoute
   '/inventory/new': typeof InventoryNewRoute
   '/shop/$productId': typeof ShopProductIdRoute
+  '/track/$orderId': typeof TrackOrderIdRoute
   '/account': typeof AccountIndexRoute
   '/inventory': typeof InventoryIndexRoute
   '/shop': typeof ShopIndexRoute
+  '/track': typeof TrackIndexRoute
   '/account/order/$orderId': typeof AccountOrderOrderIdRoute
 }
 export interface FileRoutesById {
@@ -197,12 +220,15 @@ export interface FileRoutesById {
   '/pos': typeof PosRoute
   '/saved': typeof SavedRoute
   '/settings': typeof SettingsRoute
+  '/track': typeof TrackRouteWithChildren
   '/inventory/$productId': typeof InventoryProductIdRoute
   '/inventory/new': typeof InventoryNewRoute
   '/shop/$productId': typeof ShopProductIdRoute
+  '/track/$orderId': typeof TrackOrderIdRoute
   '/account/': typeof AccountIndexRoute
   '/inventory/': typeof InventoryIndexRoute
   '/shop/': typeof ShopIndexRoute
+  '/track/': typeof TrackIndexRoute
   '/account/order/$orderId': typeof AccountOrderOrderIdRoute
 }
 export interface FileRouteTypes {
@@ -222,12 +248,15 @@ export interface FileRouteTypes {
     | '/pos'
     | '/saved'
     | '/settings'
+    | '/track'
     | '/inventory/$productId'
     | '/inventory/new'
     | '/shop/$productId'
+    | '/track/$orderId'
     | '/account/'
     | '/inventory/'
     | '/shop/'
+    | '/track/'
     | '/account/order/$orderId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -246,9 +275,11 @@ export interface FileRouteTypes {
     | '/inventory/$productId'
     | '/inventory/new'
     | '/shop/$productId'
+    | '/track/$orderId'
     | '/account'
     | '/inventory'
     | '/shop'
+    | '/track'
     | '/account/order/$orderId'
   id:
     | '__root__'
@@ -266,12 +297,15 @@ export interface FileRouteTypes {
     | '/pos'
     | '/saved'
     | '/settings'
+    | '/track'
     | '/inventory/$productId'
     | '/inventory/new'
     | '/shop/$productId'
+    | '/track/$orderId'
     | '/account/'
     | '/inventory/'
     | '/shop/'
+    | '/track/'
     | '/account/order/$orderId'
   fileRoutesById: FileRoutesById
 }
@@ -290,6 +324,7 @@ export interface RootRouteChildren {
   PosRoute: typeof PosRoute
   SavedRoute: typeof SavedRoute
   SettingsRoute: typeof SettingsRoute
+  TrackRoute: typeof TrackRouteWithChildren
   ShopProductIdRoute: typeof ShopProductIdRoute
   ShopIndexRoute: typeof ShopIndexRoute
 }
@@ -394,6 +429,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/track': {
+      id: '/track'
+      path: '/track'
+      fullPath: '/track'
+      preLoaderRoute: typeof TrackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/account/': {
       id: '/account/'
       path: '/'
@@ -436,6 +478,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopProductIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/track/': {
+      id: '/track/'
+      path: '/'
+      fullPath: '/track/'
+      preLoaderRoute: typeof TrackIndexRouteImport
+      parentRoute: typeof TrackRoute
+    }
+    '/track/$orderId': {
+      id: '/track/$orderId'
+      path: '/$orderId'
+      fullPath: '/track/$orderId'
+      preLoaderRoute: typeof TrackOrderIdRouteImport
+      parentRoute: typeof TrackRoute
+    }
     '/account/order/$orderId': {
       id: '/account/order/$orderId'
       path: '/order/$orderId'
@@ -475,6 +531,18 @@ const InventoryRouteWithChildren = InventoryRoute._addFileChildren(
   InventoryRouteChildren,
 )
 
+interface TrackRouteChildren {
+  TrackOrderIdRoute: typeof TrackOrderIdRoute
+  TrackIndexRoute: typeof TrackIndexRoute
+}
+
+const TrackRouteChildren: TrackRouteChildren = {
+  TrackOrderIdRoute: TrackOrderIdRoute,
+  TrackIndexRoute: TrackIndexRoute,
+}
+
+const TrackRouteWithChildren = TrackRoute._addFileChildren(TrackRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRouteWithChildren,
@@ -490,6 +558,7 @@ const rootRouteChildren: RootRouteChildren = {
   PosRoute: PosRoute,
   SavedRoute: SavedRoute,
   SettingsRoute: SettingsRoute,
+  TrackRoute: TrackRouteWithChildren,
   ShopProductIdRoute: ShopProductIdRoute,
   ShopIndexRoute: ShopIndexRoute,
 }

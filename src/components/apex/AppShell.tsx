@@ -98,6 +98,8 @@ function isShopPath(pathname: string): boolean {
     pathname === "/cart" ||
     pathname === "/checkout" ||
     pathname === "/saved" ||
+    pathname === "/track" ||
+    pathname.startsWith("/track/") ||
     pathname === "/account" ||
     pathname.startsWith("/account/")
   );

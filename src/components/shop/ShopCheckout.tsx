@@ -208,7 +208,7 @@ export function ShopCheckout() {
         <p className="text-[15px] text-fg-muted mt-2 mb-5">
           The store has the ticket. It stays as “Order placed” until someone in the office confirms it. Track it from your account.
         </p>
-        <Button className="w-full" onClick={() => void navigate({ to: "/account/order/$orderId", params: { orderId } })}>
+        <Button className="w-full" onClick={() => void navigate({ to: "/track/$orderId", params: { orderId } })}>
           Track order
         </Button>
       </div>

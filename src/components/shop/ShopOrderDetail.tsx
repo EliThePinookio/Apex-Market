@@ -44,7 +44,7 @@ export function ShopOrderDetail() {
       <div className="shop-body shop-checkout-wrap">
         <h1 className="display-title text-[1.75rem] mb-2">Sign in to see this order</h1>
         <p className="text-[15px] text-fg-muted mb-5">Orders are saved to your account.</p>
-        <Button className="w-full" onClick={() => void navigate({ to: "/login", search: { next: `/account/order/${orderId}` } })}>
+        <Button className="w-full" onClick={() => void navigate({ to: "/login", search: { next: `/track/${orderId}` } })}>
           Sign in
         </Button>
       </div>
@@ -55,7 +55,7 @@ export function ShopOrderDetail() {
     return (
       <div className="shop-body py-20 text-center space-y-4">
         <p className="display-title text-[1.75rem]">Order not found</p>
-        <Button variant="secondary" onClick={() => void navigate({ to: "/account" })}>
+        <Button variant="secondary" onClick={() => void navigate({ to: "/track" })}>
           Back to account
         </Button>
       </div>
@@ -88,7 +88,7 @@ export function ShopOrderDetail() {
         <span className="tabular font-semibold">{money(order.amount, cur)}</span>
       </div>
       {order.address ? <p className="text-[14px] text-fg-muted mt-3">Deliver: {order.address}</p> : null}
-      <Link to="/account" className="block text-center text-[15px] text-fg-muted min-h-11 grid place-items-center mt-4">
+      <Link to="/track" className="block text-center text-[15px] text-fg-muted min-h-11 grid place-items-center mt-4">
         All orders
       </Link>
     </div>

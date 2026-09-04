@@ -90,27 +90,26 @@ export function ShopAccount() {
       )}
       <div className="flex items-baseline justify-between mb-3 text-left">
         <h2 className="text-[15px] font-semibold">Orders</h2>
-        <Link to="/saved" className="text-[13px] text-accent font-medium">
-          Saved items
+        <Link to="/track" className="text-[13px] text-accent font-medium">
+          Track all
         </Link>
       </div>
       {orders.length === 0 ? (
         <p className="text-[15px] text-fg-muted mb-6 leading-relaxed">
-          No orders yet. Browse the shop and check out when you are ready.
+          No orders yet. After checkout they appear under Orders so you can follow packing and delivery.
         </p>
       ) : (
         <div className="shop-account-orders space-y-3 mb-6">
-          {orders.map((o) => {
+          {orders.slice(0, 3).map((o) => {
             const items = Array.isArray(o.items) ? o.items : [];
             const status = isOrderStatus(String(o.status || "")) ? o.status : "placed";
             return (
-              <Link key={o.id} to="/account/order/$orderId" params={{ orderId: o.id }} className="shop-line">
+              <Link key={o.id} to="/track/$orderId" params={{ orderId: o.id }} className="shop-line">
                 <div className="min-w-0 flex-1">
                   <p className="font-medium">{money(o.amount, cur)}</p>
                   <p className="text-[13px] text-fg-subtle">
                     {items.map((i) => `${i.productName} × ${i.quantity}`).join(", ") || "Order"}
                   </p>
-                  <p className="text-[12px] text-fg-subtle mt-1">{o.date ? new Date(o.date).toLocaleString() : ""}</p>
                 </div>
                 <span className={cn("order-pill", `is-${status}`)}>{STATUS_LABEL[status]}</span>
               </Link>
