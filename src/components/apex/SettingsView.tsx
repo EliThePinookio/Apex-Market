@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { useApex } from "@/lib/apex/store";
 import { useBeannelAuth } from "@/lib/beannel/auth";
 import { readOpenRouterKey, writeOpenRouterKey } from "@/lib/beannel/keys";
+import { pinIssue } from "@/lib/beannel/guard";
 
 const WIPE_PHRASE = "WIPE";
 const HOLD_MS = 2000;
@@ -22,6 +23,13 @@ export function SettingsView() {
   const [wipeOpen, setWipeOpen] = useState(false);
 
   const save = async () => {
+    if (form.isPinLocked) {
+      const issue = pinIssue(form.ownerPin || "");
+      if (issue) {
+        toast.error(issue);
+        return;
+      }
+    }
     setBusy(true);
     try {
       await saveProfile(form);
@@ -184,7 +192,7 @@ export function SettingsView() {
 
       <WipeConfirm
         open={wipeOpen}
-        expectedPin={profile.ownerPin || "1234"}
+        expectedPin={profile.ownerPin || ""}
         onClose={() => setWipeOpen(false)}
         onWipe={wipeAll}
       />
@@ -242,6 +250,10 @@ function WipeConfirm({
 
   const checkPin = () => {
     if (locked || wiping) return;
+    if (!expectedPin) {
+      setError("Set an owner PIN in Settings first.");
+      return;
+    }
     if (pin !== expectedPin) {
       const next = fails + 1;
       setFails(next);

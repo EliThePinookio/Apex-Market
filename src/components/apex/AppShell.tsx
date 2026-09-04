@@ -27,6 +27,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Toaster, toast } from "sonner";
 import { BrandMark, Wordmark } from "@/components/ui/brand-mark";
 import { ClothGround } from "@/components/ui/cloth-ground";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { CommandPalette } from "@/components/apex/CommandPalette";
@@ -35,6 +36,7 @@ import { PinModal } from "@/components/apex/PinModal";
 import { QuickAction } from "@/components/apex/QuickAction";
 import { ShopShell } from "@/components/shop/ShopShell";
 import { afterLoginPath, canAccessOffice, isOfficePath, kindFromProfile } from "@/lib/beannel/account";
+import { applyDark, readDark } from "@/lib/beannel/theme";
 import { useApex } from "@/lib/apex/store";
 import { useBeannelAuth } from "@/lib/beannel/auth";
 import type { NavId } from "@/types";
@@ -180,18 +182,13 @@ function SignedInShell() {
   const [pinOpen, setPinOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
-  const [dark, setDark] = useState(
-    () => typeof document !== "undefined" && document.documentElement.classList.contains("dark"),
-  );
+  const [dark, setDark] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem("beannel_theme");
-    const preferDark =
-      stored === "dark" ||
-      (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    const preferDark = readDark();
     setDark(preferDark);
-    document.documentElement.classList.toggle("dark", preferDark);
+    applyDark(preferDark);
   }, []);
 
   useEffect(() => {
@@ -242,8 +239,7 @@ function SignedInShell() {
   const toggleTheme = () => {
     const next = !dark;
     setDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("beannel_theme", next ? "dark" : "light");
+    applyDark(next);
   };
 
   const dock = useMemo(
@@ -298,6 +294,7 @@ function SignedInShell() {
           >
             <Command className="size-4" />
           </button>
+          <ThemeToggle className="office-icon-btn" />
           <button
             type="button"
             className="office-icon-btn"

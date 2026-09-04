@@ -3,6 +3,7 @@ import { Heart, Home, Search, ShoppingBag, UserRound } from "lucide-react";
 import { useState } from "react";
 import { BrandMark, Wordmark } from "@/components/ui/brand-mark";
 import { ClothGround } from "@/components/ui/cloth-ground";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { bagCount, useBag } from "@/lib/beannel/cart";
 import { useSaved } from "@/lib/beannel/wishlist";
 import { useBeannelAuth } from "@/lib/beannel/auth";
@@ -43,6 +44,7 @@ export function ShopShell() {
           <button type="submit">Search</button>
         </form>
         <div className="shop-top-actions">
+          <ThemeToggle className="shop-icon-btn" />
           <Link to="/saved" className="shop-icon-btn shop-desktop-only" aria-label="Saved">
             <Heart className="size-[18px]" />
             <span className="shop-icon-label">Saved</span>

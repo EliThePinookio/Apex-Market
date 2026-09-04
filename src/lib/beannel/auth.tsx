@@ -10,6 +10,7 @@ import {
 import type { Session, User } from "@supabase/supabase-js";
 import type { AppUserRole, UserProfile } from "@/types";
 import { canAccessOffice, isOwnerEmail, OWNER_EMAIL, type AccountKind } from "@/lib/beannel/account";
+import { passwordIssue, rateLimit, rateLimitedFor, sanitizeEmail, sanitizeText } from "@/lib/beannel/guard";
 import { fetchShopStorefront } from "@/lib/beannel/shop";
 import { isSupabaseConfigured, supabase } from "@/lib/beannel/supabase";
 
@@ -219,9 +220,14 @@ export function BeannelAuthProvider({ children }: { children: ReactNode }) {
       isConfigured: isSupabaseConfigured,
       configError,
       signIn: async (email, password) => {
+        const key = `signin:${sanitizeEmail(email)}`;
+        if (!rateLimit(key, 5, 5 * 60_000, 30_000)) {
+          const wait = Math.ceil(rateLimitedFor(key) / 1000);
+          return { success: false, error: `Too many attempts. Wait ${wait}s.` };
+        }
         try {
           const { data, error } = await supabase.auth.signInWithPassword({
-            email: email.trim(),
+            email: sanitizeEmail(email),
             password,
           });
           if (error) return { success: false, error: error.message };
@@ -249,13 +255,15 @@ export function BeannelAuthProvider({ children }: { children: ReactNode }) {
         return { success: true };
       },
       signUp: async (email, password, fullName, _businessName, _kind = "customer") => {
+        const issue = passwordIssue(password);
+        if (issue) return { success: false, error: issue };
         try {
           const { data, error } = await supabase.auth.signUp({
-            email: email.trim(),
+            email: sanitizeEmail(email),
             password,
             options: {
               data: {
-                full_name: fullName?.trim() || "Customer",
+                full_name: sanitizeText(fullName || "Customer", 80),
                 account_kind: "customer",
               },
             },
@@ -279,7 +287,7 @@ export function BeannelAuthProvider({ children }: { children: ReactNode }) {
         }
       },
       resetPassword: async (email) => {
-        const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        const { error } = await supabase.auth.resetPasswordForEmail(sanitizeEmail(email), {
           redirectTo: window.location.origin,
         });
         if (error) return { success: false, error: error.message };

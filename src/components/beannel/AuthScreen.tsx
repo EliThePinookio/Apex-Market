@@ -17,6 +17,8 @@ import { Group } from "@/components/ui/group";
 import { useBeannelAuth } from "@/lib/beannel/auth";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { afterLoginPath, kindFromProfile } from "@/lib/beannel/account";
+import { applyDark, readDark } from "@/lib/beannel/theme";
+import { passwordIssue } from "@/lib/beannel/guard";
 
 type Mode = "signin" | "signup" | "forgot";
 
@@ -38,7 +40,7 @@ export function AuthScreen() {
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
-    setDark(document.documentElement.classList.contains("dark"));
+    setDark(readDark());
     const hash = window.location.hash;
     const q = window.location.search;
     const params = new URLSearchParams(hash.startsWith("#") ? hash.slice(1) : q);
@@ -57,8 +59,7 @@ export function AuthScreen() {
   const toggleTheme = () => {
     const next = !dark;
     setDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("beannel_theme", next ? "dark" : "light");
+    applyDark(next);
   };
 
   const switchMode = (next: Mode) => {
@@ -83,11 +84,16 @@ export function AuthScreen() {
       else setError(res.error || "Could not send reset email.");
       return;
     }
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
       return;
     }
     if (mode === "signup") {
+      const issue = passwordIssue(password);
+      if (issue) {
+        setError(issue);
+        return;
+      }
       if (password !== confirmPassword) {
         setError("Passwords do not match.");
         return;
@@ -215,7 +221,7 @@ export function AuthScreen() {
                   <input
                     type="password"
                     required
-                    minLength={6}
+                    minLength={8}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="field"
@@ -230,7 +236,7 @@ export function AuthScreen() {
                   <input
                     type="password"
                     required
-                    minLength={6}
+                    minLength={8}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="field"

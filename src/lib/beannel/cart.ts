@@ -51,16 +51,18 @@ export function bagTotal(): number {
 }
 
 export function addToBag(item: Omit<BagItem, "qty">, qty = 1): void {
+  const add = Math.min(20, Math.max(1, Math.floor(qty) || 1));
   const items = [...cache];
   const idx = items.findIndex((i) => i.listingId === item.listingId);
-  if (idx >= 0) items[idx] = { ...items[idx], qty: items[idx].qty + qty };
-  else items.push({ ...item, qty });
-  emit(items);
+  if (idx >= 0) items[idx] = { ...items[idx], qty: Math.min(20, items[idx].qty + add) };
+  else items.push({ ...item, qty: add });
+  emit(items.slice(0, 30));
 }
 
 export function setBagQty(listingId: string, qty: number): void {
-  if (qty <= 0) emit(cache.filter((i) => i.listingId !== listingId));
-  else emit(cache.map((i) => (i.listingId === listingId ? { ...i, qty } : i)));
+  const next = Math.floor(qty);
+  if (next <= 0) emit(cache.filter((i) => i.listingId !== listingId));
+  else emit(cache.map((i) => (i.listingId === listingId ? { ...i, qty: Math.min(20, next) } : i)));
 }
 
 export function clearBag(): void {

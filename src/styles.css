@@ -97,43 +97,6 @@
     color-scheme: light;
   }
 
-  html.dark {
-    --color-bg: #0a0a0a;
-    --color-bg-elevated: #141414;
-    --color-bg-subtle: #222018;
-    --color-fg: #f5efe0;
-    --color-fg-muted: #b7aa94;
-    --color-fg-subtle: #8e8474;
-    --color-border: color-mix(in oklab, var(--color-fg) 10%, transparent);
-    --color-border-strong: color-mix(in oklab, var(--color-fg) 16%, transparent);
-    --color-accent: #d4af37;
-    --color-accent-fg: #14110c;
-    --color-success: #30d158;
-    --color-warning: #ff9f0a;
-    --color-danger: #ff453a;
-    --color-info: #d4af37;
-    --color-danger-fg: #1a0708;
-    --color-success-fg: #05210c;
-    --color-scrim: color-mix(in oklab, #000 58%, transparent);
-    --shadow-1: 0 0 0 1px rgba(255, 255, 255, 0.06);
-    --shadow-2:
-      0 0 0 1px rgba(255, 255, 255, 0.07),
-      0 10px 28px -16px rgba(0, 0, 0, 0.7);
-    --shadow-3:
-      0 0 0 1px rgba(255, 255, 255, 0.09),
-      0 18px 44px -18px rgba(0, 0, 0, 0.78);
-    --shadow-4:
-      0 0 0 1px rgba(255, 255, 255, 0.1),
-      0 28px 64px -16px rgba(0, 0, 0, 0.86);
-    --shadow-panel: var(--shadow-2);
-    --shadow-lift:
-      0 0 0 1px rgba(255, 255, 255, 0.08),
-      0 8px 22px -12px rgba(0, 0, 0, 0.7),
-      0 22px 44px -18px rgba(0, 0, 0, 0.55);
-    --highlight: inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    color-scheme: dark;
-  }
-
   html {
     font-family: var(--font-sans);
     background: var(--color-bg);
@@ -175,6 +138,43 @@
   }
 }
 
+html.dark {
+  --color-bg: #0b0b0b;
+  --color-bg-elevated: #161310;
+  --color-bg-subtle: #1f1a14;
+  --color-fg: #f3e6c8;
+  --color-fg-muted: #c9b896;
+  --color-fg-subtle: #9a8a6e;
+  --color-border: color-mix(in oklab, #c9a96e 22%, transparent);
+  --color-border-strong: color-mix(in oklab, #c9a96e 38%, transparent);
+  --color-accent: #c9a96e;
+  --color-accent-fg: #0b0b0b;
+  --color-success: #7d9a62;
+  --color-warning: #d4a017;
+  --color-danger: #c45c4a;
+  --color-info: #c9a96e;
+  --color-danger-fg: #f3e6c8;
+  --color-success-fg: #0b0b0b;
+  --color-scrim: color-mix(in oklab, #0b0b0b 72%, transparent);
+  --shadow-1: 0 0 0 1px color-mix(in oklab, #c9a96e 16%, transparent);
+  --shadow-2:
+    0 0 0 1px color-mix(in oklab, #c9a96e 18%, transparent),
+    0 10px 28px -16px rgba(0, 0, 0, 0.78);
+  --shadow-3:
+    0 0 0 1px color-mix(in oklab, #c9a96e 22%, transparent),
+    0 18px 44px -18px rgba(0, 0, 0, 0.84);
+  --shadow-4:
+    0 0 0 1px color-mix(in oklab, #c9a96e 24%, transparent),
+    0 28px 64px -16px rgba(0, 0, 0, 0.9);
+  --shadow-panel: var(--shadow-2);
+  --shadow-lift:
+    0 0 0 1px color-mix(in oklab, #c9a96e 20%, transparent),
+    0 8px 22px -12px rgba(0, 0, 0, 0.75),
+    0 22px 44px -18px rgba(0, 0, 0, 0.6);
+  --highlight: inset 0 1px 0 color-mix(in oklab, #f3e6c8 12%, transparent);
+  color-scheme: dark;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -211,6 +211,11 @@
   font-variation-settings: "SOFT" 20, "WONK" 0.35, "opsz" 14;
   letter-spacing: -0.02em;
   font-synthesis: none;
+}
+html.dark .brand-wordmark,
+html.dark .brand-wordmark-sm {
+  color: #f3e6c8;
+  text-shadow: 0 0 28px color-mix(in oklab, #c9a96e 40%, transparent);
 }
 .display-title {
   font-family: var(--font-brand);
@@ -1477,10 +1482,43 @@ input[type="range"]::-moz-range-thumb {
   background: color-mix(in oklab, var(--color-bg) 22%, transparent);
 }
 html.dark .cloth-photo {
-  filter: brightness(0.5) saturate(0.8);
+  filter: brightness(0.22) contrast(1.18) saturate(0.55);
 }
 html.dark .cloth-veil {
-  background: color-mix(in oklab, var(--color-bg) 32%, transparent);
+  background:
+    radial-gradient(120% 70% at 50% -10%, color-mix(in oklab, #c9a96e 16%, transparent), transparent 52%),
+    color-mix(in oklab, #0b0b0b 78%, transparent);
+}
+html.dark .adinkra-ground {
+  color: #c9a96e;
+}
+html.dark .adinkra-ground .adinkra {
+  opacity: 0.26;
+  mix-blend-mode: screen;
+}
+.theme-toggle {
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: var(--color-fg);
+  background: color-mix(in oklab, var(--color-bg-elevated) 70%, transparent);
+  box-shadow: var(--highlight), var(--shadow-1);
+  flex-shrink: 0;
+}
+.theme-toggle:hover {
+  color: var(--color-accent);
+}
+.office-icon-btn.theme-toggle,
+.shop-icon-btn.theme-toggle {
+  width: 2.35rem;
+  height: 2.35rem;
+  min-width: 2.35rem;
+  min-height: 2.35rem;
+  background: color-mix(in oklab, #fff 8%, transparent);
+  box-shadow: none;
+  color: inherit;
 }
 .shop-top,
 .shop-main,
@@ -1503,6 +1541,14 @@ html.dark .cloth-veil {
   -webkit-backdrop-filter: blur(var(--blur-md)) saturate(1.5);
   border-bottom: 1px solid var(--color-border);
   box-shadow: var(--shadow-lift);
+}
+html.dark .shop-top {
+  background: color-mix(in oklab, #0b0b0b 88%, transparent);
+  border-bottom: 1px solid color-mix(in oklab, #c9a96e 28%, transparent);
+}
+html.dark .shop-dock {
+  background: color-mix(in oklab, #0b0b0b 90%, transparent);
+  border-top-color: color-mix(in oklab, #c9a96e 22%, transparent);
 }
 .shop-search {
   flex: 1;
@@ -2279,9 +2325,9 @@ html.dark .cloth-veil {
   color: var(--color-fg);
 }
 html.dark .office-frame {
-  --office-top: color-mix(in oklab, #0b0908 82%, transparent);
-  --office-top-fg: #f6f1e8;
-  --office-sidebar: color-mix(in oklab, var(--color-bg-elevated) 48%, transparent);
+  --office-top: #0b0b0b;
+  --office-top-fg: #f3e6c8;
+  --office-sidebar: color-mix(in oklab, #161310 70%, transparent);
 }
 .office-topbar {
   display: flex;

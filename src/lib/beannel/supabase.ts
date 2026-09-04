@@ -28,6 +28,7 @@ export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKe
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
+    flowType: "pkce",
     storage: typeof window === "undefined" ? undefined : window.localStorage,
   },
 });

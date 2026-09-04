@@ -1,6 +1,7 @@
 import { coverFor } from "@/lib/beannel/catalog";
 import { supabase } from "@/lib/beannel/supabase";
 import { newId } from "@/lib/apex/money";
+import { sanitizeText } from "@/lib/beannel/guard";
 import type { Product, TransactionItem } from "@/types";
 import {
   listingIdFor,
@@ -369,12 +370,43 @@ export async function placeShopOrder(args: {
   items: BagItem[];
   userId?: string;
 }): Promise<{ orderId: string }> {
-  const name = args.customerName.trim();
-  const phone = args.phone.trim();
-  if (!name) throw new Error("Please leave your name.");
-  if (phone.replace(/\D/g, "").length < 9) throw new Error("Please leave a working phone number.");
+  const name = sanitizeText(args.customerName, 80);
+  const phone = args.phone.replace(/\D/g, "").slice(0, 15);
+  const address = sanitizeText(args.address, 200);
+  if (name.length < 2) throw new Error("Please leave your name.");
+  if (phone.length < 9) throw new Error("Please leave a working phone number.");
   if (!args.items.length) throw new Error("Your bag is empty.");
+  if (args.items.length > 30) throw new Error("Your bag is too large.");
+  if (args.items.some((i) => i.qty < 1 || i.qty > 20)) throw new Error("Quantity is not allowed.");
+  if (!args.userId) throw new Error("Sign in to check out.");
   if (!args.businessId) throw new Error("The shop is not taking orders yet.");
+
+  const payload = args.items.map((item) => ({ listingId: item.listingId, qty: item.qty }));
+  const { data, error } = await supabase.rpc("place_shop_order", {
+    p_name: name,
+    p_phone: phone,
+    p_address: address,
+    p_payment: args.payment,
+    p_business_id: args.businessId,
+    p_items: payload,
+  });
+  if (!error && data) return { orderId: String(data) };
+  if (error && !/could not find|does not exist|PGRST202/i.test(error.message)) {
+    throw new Error(error.message.replace(/^place_shop_order:\s*/i, "") || "Could not send the order.");
+  }
+
+  return placeShopOrderLegacy({ ...args, customerName: name, phone, address, userId: args.userId });
+}
+
+async function placeShopOrderLegacy(args: {
+  businessId: string;
+  customerName: string;
+  phone: string;
+  address: string;
+  payment: "mobile_money" | "cash" | "other";
+  items: BagItem[];
+  userId: string;
+}): Promise<{ orderId: string }> {
 
   const listings = await fetchShopListings();
   const byId = new Map(listings.map((l) => [l.listingId, l]));
@@ -412,11 +444,11 @@ export async function placeShopOrder(args: {
   const orderId = newId("shop");
   const description = writeOrderEnvelope({
     businessId: args.businessId,
-    name,
-    phone,
+    name: args.customerName,
+    phone: args.phone,
     payment: args.payment,
     address: args.address,
-    userId: args.userId || "",
+    userId: args.userId,
     status: "placed",
     updatedAt: now,
   });
@@ -432,8 +464,8 @@ export async function placeShopOrder(args: {
     date: now,
     description,
     payment_method: args.payment,
-    customer_name: name,
-    customer_id: args.userId || "",
+    customer_name: args.customerName,
+    customer_id: args.userId,
     reference_no: args.userId ? `SHOP-${args.userId}` : "SHOP",
     items: lines,
     created_at: now,

@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { rateLimit } from "@/lib/beannel/guard";
 
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 
@@ -228,7 +229,15 @@ export const askApexAdvisor = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const history = Array.isArray(data.history) ? data.history : [];
-    const messages = packMessages(data.context, data.prompt, history);
+    if (!rateLimit(`advisor:${data.mode || "chat"}`, 20, 10 * 60_000, 60_000)) {
+      return {
+        ok: true as const,
+        text: "Slow down a moment. Ask again in a minute.",
+        source: "ledger" as const,
+      };
+    }
+    const prompt = data.prompt.slice(0, 2000);
+    const messages = packMessages(data.context, prompt, history);
     const openrouter = usableKey(process.env.OPENROUTER_API_KEY) || usableKey(data.openrouterKey);
     const xai = usableKey(process.env.XAI_API_KEY);
 
