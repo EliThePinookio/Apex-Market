@@ -8,9 +8,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-accent text-accent-fg shadow-[var(--highlight),var(--shadow-1)] hover:brightness-[1.06]",
+          "bg-accent/90 text-accent-fg shadow-[inset_0_1px_0_rgba(255,255,255,0.45),var(--shadow-1)] backdrop-blur-md hover:brightness-[1.08]",
         secondary:
-          "bg-bg-elevated text-fg shadow-[var(--shadow-1)] hover:shadow-[var(--shadow-2)]",
+          "bg-bg-elevated/70 text-fg shadow-[inset_0_1px_0_rgba(255,255,255,0.5),var(--shadow-1)] backdrop-blur-md hover:shadow-[var(--shadow-2)]",
         ghost: "text-fg-muted hover:bg-bg-subtle hover:text-fg",
         danger: "bg-danger text-danger-fg shadow-[var(--shadow-1)] hover:brightness-110",
         success: "bg-success text-success-fg shadow-[var(--shadow-1)] hover:brightness-110",

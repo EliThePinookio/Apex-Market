@@ -94,6 +94,10 @@
     --text-title: 1.375rem;
     --text-large-title: 2.125rem;
     --highlight: inset 0 1px 0 rgba(255, 255, 255, 0.68);
+    --glass-fill: color-mix(in oklab, #fffdf8 38%, transparent);
+    --glass-tint: color-mix(in oklab, #fff 55%, transparent);
+    --glass-stroke: color-mix(in oklab, #fff 62%, transparent);
+    --blur-liquid: 28px;
     color-scheme: light;
   }
 
@@ -172,6 +176,9 @@ html.dark {
     0 8px 22px -12px rgba(0, 0, 0, 0.75),
     0 22px 44px -18px rgba(0, 0, 0, 0.6);
   --highlight: inset 0 1px 0 color-mix(in oklab, #f3e6c8 12%, transparent);
+  --glass-fill: color-mix(in oklab, #161310 42%, transparent);
+  --glass-tint: color-mix(in oklab, #c9a96e 14%, transparent);
+  --glass-stroke: color-mix(in oklab, #f3e6c8 22%, transparent);
   color-scheme: dark;
 }
 
@@ -234,13 +241,27 @@ html.dark .brand-wordmark-sm {
 }
 
 .glass {
-  background: color-mix(in oklab, var(--color-bg-elevated) 72%, transparent);
-  backdrop-filter: blur(var(--blur-lg)) saturate(1.65);
-  -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(1.65);
-  box-shadow: var(--highlight), var(--shadow-2);
+  position: relative;
+  isolation: isolate;
+  background:
+    linear-gradient(180deg, var(--glass-tint), transparent 42%),
+    var(--glass-fill);
+  backdrop-filter: blur(var(--blur-liquid)) saturate(1.85) brightness(1.08);
+  -webkit-backdrop-filter: blur(var(--blur-liquid)) saturate(1.85) brightness(1.08);
+  border: 1px solid var(--glass-stroke);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, #fff 72%, transparent),
+    inset 0 -18px 28px color-mix(in oklab, #fff 6%, transparent),
+    var(--shadow-2);
 }
 html.dark .glass {
-  background: color-mix(in oklab, var(--color-bg-elevated) 62%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in oklab, #c9a96e 12%, transparent), transparent 48%),
+    var(--glass-fill);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, #f3e6c8 16%, transparent),
+    inset 0 -18px 28px color-mix(in oklab, #000 22%, transparent),
+    var(--shadow-2);
 }
 
 .cushion {
@@ -3333,9 +3354,227 @@ html.dark .office-frame {
   white-space: pre-wrap;
 }
 
+/* —— Liquid glass (Apple water) —— */
+.cushion,
+.panel,
+.shop-top,
+.shop-dock,
+.shop-search,
+.shop-order-card,
+.shop-orders-empty,
+.mall-card,
+.dept-tile,
+.office-kpi-card,
+.office-sidebar,
+.office-index,
+.theme-toggle,
+.field,
+.tag-chip {
+  backdrop-filter: blur(var(--blur-liquid)) saturate(1.8) brightness(1.06);
+  -webkit-backdrop-filter: blur(var(--blur-liquid)) saturate(1.8) brightness(1.06);
+}
+.cushion,
+.panel,
+.shop-top,
+.shop-dock,
+.shop-order-card,
+.mall-card,
+.dept-tile,
+.office-kpi-card,
+.office-sidebar {
+  border: 1px solid var(--glass-stroke);
+  background:
+    linear-gradient(185deg, var(--glass-tint), transparent 46%),
+    var(--glass-fill);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, #fff 70%, transparent),
+    inset 0 -20px 32px color-mix(in oklab, #fff 7%, transparent),
+    var(--shadow-2);
+}
+html.dark .cushion,
+html.dark .panel,
+html.dark .shop-top,
+html.dark .shop-dock,
+html.dark .shop-order-card,
+html.dark .mall-card,
+html.dark .dept-tile,
+html.dark .office-kpi-card,
+html.dark .office-sidebar {
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, #f3e6c8 14%, transparent),
+    inset 0 -16px 28px color-mix(in oklab, #000 28%, transparent),
+    var(--shadow-2);
+}
+
+.shop-top,
+.shop-dock,
+.mall-card,
+.dept-tile,
+.shop-order-card,
+.office-kpi-card,
+.cushion,
+.panel,
+.glass,
+.theme-toggle {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.shop-top::after,
+.shop-dock::after,
+.mall-card::after,
+.dept-tile::after,
+.shop-order-card::after,
+.office-kpi-card::after,
+.glass::after,
+.cushion::after,
+.panel::after,
+.theme-toggle::after {
+  content: "";
+  position: absolute;
+  inset: -20% -40%;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    color-mix(in oklab, #fff 38%, transparent) 48%,
+    transparent 62%
+  );
+  animation: liquid-sheen 8.5s var(--ease-standard) infinite;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  opacity: 0.55;
+  z-index: 2;
+}
+html.dark .shop-top::after,
+html.dark .shop-dock::after,
+html.dark .mall-card::after,
+html.dark .dept-tile::after,
+html.dark .shop-order-card::after,
+html.dark .office-kpi-card::after,
+html.dark .glass::after,
+html.dark .cushion::after,
+html.dark .panel::after {
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    color-mix(in oklab, #c9a96e 28%, transparent) 48%,
+    transparent 62%
+  );
+  mix-blend-mode: screen;
+  opacity: 0.4;
+}
+
+@keyframes liquid-sheen {
+  0% { transform: translateX(-18%) rotate(8deg); }
+  50% { transform: translateX(18%) rotate(8deg); }
+  100% { transform: translateX(-18%) rotate(8deg); }
+}
+@keyframes liquid-page {
+  from { opacity: 0; filter: blur(8px); transform: translateY(10px) scale(0.985); }
+  to { opacity: 1; filter: blur(0); transform: none; }
+}
+@keyframes liquid-tile {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); filter: blur(6px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+
+.shop-main,
+.office-page,
+.shop-body {
+  animation: liquid-page 520ms var(--ease-spring) both;
+}
+.mall-grid > *,
+.dept-grid > *,
+.office-kpi > *,
+.shop-order-list > * {
+  animation: liquid-tile 560ms var(--ease-spring) both;
+}
+.mall-grid > *:nth-child(1), .dept-grid > *:nth-child(1), .office-kpi > *:nth-child(1), .shop-order-list > *:nth-child(1) { animation-delay: 0ms; }
+.mall-grid > *:nth-child(2), .dept-grid > *:nth-child(2), .office-kpi > *:nth-child(2), .shop-order-list > *:nth-child(2) { animation-delay: 45ms; }
+.mall-grid > *:nth-child(3), .dept-grid > *:nth-child(3), .office-kpi > *:nth-child(3), .shop-order-list > *:nth-child(3) { animation-delay: 90ms; }
+.mall-grid > *:nth-child(4), .dept-grid > *:nth-child(4), .office-kpi > *:nth-child(4), .shop-order-list > *:nth-child(4) { animation-delay: 135ms; }
+.mall-grid > *:nth-child(5), .dept-grid > *:nth-child(5), .shop-order-list > *:nth-child(5) { animation-delay: 180ms; }
+.mall-grid > *:nth-child(6), .dept-grid > *:nth-child(6), .shop-order-list > *:nth-child(6) { animation-delay: 225ms; }
+.mall-grid > *:nth-child(7), .shop-order-list > *:nth-child(7) { animation-delay: 270ms; }
+.mall-grid > *:nth-child(8), .shop-order-list > *:nth-child(8) { animation-delay: 315ms; }
+
+button:not(:disabled),
+[role="button"]:not(:disabled),
+a.shop-line,
+.office-icon-btn,
+.shop-icon-btn,
+.tag-chip {
+  transition:
+    transform var(--motion-fast) var(--ease-spring),
+    box-shadow var(--motion-fast) var(--ease-spring),
+    background-color var(--motion-fast) var(--ease-out),
+    filter var(--motion-fast) var(--ease-out),
+    color var(--motion-quick) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  button:not(:disabled):hover,
+  [role="button"]:not(:disabled):hover,
+  .mall-card:hover,
+  .dept-tile:hover,
+  .shop-order-card:hover,
+  .office-kpi-card:hover,
+  .tag-chip:hover {
+    filter: brightness(1.06) saturate(1.05);
+  }
+}
+button:not(:disabled):active,
+[role="button"]:not(:disabled):active,
+.mall-card:active,
+.dept-tile:active,
+.shop-order-card:active {
+  transform: scale(0.975);
+  filter: brightness(0.97);
+}
+
+::view-transition-old(root) {
+  animation: 280ms var(--ease-out) both liquid-out;
+}
+::view-transition-new(root) {
+  animation: 480ms var(--ease-spring) both liquid-in;
+}
+@keyframes liquid-out {
+  to { opacity: 0; filter: blur(10px); transform: scale(0.97); }
+}
+@keyframes liquid-in {
+  from { opacity: 0; filter: blur(12px); transform: scale(1.025); }
+  to { opacity: 1; filter: blur(0); transform: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .product-thumb img { transition: none; }
+  .shop-top::after,
+  .shop-dock::after,
+  .mall-card::after,
+  .dept-tile::after,
+  .shop-order-card::after,
+  .office-kpi-card::after,
+  .glass::after,
+  .cushion::after,
+  .panel::after,
+  .theme-toggle::after {
+    animation: none;
+    display: none;
+  }
+  .shop-main,
+  .office-page,
+  .shop-body,
+  .mall-grid > *,
+  .dept-grid > *,
+  .office-kpi > *,
+  .shop-order-list > * {
+    animation: none;
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
 }
+
 
 
 
