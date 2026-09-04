@@ -8,6 +8,7 @@ import type {
 } from "@/types";
 import { customerTier, loyaltyFromSale } from "@/lib/apex/summary";
 import { newId } from "@/lib/apex/money";
+import { parseShopMeta, writeShopMeta } from "@/lib/beannel/shop-meta";
 
 export interface ApexSnapshot {
   products: Product[];
@@ -201,6 +202,11 @@ export function saveProductOn(
 ): ApexSnapshot {
   const now = new Date().toISOString();
   const id = productData.id || newId("prod");
+  const unpacked = parseShopMeta(productData.notes);
+  const size = (productData.size ?? unpacked.meta.size ?? "").trim();
+  const garmentType = (productData.garmentType ?? unpacked.meta.garmentType ?? "").trim();
+  const imageUrl = (productData.imageUrl ?? unpacked.meta.imageUrl ?? "").trim();
+  const listed = productData.listed ?? unpacked.meta.listed !== false;
   const product: Product = {
     id,
     name: productData.name?.trim() || "New Product",
@@ -212,9 +218,13 @@ export function saveProductOn(
     minStockThreshold: Number(productData.minStockThreshold) ?? 5,
     unit: productData.unit?.trim() || "pcs",
     barcode: productData.barcode || "",
-    notes: productData.notes || "",
+    notes: writeShopMeta(unpacked.notes, { size, garmentType, imageUrl, listed }),
     createdAt: productData.createdAt || now,
     updatedAt: now,
+    size,
+    garmentType,
+    imageUrl,
+    listed,
   };
   const exists = snapshot.products.some((p) => p.id === id);
   const products = exists

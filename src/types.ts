@@ -32,6 +32,10 @@ export interface Product {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  size?: string;
+  garmentType?: string;
+  imageUrl?: string;
+  listed?: boolean;
 }
 
 export interface TransactionItem {
@@ -93,6 +97,8 @@ export interface BusinessProfile {
   lowStockAlertEnabled: boolean;
   allowNegativeStock: boolean;
   receiptHeaderMsg?: string;
+  whatsappNumber?: string;
+  shopTagline?: string;
 }
 
 export interface FinancialSummary {

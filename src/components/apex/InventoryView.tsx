@@ -14,7 +14,8 @@ import { Sheet } from "@/components/ui/sheet";
 import { exportInventoryCsv } from "@/lib/apex/export";
 import { money } from "@/lib/apex/money";
 import { useApex } from "@/lib/apex/store";
-import { isGeneratedSku, nextSku, prefixFor, colorFor } from "@/lib/beannel/catalog";
+import { isGeneratedSku, nextSku, prefixFor, colorFor, coverFor } from "@/lib/beannel/catalog";
+import { compressImage, FASHION_SIZES, GARMENT_TYPES } from "@/lib/beannel/shop-meta";
 import { cn } from "@/lib/cn";
 import type { Product } from "@/types";
 
@@ -23,6 +24,7 @@ type ProductDraft = Partial<Omit<Product, "buyPrice" | "sellPrice" | "stockQuant
   sellPrice?: NumericValue;
   stockQuantity?: NumericValue;
   minStockThreshold?: NumericValue;
+  sizes?: string[];
 };
 
 export function InventoryView() {
@@ -67,6 +69,11 @@ export function InventoryView() {
       stockQuantity: "",
       minStockThreshold: "",
       unit: "pcs",
+      listed: true,
+      sizes: [],
+      size: "",
+      garmentType: "",
+      imageUrl: "",
     });
   };
 
@@ -156,7 +163,8 @@ export function InventoryView() {
                       <p className="text-[15px] font-medium truncate">{p.name}</p>
                       <p className="text-[13px] text-fg-subtle flex items-center gap-1.5">
                         <span className="size-1.5 rounded-full shrink-0" style={{ background: colorFor(p.category) }} />
-                        {p.sku} · {p.category}
+                        {p.sku}
+                        {p.size ? ` · ${p.size}` : ""} · {p.category}
                       </p>
                     </div>
                     <div className="text-right">
@@ -194,7 +202,8 @@ export function InventoryView() {
                           <p className="font-medium">{p.name}</p>
                           <p className="text-[12px] text-fg-subtle flex items-center gap-1.5">
                             <span className="size-1.5 rounded-full shrink-0" style={{ background: colorFor(p.category) }} />
-                            {p.sku} · {p.category}
+                            {p.sku}
+                            {p.size ? ` · ${p.size}` : ""} · {p.category}
                           </p>
                         </td>
                         <td className={cn("tabular", low && "text-warning font-medium")}>
@@ -256,13 +265,45 @@ export function InventoryView() {
             onSubmit={async (e) => {
               e.preventDefault();
               try {
-                await saveProduct({
-                  ...editing,
-                  buyPrice: toNumber(editing.buyPrice),
-                  sellPrice: toNumber(editing.sellPrice),
-                  stockQuantity: toNumber(editing.stockQuantity),
-                  minStockThreshold: toNumber(editing.minStockThreshold, 5),
-                });
+                const sizeList =
+                  !editing.id && editing.sizes && editing.sizes.length > 0
+                    ? editing.sizes
+                    : [editing.size || ""];
+                if (!editing.id && sizeList.length > 1) {
+                  let running = [...products];
+                  for (const size of sizeList) {
+                    const sku = nextSku(editing.category || "Apparels", running);
+                    await saveProduct({
+                      ...editing,
+                      id: undefined,
+                      size,
+                      sku,
+                      listed: editing.listed !== false,
+                      buyPrice: toNumber(editing.buyPrice),
+                      sellPrice: toNumber(editing.sellPrice),
+                      stockQuantity: toNumber(editing.stockQuantity),
+                      minStockThreshold: toNumber(editing.minStockThreshold, 5),
+                    });
+                    running = [
+                      ...running,
+                      {
+                        id: `tmp-${sku}`,
+                        sku,
+                        category: editing.category || "Apparels",
+                      } as Product,
+                    ];
+                  }
+                } else {
+                  await saveProduct({
+                    ...editing,
+                    size: sizeList[0] || "",
+                    listed: editing.listed !== false,
+                    buyPrice: toNumber(editing.buyPrice),
+                    sellPrice: toNumber(editing.sellPrice),
+                    stockQuantity: toNumber(editing.stockQuantity),
+                    minStockThreshold: toNumber(editing.minStockThreshold, 5),
+                  });
+                }
                 toast.success(editing.id ? "Product updated" : "Product added");
                 setEditing(null);
               } catch (err) {
@@ -276,8 +317,40 @@ export function InventoryView() {
                 value={editing.name || ""}
                 onChange={(e) => setEditing({ ...editing, name: e.target.value })}
                 className="field"
+                placeholder="Oxford shirt"
               />
             </Field>
+            <div>
+              <p className="text-[13px] font-medium text-fg-muted mb-1.5">Photo</p>
+              <div className="flex items-center gap-3">
+                {(editing.imageUrl || coverFor(editing.category || "Apparels")) && (
+                  <img
+                    src={editing.imageUrl || coverFor(editing.category || "Apparels")}
+                    alt=""
+                    className="size-16 rounded-[14px] object-cover shadow-[var(--shadow-lift)]"
+                  />
+                )}
+                <label className="btn-secondary-file">
+                  Upload photo
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      e.target.value = "";
+                      if (!file) return;
+                      try {
+                        const imageUrl = await compressImage(file);
+                        setEditing((cur) => (cur ? { ...cur, imageUrl } : cur));
+                      } catch {
+                        toast.error("Could not read that photo");
+                      }
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <Field label="SKU / ID">
                 <input value={editing.sku || ""} onChange={(e) => setEditing({ ...editing, sku: e.target.value.toUpperCase() })} className="field tabular" />
@@ -305,6 +378,53 @@ export function InventoryView() {
             <p className="text-[12px] text-fg-subtle">
               {editing.category || "Apparels"} IDs run {prefixFor(editing.category || "Apparels")}001, {prefixFor(editing.category || "Apparels")}002 — counted per category
             </p>
+            <div>
+              <p className="text-[13px] font-medium text-fg-muted mb-1.5">
+                {editing.id ? "Size" : "Sizes"}
+              </p>
+              <div className="tag-row">
+                {FASHION_SIZES.map((size) => {
+                  const on = editing.id ? editing.size === size : (editing.sizes || []).includes(size);
+                  return (
+                    <button
+                      key={size}
+                      type="button"
+                      className="tag-chip"
+                      data-active={on}
+                      onClick={() => {
+                        if (editing.id) {
+                          setEditing({ ...editing, size: editing.size === size ? "" : size });
+                          return;
+                        }
+                        const current = editing.sizes || [];
+                        setEditing({
+                          ...editing,
+                          sizes: current.includes(size) ? current.filter((s) => s !== size) : [...current, size],
+                        });
+                      }}
+                    >
+                      {size}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              <p className="text-[13px] font-medium text-fg-muted mb-1.5">Type</p>
+              <div className="tag-row">
+                {GARMENT_TYPES.map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    className="tag-chip"
+                    data-active={editing.garmentType === type}
+                    onClick={() => setEditing({ ...editing, garmentType: editing.garmentType === type ? "" : type })}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Cost">
                 <NumericInput value={editing.buyPrice} onChange={(v) => setEditing({ ...editing, buyPrice: v })} min={0} step="0.01" />
@@ -328,6 +448,24 @@ export function InventoryView() {
                 className="field"
               />
             </Field>
+            <div className="tag-row">
+              <button
+                type="button"
+                className="tag-chip"
+                data-active={editing.listed !== false}
+                onClick={() => setEditing({ ...editing, listed: true })}
+              >
+                On the shop
+              </button>
+              <button
+                type="button"
+                className="tag-chip"
+                data-active={editing.listed === false}
+                onClick={() => setEditing({ ...editing, listed: false })}
+              >
+                Stock only
+              </button>
+            </div>
             {editing.id && (
               <button
                 type="button"

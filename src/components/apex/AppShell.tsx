@@ -17,6 +17,7 @@ import {
   Wifi,
   WifiOff,
   Moon,
+  Store,
   Sun,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -28,6 +29,7 @@ import { CommandPalette } from "@/components/apex/CommandPalette";
 import { PinModal } from "@/components/apex/PinModal";
 import { QuickAction } from "@/components/apex/QuickAction";
 import { AuthScreen } from "@/components/beannel/AuthScreen";
+import { ShopShell } from "@/components/shop/ShopShell";
 import { useApex } from "@/lib/apex/store";
 import { useBeannelAuth } from "@/lib/beannel/auth";
 import type { NavId } from "@/types";
@@ -75,9 +77,19 @@ function ConnectingScreen({ label }: { label: string }) {
   );
 }
 
+function isShopPath(pathname: string): boolean {
+  return (
+    pathname === "/shop" ||
+    pathname.startsWith("/shop/") ||
+    pathname === "/cart" ||
+    pathname === "/checkout"
+  );
+}
+
 export function AppShell() {
   const auth = useBeannelAuth();
   const store = useApex();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [layoutQa, setLayoutQa] = useState(false);
 
   useEffect(() => {
@@ -85,6 +97,12 @@ export function AppShell() {
       setLayoutQa(true);
     }
   }, []);
+
+  if (pathname === "/login") return <Outlet />;
+  if (isShopPath(pathname) || (!auth.user && pathname === "/" && !layoutQa)) {
+    if (auth.isLoading && !auth.user) return <ConnectingScreen label="Opening the house" />;
+    return <ShopShell />;
+  }
 
   if (!auth.isConfigured) {
     return (
@@ -254,6 +272,10 @@ function SignedInShell() {
               <Plus className="size-4" />
               New entry
             </Button>
+            <Link to="/shop" className="nav-item mt-1">
+              <Store className="size-[18px]" />
+              Customer shop
+            </Link>
           </div>
         </aside>
 
@@ -334,6 +356,17 @@ function SignedInShell() {
                   >
                     {isOwnerUnlocked ? <Lock className="size-4" /> : <Unlock className="size-4" />}
                     {isOwnerUnlocked ? "Lock owner mode" : "Unlock owner mode"}
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setAccountOpen(false);
+                      void navigate({ to: "/shop" });
+                    }}
+                  >
+                    <Store className="size-4" />
+                    Customer shop
                   </button>
                   <button
                     type="button"

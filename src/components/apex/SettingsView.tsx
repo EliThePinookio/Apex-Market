@@ -93,6 +93,31 @@ export function SettingsView() {
       </section>
 
       <section>
+        <GroupLabel>Customer shop</GroupLabel>
+        <Group footer="The public shop browses this inventory. Orders land here as sales and take stock down.">
+          <GroupRow>
+            <span className="shrink-0">WhatsApp</span>
+            <input
+              value={form.whatsappNumber || ""}
+              onChange={(e) => setForm({ ...form, whatsappNumber: e.target.value })}
+              className="group-input"
+              placeholder="0XX XXX XXXX"
+              inputMode="tel"
+            />
+          </GroupRow>
+          <GroupRow>
+            <span className="shrink-0">Tagline</span>
+            <input
+              value={form.shopTagline || ""}
+              onChange={(e) => setForm({ ...form, shopTagline: e.target.value })}
+              className="group-input"
+              placeholder="Clothes · Jewelry · Watches"
+            />
+          </GroupRow>
+        </Group>
+      </section>
+
+      <section>
         <GroupLabel>Operations</GroupLabel>
         <Group>
           <Switch

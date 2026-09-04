@@ -9,6 +9,7 @@ import type {
 import { supabase } from "@/lib/beannel/supabase";
 import { newId } from "@/lib/apex/money";
 import type { ApexSnapshot } from "@/lib/apex/db";
+import { parseShopMeta } from "@/lib/beannel/shop-meta";
 
 function fail(error: { message: string } | null, action: string): void {
   if (error) throw new Error(`${action}: ${error.message}`);
@@ -43,6 +44,7 @@ export function saveLocalPin(
 }
 
 function mapProduct(d: Record<string, unknown>): Product {
+  const { meta, notes } = parseShopMeta(d.notes ? String(d.notes) : "");
   return {
     id: String(d.id),
     name: String(d.name || "Product"),
@@ -54,9 +56,13 @@ function mapProduct(d: Record<string, unknown>): Product {
     minStockThreshold: Number(d.min_stock_threshold) || 5,
     unit: String(d.unit || "pcs"),
     barcode: d.barcode ? String(d.barcode) : "",
-    notes: d.notes ? String(d.notes) : "",
+    notes,
     createdAt: String(d.created_at || new Date().toISOString()),
     updatedAt: String(d.updated_at || new Date().toISOString()),
+    size: meta.size || "",
+    garmentType: meta.garmentType || "",
+    imageUrl: meta.imageUrl || "",
+    listed: meta.listed !== false,
   };
 }
 
@@ -117,6 +123,8 @@ export const EMPTY_PROFILE: BusinessProfile = {
   lowStockAlertEnabled: true,
   allowNegativeStock: false,
   receiptHeaderMsg: "Thank you for shopping with us!",
+  whatsappNumber: "",
+  shopTagline: "Clothes · Jewelry · Watches · Fashion",
 };
 
 export function emptySnapshot(profile: BusinessProfile = EMPTY_PROFILE): ApexSnapshot {
@@ -530,6 +538,8 @@ export async function persistStockRefill(args: {
 }
 
 export async function persistWipe(businessId: string): Promise<void> {
+  const { wipeShopPublic } = await import("@/lib/beannel/shop");
+  await wipeShopPublic(businessId);
   const tables = [
     "sales",
     "purchases",

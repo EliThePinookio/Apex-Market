@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { BrandMark, Wordmark } from "@/components/ui/brand-mark";
 import { Group } from "@/components/ui/group";
 import { useBeannelAuth } from "@/lib/beannel/auth";
+import { Link } from "@tanstack/react-router";
 
 type Mode = "signin" | "signup" | "forgot";
 
@@ -294,6 +295,9 @@ export function AuthScreen() {
             <ShieldCheck className="size-3.5 text-accent" />
             Live accounts. Your data stays on your workspace.
           </p>
+          <Link to="/shop" className="block text-center text-[15px] text-accent font-medium min-h-11 grid place-items-center">
+            Browse the shop
+          </Link>
         </div>
       </section>
     </div>

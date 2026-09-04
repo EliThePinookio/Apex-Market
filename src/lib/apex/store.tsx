@@ -35,6 +35,14 @@ import { computeSummary, filterTransactions } from "@/lib/apex/summary";
 import { useBeannelAuth } from "@/lib/beannel/auth";
 import { mergeCatalog } from "@/lib/beannel/catalog";
 import {
+  dropInboxOrder,
+  fetchShopInbox,
+  fetchShopStorefront,
+  persistShopInfo,
+  publishListing,
+  unpublishListing,
+} from "@/lib/beannel/shop";
+import {
   EMPTY_PROFILE,
   emptySnapshot,
   loadWorkspace,
@@ -146,8 +154,70 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
     setLoadError(null);
     try {
       const data = await loadWorkspace(businessId);
-      snapshotRef.current = data;
-      setSnapshot(data);
+      const storefront = await fetchShopStorefront().catch(() => null);
+      let next = data;
+      const whatsapp = storefront?.businessId === businessId || storefront?.whatsapp ? storefront?.whatsapp : "";
+      next = {
+        ...next,
+        profile: {
+          ...next.profile,
+          whatsappNumber: whatsapp || next.profile.whatsappNumber || "",
+          shopTagline: storefront?.tagline || next.profile.shopTagline,
+        },
+      };
+      await persistShopInfo(businessId, {
+        name: next.profile.businessName,
+        tagline: next.profile.shopTagline,
+        currency: next.profile.currencySymbol,
+        whatsapp: next.profile.whatsappNumber || "",
+      }).catch(() => undefined);
+      const inbox = await fetchShopInbox(businessId).catch(() => []);
+      for (const order of inbox) {
+        try {
+          const items = order.items.map((item) => {
+            const prod = next.products.find((p) => p.id === item.productId);
+            const unitBuy = prod?.buyPrice || 0;
+            return {
+              ...item,
+              unitBuyPrice: unitBuy,
+              totalBuyPrice: unitBuy * item.quantity,
+            };
+          });
+          const result = recordSaleOn(next, {
+            items,
+            customerName: order.name,
+            paymentMethod: order.payment,
+            description: `Online · ${order.name} · ${order.phone}${order.address ? ` · ${order.address}` : ""}`,
+          });
+          const subtotal = items.reduce((s, i) => s + i.totalSellPrice, 0);
+          await persistSale({
+            businessId,
+            userId: user.id,
+            transaction: result.transaction,
+            items,
+            products: result.snapshot.products,
+            changedCustomers: changedCustomers(next.customers, result.snapshot.customers),
+            discount: 0,
+            subtotal,
+          });
+          await dropInboxOrder(order.id);
+          next = result.snapshot;
+          const touched = new Set(items.map((i) => i.productId));
+          for (const id of touched) {
+            const prod = next.products.find((p) => p.id === id);
+            if (prod) await publishListing(businessId, prod).catch(() => undefined);
+          }
+        } catch {
+          /* leave in inbox */
+        }
+      }
+      await Promise.all(
+        next.products
+          .filter((p) => p.listed !== false && p.sellPrice > 0)
+          .map((p) => publishListing(businessId, p).catch(() => undefined)),
+      );
+      snapshotRef.current = next;
+      setSnapshot(next);
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : "Could not load workspace.");
       snapshotRef.current = emptySnapshot();
@@ -254,6 +324,7 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
         quantityToAdd: data.quantityToAdd,
         costPerUnit: data.costPerUnit || product.buyPrice,
       });
+      await publishListing(biz, product).catch(() => undefined);
       snapshotRef.current = next;
       setSnapshot(next);
     },
@@ -267,6 +338,7 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
       const saved = next.products.find((x) => x.id === (p.id || next.products[0]?.id));
       if (!saved) throw new Error("Product was not saved.");
       await persistProduct(biz, saved, next.categories);
+      await publishListing(biz, saved).catch(() => undefined);
       snapshotRef.current = next;
       setSnapshot(next);
     },
@@ -277,6 +349,7 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
     async (id: string) => {
       requireSession();
       await persistDeleteProduct(id);
+      await unpublishListing(id).catch(() => undefined);
       const next = deleteProductOn(snapshotRef.current, id);
       snapshotRef.current = next;
       setSnapshot(next);
@@ -324,6 +397,12 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
       const { businessId: biz } = requireSession();
       const next = saveProfileOn(snapshotRef.current, p);
       await persistProfile(biz, next.profile);
+      await persistShopInfo(biz, {
+        name: next.profile.businessName,
+        tagline: next.profile.shopTagline,
+        currency: next.profile.currencySymbol,
+        whatsapp: next.profile.whatsappNumber || "",
+      }).catch(() => undefined);
       snapshotRef.current = next;
       setSnapshot(next);
     },

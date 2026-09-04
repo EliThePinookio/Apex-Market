@@ -203,6 +203,8 @@ export function DashboardView() {
 
   const empty = products.length === 0 && transactions.length === 0;
   const periodLabel = PERIODS.find((p) => p.id === period)?.label || "This window";
+  const onlineSales = transactions.filter((t) => t.type === "sale" && t.description.startsWith("Online ·"));
+  const onlineToday = onlineSales.filter((t) => t.date.slice(0, 10) === new Date().toISOString().slice(0, 10));
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-5">
@@ -211,6 +213,23 @@ export function DashboardView() {
         title="Overview"
         subtitle="Track the floor, the till, and the books in one place."
       />
+      {onlineSales.length > 0 && (
+        <button
+          type="button"
+          className="cushion w-full text-left px-4 py-3 flex items-center justify-between gap-3"
+          onClick={() => void navigate({ to: "/ledger" })}
+        >
+          <span>
+            <span className="text-[13px] font-medium text-fg-muted">Customer shop</span>
+            <span className="block text-[15px] font-semibold">
+              {onlineToday.length > 0
+                ? `${onlineToday.length} online order${onlineToday.length === 1 ? "" : "s"} today`
+                : `${onlineSales.length} online order${onlineSales.length === 1 ? "" : "s"} in the books`}
+            </span>
+          </span>
+          <ChevronRight className="size-4 text-fg-subtle" />
+        </button>
+      )}
       <div className="tag-row">
         {PERIODS.map((p) => (
           <button
