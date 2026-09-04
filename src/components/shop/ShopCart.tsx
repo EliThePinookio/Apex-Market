@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { money } from "@/lib/apex/money";
 import { bagTotal, setBagQty, useBag } from "@/lib/beannel/cart";
 import { fetchShopStorefront, type ShopStorefront } from "@/lib/beannel/shop";
+import { useBeannelAuth } from "@/lib/beannel/auth";
 import { useEffect, useState } from "react";
 
 export function ShopCart() {
   const items = useBag();
   const navigate = useNavigate();
+  const { user } = useBeannelAuth();
   const [store, setStore] = useState<ShopStorefront | null>(null);
 
   useEffect(() => {
@@ -21,16 +23,16 @@ export function ShopCart() {
   if (items.length === 0) {
     return (
       <div className="shop-body py-20 text-center space-y-4">
-        <p className="display-title text-[1.75rem]">Your bag is empty</p>
-        <p className="text-[15px] text-fg-muted">Walk the floor and pick a piece.</p>
-        <Button onClick={() => void navigate({ to: "/shop" })}>Browse the house</Button>
+        <p className="display-title text-[1.75rem]">Your cart is empty</p>
+        <p className="text-[15px] text-fg-muted">Find a piece and add it to cart.</p>
+        <Button onClick={() => void navigate({ to: "/" })}>Continue shopping</Button>
       </div>
     );
   }
 
   return (
     <div className="shop-body shop-checkout-wrap">
-      <h1 className="display-title text-[2rem] mb-5">Bag</h1>
+      <h1 className="display-title text-[2rem] mb-5">Cart</h1>
       <div className="space-y-3">
         {items.map((item) => (
           <div key={item.listingId} className="shop-line">
@@ -61,11 +63,21 @@ export function ShopCart() {
         <span>Total</span>
         <span className="tabular font-semibold">{money(total, cur)}</span>
       </div>
-      <Button size="lg" className="w-full mt-4" onClick={() => void navigate({ to: "/checkout" })}>
-        Checkout
+      <Button
+        size="lg"
+        className="w-full mt-4"
+        onClick={() => {
+          if (!user) {
+            void navigate({ to: "/login", search: { as: "customer", next: "/checkout" } });
+            return;
+          }
+          void navigate({ to: "/checkout" });
+        }}
+      >
+        {user ? "Checkout" : "Sign in to checkout"}
       </Button>
-      <Link to="/shop" className="block text-center text-[15px] text-fg-muted min-h-11 grid place-items-center">
-        Continue browsing
+      <Link to="/" className="block text-center text-[15px] text-fg-muted min-h-11 grid place-items-center">
+        Continue shopping
       </Link>
     </div>
   );

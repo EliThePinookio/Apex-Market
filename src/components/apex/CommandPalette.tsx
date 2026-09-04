@@ -88,7 +88,7 @@ export function CommandPalette({ open, onClose, onQuick, onLockToggle }: Props) 
             )}
           </Command.Group>
           <Command.Group heading="Go to" className="text-[10px] uppercase tracking-wider text-fg-subtle [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5">
-            <Item icon={LayoutDashboard} label="Dashboard" onSelect={() => go("/")} />
+            <Item icon={LayoutDashboard} label="Dashboard" onSelect={() => go("/manage")} />
             <Item icon={ShoppingCart} label="Open register" onSelect={() => go("/pos")} />
             <Item icon={Package} label="Inventory" onSelect={() => go("/inventory")} />
             <Item icon={Receipt} label="Ledger" onSelect={() => go("/ledger")} />

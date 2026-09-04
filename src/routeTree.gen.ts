@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountRouteImport } from './routes/account'
 import { Route as AdvisorRouteImport } from './routes/advisor'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as CheckoutRouteImport } from './routes/checkout'
@@ -17,6 +18,7 @@ import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as LedgerRouteImport } from './routes/ledger'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ManageRouteImport } from './routes/manage'
 import { Route as PosRouteImport } from './routes/pos'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ShopIndexRouteImport } from './routes/shop/index'
@@ -25,6 +27,11 @@ import { Route as ShopProductIdRouteImport } from './routes/shop/$productId'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdvisorRoute = AdvisorRouteImport.update({
@@ -62,6 +69,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ManageRoute = ManageRouteImport.update({
+  id: '/manage',
+  path: '/manage',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PosRoute = PosRouteImport.update({
   id: '/pos',
   path: '/pos',
@@ -85,6 +97,7 @@ const ShopProductIdRoute = ShopProductIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/advisor': typeof AdvisorRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
@@ -92,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/inventory': typeof InventoryRoute
   '/ledger': typeof LedgerRoute
   '/login': typeof LoginRoute
+  '/manage': typeof ManageRoute
   '/pos': typeof PosRoute
   '/settings': typeof SettingsRoute
   '/shop/$productId': typeof ShopProductIdRoute
@@ -99,6 +113,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/advisor': typeof AdvisorRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
@@ -106,6 +121,7 @@ export interface FileRoutesByTo {
   '/inventory': typeof InventoryRoute
   '/ledger': typeof LedgerRoute
   '/login': typeof LoginRoute
+  '/manage': typeof ManageRoute
   '/pos': typeof PosRoute
   '/settings': typeof SettingsRoute
   '/shop/$productId': typeof ShopProductIdRoute
@@ -114,6 +130,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/advisor': typeof AdvisorRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
@@ -121,6 +138,7 @@ export interface FileRoutesById {
   '/inventory': typeof InventoryRoute
   '/ledger': typeof LedgerRoute
   '/login': typeof LoginRoute
+  '/manage': typeof ManageRoute
   '/pos': typeof PosRoute
   '/settings': typeof SettingsRoute
   '/shop/$productId': typeof ShopProductIdRoute
@@ -130,6 +148,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/account'
     | '/advisor'
     | '/cart'
     | '/checkout'
@@ -137,6 +156,7 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/ledger'
     | '/login'
+    | '/manage'
     | '/pos'
     | '/settings'
     | '/shop/$productId'
@@ -144,6 +164,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/account'
     | '/advisor'
     | '/cart'
     | '/checkout'
@@ -151,6 +172,7 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/ledger'
     | '/login'
+    | '/manage'
     | '/pos'
     | '/settings'
     | '/shop/$productId'
@@ -158,6 +180,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/account'
     | '/advisor'
     | '/cart'
     | '/checkout'
@@ -165,6 +188,7 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/ledger'
     | '/login'
+    | '/manage'
     | '/pos'
     | '/settings'
     | '/shop/$productId'
@@ -173,6 +197,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRoute: typeof AccountRoute
   AdvisorRoute: typeof AdvisorRoute
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
@@ -180,6 +205,7 @@ export interface RootRouteChildren {
   InventoryRoute: typeof InventoryRoute
   LedgerRoute: typeof LedgerRoute
   LoginRoute: typeof LoginRoute
+  ManageRoute: typeof ManageRoute
   PosRoute: typeof PosRoute
   SettingsRoute: typeof SettingsRoute
   ShopProductIdRoute: typeof ShopProductIdRoute
@@ -193,6 +219,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/advisor': {
@@ -244,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/manage': {
+      id: '/manage'
+      path: '/manage'
+      fullPath: '/manage'
+      preLoaderRoute: typeof ManageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pos': {
       id: '/pos'
       path: '/pos'
@@ -277,6 +317,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRoute: AccountRoute,
   AdvisorRoute: AdvisorRoute,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
@@ -284,6 +325,7 @@ const rootRouteChildren: RootRouteChildren = {
   InventoryRoute: InventoryRoute,
   LedgerRoute: LedgerRoute,
   LoginRoute: LoginRoute,
+  ManageRoute: ManageRoute,
   PosRoute: PosRoute,
   SettingsRoute: SettingsRoute,
   ShopProductIdRoute: ShopProductIdRoute,

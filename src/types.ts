@@ -169,7 +169,7 @@ export type DateFilterPreset =
   | "all"
   | "custom";
 
-export type AppUserRole = "owner" | "manager" | "cashier" | "viewer";
+export type AppUserRole = "owner" | "manager" | "cashier" | "viewer" | "customer";
 
 export interface UserProfile {
   id: string;

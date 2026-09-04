@@ -10,6 +10,7 @@ import {
 import type { Session, User } from "@supabase/supabase-js";
 import type { AppUserRole, UserProfile } from "@/types";
 import { isSupabaseConfigured, supabase } from "@/lib/beannel/supabase";
+import { kindFromUser, type AccountKind } from "@/lib/beannel/account";
 
 interface BeannelAuthValue {
   user: User | null;
@@ -27,6 +28,7 @@ interface BeannelAuthValue {
     password: string,
     fullName?: string,
     businessName?: string,
+    kind?: AccountKind,
   ) => Promise<{ success: boolean; error?: string; message?: string }>;
   resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
@@ -44,14 +46,27 @@ async function ensureWorkspace(currentUser: User): Promise<UserProfile> {
   if (profErr) throw new Error(profErr.message);
 
   if (existing) {
-    const bId = existing.business_id || currentUser.id;
+    const kind = kindFromUser(currentUser);
+    const bId = existing.business_id || (kind === "customer" ? undefined : currentUser.id);
     return {
       id: existing.id,
       email: existing.email || currentUser.email || "",
-      fullName: existing.full_name || currentUser.user_metadata?.full_name || "Store Owner",
+      fullName: existing.full_name || currentUser.user_metadata?.full_name || "Customer",
       businessId: bId,
-      role: (existing.role as AppUserRole) || "owner",
+      role: kind === "customer" ? "customer" : ((existing.role as AppUserRole) || "owner"),
       createdAt: existing.created_at || new Date().toISOString(),
+    };
+  }
+
+  const kind = kindFromUser(currentUser);
+  if (kind === "customer") {
+    return {
+      id: currentUser.id,
+      email: currentUser.email || "",
+      fullName: currentUser.user_metadata?.full_name || currentUser.email?.split("@")[0] || "Customer",
+      businessId: undefined,
+      role: "customer",
+      createdAt: new Date().toISOString(),
     };
   }
 
@@ -115,7 +130,7 @@ export function BeannelAuthProvider({ children }: { children: ReactNode }) {
 
   const applyProfile = (p: UserProfile) => {
     setProfile(p);
-    setBusinessId(p.businessId || p.id);
+    setBusinessId(p.businessId || (p.role === "customer" ? null : p.id));
     setRole(p.role);
   };
 
@@ -207,30 +222,44 @@ export function BeannelAuthProvider({ children }: { children: ReactNode }) {
         }
       },
       signInWithGoogle: async () => {
+        const asCustomer = new URLSearchParams(window.location.search).get("as") !== "staff";
         const { error } = await supabase.auth.signInWithOAuth({
           provider: "google",
-          options: { redirectTo: window.location.origin },
+          options: {
+            redirectTo: `${window.location.origin}/login?as=${asCustomer ? "customer" : "staff"}`,
+            queryParams: asCustomer ? { prompt: "select_account" } : undefined,
+          },
         });
         if (error) return { success: false, error: error.message };
         return { success: true };
       },
-      signUp: async (email, password, fullName, businessName) => {
+      signUp: async (email, password, fullName, businessName, kind = "staff") => {
         try {
           const { data, error } = await supabase.auth.signUp({
             email: email.trim(),
             password,
             options: {
               data: {
-                full_name: fullName?.trim() || "Store Owner",
+                full_name: fullName?.trim() || (kind === "customer" ? "Customer" : "Store Owner"),
                 business_name: businessName?.trim() || "BEANNEL",
+                account_kind: kind,
               },
             },
           });
           if (error) return { success: false, error: error.message };
+          if (data.user && !data.user.user_metadata?.account_kind) {
+            await supabase.auth.updateUser({ data: { account_kind: kind } });
+          }
           if (data.session && data.user) {
-            setUser(data.user);
+            setUser({
+              ...data.user,
+              user_metadata: { ...data.user.user_metadata, account_kind: kind },
+            });
             setSession(data.session);
-            await loadProfile(data.user);
+            await loadProfile({
+              ...data.user,
+              user_metadata: { ...data.user.user_metadata, account_kind: kind },
+            });
             return { success: true, message: "Account created. You are signed in." };
           }
           return {

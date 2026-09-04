@@ -33,6 +33,7 @@ import {
 } from "@/lib/apex/db";
 import { computeSummary, filterTransactions } from "@/lib/apex/summary";
 import { useBeannelAuth } from "@/lib/beannel/auth";
+import { kindFromUser } from "@/lib/beannel/account";
 import { mergeCatalog } from "@/lib/beannel/catalog";
 import {
   dropInboxOrder,
@@ -144,6 +145,12 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
       setLoadError(null);
       setReady(true);
       setOwnerUnlocked(false);
+      return;
+    }
+    if (kindFromUser(user) === "customer") {
+      setSnapshot(emptySnapshot());
+      setLoadError(null);
+      setReady(true);
       return;
     }
     if (!businessId) {

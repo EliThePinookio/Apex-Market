@@ -1,14 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { DashboardView } from "@/components/apex/DashboardView";
 import { ShopHome } from "@/components/shop/ShopHome";
-import { useBeannelAuth } from "@/lib/beannel/auth";
+
+type ShopSearch = { q?: string; cat?: string };
 
 export const Route = createFileRoute("/")({
-  component: HomeGate,
+  validateSearch: (search: Record<string, unknown>): ShopSearch => {
+    const next: ShopSearch = {};
+    if (typeof search.q === "string" && search.q) next.q = search.q;
+    if (typeof search.cat === "string" && search.cat) next.cat = search.cat;
+    return next;
+  },
+  component: ShopHome,
 });
-
-function HomeGate() {
-  const { user } = useBeannelAuth();
-  if (!user) return <ShopHome />;
-  return <DashboardView />;
-}

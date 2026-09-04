@@ -16,12 +16,17 @@ import { Button } from "@/components/ui/button";
 import { BrandMark, Wordmark } from "@/components/ui/brand-mark";
 import { Group } from "@/components/ui/group";
 import { useBeannelAuth } from "@/lib/beannel/auth";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { afterLoginPath, kindFromUser } from "@/lib/beannel/account";
+import { supabase } from "@/lib/beannel/supabase";
 
 type Mode = "signin" | "signup" | "forgot";
 
 export function AuthScreen() {
-  const { signIn, signInWithGoogle, signUp, resetPassword } = useBeannelAuth();
+  const { signIn, signInWithGoogle, signUp, resetPassword, user } = useBeannelAuth();
+  const navigate = useNavigate();
+  const search = useSearch({ strict: false }) as { as?: "staff" | "customer"; next?: string };
+  const asStaff = search.as === "staff";
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,14 +42,29 @@ export function AuthScreen() {
   useEffect(() => {
     setDark(document.documentElement.classList.contains("dark"));
     const hash = window.location.hash;
-    const search = window.location.search;
-    const params = new URLSearchParams(hash.startsWith("#") ? hash.slice(1) : search);
+    const q = window.location.search;
+    const params = new URLSearchParams(hash.startsWith("#") ? hash.slice(1) : q);
     const desc = params.get("error_description") || params.get("error");
     if (desc) {
       setError(decodeURIComponent(desc.replace(/\+/g, " ")));
-      window.history.replaceState({}, document.title, window.location.pathname);
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
     }
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const go = async () => {
+      const created = new Date(user.created_at || 0).getTime();
+      const fresh = Date.now() - created < 20 * 60 * 1000;
+      if (!asStaff && fresh && !user.user_metadata?.account_kind) {
+        await supabase.auth.updateUser({ data: { account_kind: "customer" } });
+        void navigate({ to: afterLoginPath("customer", search.next) });
+        return;
+      }
+      void navigate({ to: afterLoginPath(kindFromUser(user), search.next) });
+    };
+    void go();
+  }, [user, asStaff, search.next, navigate]);
 
   const toggleTheme = () => {
     const next = !dark;
@@ -85,7 +105,7 @@ export function AuthScreen() {
         return;
       }
       setBusy(true);
-      const res = await signUp(email, password, fullName, businessName);
+      const res = await signUp(email, password, fullName, asStaff ? businessName : "BEANNEL", asStaff ? "staff" : "customer");
       setBusy(false);
       if (res.success) setSuccess(res.message || "Account created.");
       else setError(res.error || "Could not create account.");
@@ -138,6 +158,15 @@ export function AuthScreen() {
             </div>
           </div>
 
+          <div className="tag-row justify-center mb-4">
+            <Link to="/login" search={{ as: "customer", next: search.next }} className="tag-chip" data-active={!asStaff}>
+              Shop
+            </Link>
+            <Link to="/login" search={{ as: "staff", next: search.next }} className="tag-chip" data-active={asStaff}>
+              Office
+            </Link>
+          </div>
+
           {mode !== "forgot" && (
             <div className="tag-row justify-center mb-4">
               <button type="button" className="tag-chip" data-active={mode === "signin"} onClick={() => switchMode("signin")}>
@@ -151,13 +180,17 @@ export function AuthScreen() {
 
           <div className="mb-3">
             <h2 className="text-[1.25rem] font-semibold tracking-tight">
-              {mode === "signin" && "Welcome back"}
-              {mode === "signup" && "Register your store"}
+              {mode === "signin" && (asStaff ? "Staff sign in" : "Sign in to shop")}
+              {mode === "signup" && (asStaff ? "Register your store" : "Create your account")}
               {mode === "forgot" && "Reset password"}
             </h2>
             <p className="text-[13px] text-fg-muted mt-0.5 leading-snug">
-              {mode === "signin" && "Email and password for your BEANNEL account."}
-              {mode === "signup" && "New workspaces start empty."}
+              {mode === "signin" &&
+                (asStaff
+                  ? "Open the office — restock, sales, and profit."
+                  : "Same BEANNEL account. Browse free. Sign in to buy.")}
+              {mode === "signup" &&
+                (asStaff ? "New workspaces start empty." : "Free to browse. An account is required to check out.")}
               {mode === "forgot" && "We will send a recovery link to this email."}
             </p>
           </div>
@@ -189,16 +222,18 @@ export function AuthScreen() {
                       placeholder="Full name"
                     />
                   </label>
-                  <label className="group-row">
-                    <Building2 className="size-4 text-fg-subtle shrink-0" />
-                    <input
-                      required
-                      value={businessName}
-                      onChange={(e) => setBusinessName(e.target.value)}
-                      className="field"
-                      placeholder="Store name"
-                    />
-                  </label>
+                  {asStaff && (
+                    <label className="group-row">
+                      <Building2 className="size-4 text-fg-subtle shrink-0" />
+                      <input
+                        required
+                        value={businessName}
+                        onChange={(e) => setBusinessName(e.target.value)}
+                        className="field"
+                        placeholder="Store name"
+                      />
+                    </label>
+                  )}
                 </>
               )}
               <label className="group-row">
@@ -295,8 +330,8 @@ export function AuthScreen() {
             <ShieldCheck className="size-3.5 text-accent" />
             Live accounts. Your data stays on your workspace.
           </p>
-          <Link to="/shop" className="block text-center text-[15px] text-accent font-medium min-h-11 grid place-items-center">
-            Browse the shop
+          <Link to="/" className="block text-center text-[15px] text-accent font-medium min-h-11 grid place-items-center">
+            Back to the shop
           </Link>
         </div>
       </section>

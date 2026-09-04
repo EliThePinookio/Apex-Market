@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { money } from "@/lib/apex/money";
 import { bagTotal, clearBag, useBag } from "@/lib/beannel/cart";
+import { useBeannelAuth } from "@/lib/beannel/auth";
 import {
   fetchShopStorefront,
   orderMessage,
@@ -19,13 +20,20 @@ type Pay = "mobile_money" | "cash" | "other";
 export function ShopCheckout() {
   const items = useBag();
   const navigate = useNavigate();
+  const { user, profile } = useBeannelAuth();
   const [store, setStore] = useState<ShopStorefront | null>(null);
-  const [name, setName] = useState("");
+  const [name, setName] = useState(profile?.fullName || "");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [pay, setPay] = useState<Pay>("mobile_money");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      void navigate({ to: "/login", search: { as: "customer", next: "/checkout" } });
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     void fetchShopStorefront().then(setStore).catch(() => undefined);
@@ -36,11 +44,11 @@ export function ShopCheckout() {
   const payLabel = pay === "mobile_money" ? "Mobile money" : pay === "cash" ? "Cash on delivery" : "WhatsApp";
 
   const submit = async (viaWhatsapp: boolean) => {
-    if (!items.length) return;
+    if (!items.length || !user) return;
     setBusy(true);
     try {
       const businessId = store?.businessId || "";
-      if (!businessId) throw new Error("The house is not taking orders yet. Message us on WhatsApp.");
+      if (!businessId) throw new Error("The shop is not taking orders yet. Message us on WhatsApp.");
       await placeShopOrder({
         businessId,
         customerName: name,
@@ -48,6 +56,7 @@ export function ShopCheckout() {
         address,
         payment: viaWhatsapp ? "other" : pay,
         items,
+        userId: user.id,
       });
       if (viaWhatsapp || pay === "other") {
         const text = orderMessage({
@@ -70,17 +79,18 @@ export function ShopCheckout() {
     }
   };
 
+  if (!user) return null;
+
   if (done) {
     return (
       <div className="shop-body py-20 text-center space-y-3">
         <p className="shop-kicker">BEANNEL</p>
         <h1 className="display-title text-[2rem]">Order received</h1>
         <p className="text-[15px] text-fg-muted max-w-sm mx-auto">
-          It is already in the house inventory. We will confirm on your phone
-          {store?.whatsapp ? " or WhatsApp" : ""}.
+          It is already in the store office. Track it from your account.
         </p>
-        <Button className="mt-4" onClick={() => void navigate({ to: "/shop" })}>
-          Keep browsing
+        <Button className="mt-4" onClick={() => void navigate({ to: "/account" })}>
+          View orders
         </Button>
       </div>
     );
@@ -90,7 +100,7 @@ export function ShopCheckout() {
     return (
       <div className="shop-body py-20 text-center space-y-4">
         <p className="display-title text-[1.75rem]">Nothing to check out</p>
-        <Button onClick={() => void navigate({ to: "/shop" })}>Browse the house</Button>
+        <Button onClick={() => void navigate({ to: "/" })}>Browse the shop</Button>
       </div>
     );
   }
@@ -98,7 +108,7 @@ export function ShopCheckout() {
   return (
     <div className="shop-body shop-checkout-wrap">
       <h1 className="display-title text-[2rem] mb-1">Checkout</h1>
-      <p className="text-[15px] text-fg-muted mb-5">Your order lands in BEANNEL stock as soon as you send it.</p>
+      <p className="text-[15px] text-fg-muted mb-5">Signed in as {user.email}. Your order goes straight to BEANNEL stock.</p>
 
       <form
         className="space-y-3"
@@ -158,12 +168,7 @@ export function ShopCheckout() {
           {busy ? "Sending…" : "Place order"}
         </Button>
         {store?.whatsapp ? (
-          <button
-            type="button"
-            className="shop-wa w-full"
-            disabled={busy}
-            onClick={() => void submit(true)}
-          >
+          <button type="button" className="shop-wa w-full" disabled={busy} onClick={() => void submit(true)}>
             <MessageCircle className="size-4" />
             Send on WhatsApp
           </button>

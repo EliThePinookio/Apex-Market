@@ -116,6 +116,29 @@ function mapListing(row: Record<string, unknown>): ShopListing | null {
   };
 }
 
+export function listingsFromProducts(products: Product[]): ShopListing[] {
+  return products
+    .filter((p) => p.listed !== false && p.sellPrice > 0)
+    .map((p) => {
+      const { meta } = parseShopMeta(p.notes);
+      return {
+        listingId: listingIdFor(p.id),
+        productId: p.id,
+        name: p.name,
+        sku: p.sku,
+        category: p.category,
+        price: p.sellPrice,
+        stock: Math.max(0, p.stockQuantity),
+        unit: p.unit,
+        size: p.size || meta.size || "",
+        garmentType: p.garmentType || meta.garmentType || "",
+        image: listingImage({ ...meta, imageUrl: p.imageUrl || meta.imageUrl }, p.category),
+        listed: true,
+        updatedAt: p.updatedAt,
+      };
+    });
+}
+
 export async function fetchShopListings(): Promise<ShopListing[]> {
   const { data, error } = await supabase
     .from("products")
@@ -264,6 +287,7 @@ export async function placeShopOrder(args: {
   address: string;
   payment: "mobile_money" | "cash" | "other";
   items: BagItem[];
+  userId?: string;
 }): Promise<{ orderId: string }> {
   const name = args.customerName.trim();
   const phone = args.phone.trim();
@@ -312,6 +336,7 @@ export async function placeShopOrder(args: {
     phone,
     args.payment,
     args.address.replace(/\|/g, " "),
+    args.userId ? `uid:${args.userId}` : "",
   ].join("|");
 
   const { error } = await supabase.from("transactions").insert({
@@ -326,7 +351,8 @@ export async function placeShopOrder(args: {
     description,
     payment_method: args.payment,
     customer_name: name,
-    reference_no: "SHOP",
+    customer_id: args.userId || "",
+    reference_no: args.userId ? `SHOP-${args.userId}` : "SHOP",
     items: lines,
     created_at: now,
   });
@@ -354,8 +380,41 @@ function parseInboxDescription(description: string): {
     name: parts[2] || "Customer",
     phone: parts[3] || "",
     payment,
-    address: parts.slice(5).join("|"),
+    address: (parts[5] || "").replace(/^uid:.*$/, ""),
   };
+}
+
+export async function fetchMyShopOrders(userId: string): Promise<ShopInboxOrder[]> {
+  if (!userId) return [];
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("*")
+    .is("business_id", null)
+    .like("id", "shop-%")
+    .order("date", { ascending: false })
+    .limit(50);
+  if (error || !data?.length) return [];
+  const mine = data.filter((row) => {
+    const desc = String(row.description || "");
+    const ref = String(row.reference_no || "");
+    return desc.includes(`uid:${userId}`) || ref === `SHOP-${userId}` || String(row.customer_id || "") === userId;
+  });
+  const orders: ShopInboxOrder[] = [];
+  for (const row of mine) {
+    const parsed = parseInboxDescription(String(row.description || ""));
+    const items = Array.isArray(row.items) ? (row.items as TransactionItem[]) : [];
+    orders.push({
+      id: String(row.id),
+      name: parsed?.name || String(row.customer_name || "You"),
+      phone: parsed?.phone || "",
+      address: parsed?.address || "",
+      payment: parsed?.payment || "other",
+      items,
+      amount: Number(row.amount) || 0,
+      date: String(row.date || ""),
+    });
+  }
+  return orders;
 }
 
 export async function fetchShopInbox(businessId: string): Promise<ShopInboxOrder[]> {

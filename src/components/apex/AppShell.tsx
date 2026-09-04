@@ -1,4 +1,4 @@
-import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Link, Navigate, Outlet, useNavigate, useRouterState, useSearch } from "@tanstack/react-router";
 import {
   Bell,
   BarChart3,
@@ -28,14 +28,14 @@ import { Button } from "@/components/ui/button";
 import { CommandPalette } from "@/components/apex/CommandPalette";
 import { PinModal } from "@/components/apex/PinModal";
 import { QuickAction } from "@/components/apex/QuickAction";
-import { AuthScreen } from "@/components/beannel/AuthScreen";
 import { ShopShell } from "@/components/shop/ShopShell";
+import { afterLoginPath, kindFromUser } from "@/lib/beannel/account";
 import { useApex } from "@/lib/apex/store";
 import { useBeannelAuth } from "@/lib/beannel/auth";
 import type { NavId } from "@/types";
 
 const NAV: Array<{ id: NavId; to: string; label: string; icon: typeof LayoutDashboard }> = [
-  { id: "dashboard", to: "/", label: "Home", icon: LayoutDashboard },
+  { id: "dashboard", to: "/manage", label: "Home", icon: LayoutDashboard },
   { id: "pos", to: "/pos", label: "Register", icon: ShoppingCart },
   { id: "inventory", to: "/inventory", label: "Stock", icon: Package },
   { id: "ledger", to: "/ledger", label: "Ledger", icon: Receipt },
@@ -77,12 +77,26 @@ function ConnectingScreen({ label }: { label: string }) {
   );
 }
 
+function isManagePath(pathname: string): boolean {
+  return (
+    pathname === "/manage" ||
+    pathname.startsWith("/pos") ||
+    pathname.startsWith("/inventory") ||
+    pathname.startsWith("/ledger") ||
+    pathname.startsWith("/customers") ||
+    pathname.startsWith("/advisor") ||
+    pathname.startsWith("/settings")
+  );
+}
+
 function isShopPath(pathname: string): boolean {
   return (
+    pathname === "/" ||
     pathname === "/shop" ||
     pathname.startsWith("/shop/") ||
     pathname === "/cart" ||
-    pathname === "/checkout"
+    pathname === "/checkout" ||
+    pathname === "/account"
   );
 }
 
@@ -90,6 +104,7 @@ export function AppShell() {
   const auth = useBeannelAuth();
   const store = useApex();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const search = useSearch({ strict: false }) as { as?: "staff" | "customer"; next?: string };
   const [layoutQa, setLayoutQa] = useState(false);
 
   useEffect(() => {
@@ -98,10 +113,22 @@ export function AppShell() {
     }
   }, []);
 
-  if (pathname === "/login") return <Outlet />;
-  if (isShopPath(pathname) || (!auth.user && pathname === "/" && !layoutQa)) {
-    if (auth.isLoading && !auth.user) return <ConnectingScreen label="Opening the house" />;
+  if (pathname === "/login") {
+    if (auth.user && !auth.isLoading) {
+      return <Navigate to={afterLoginPath(kindFromUser(auth.user), search.next)} />;
+    }
+    return <Outlet />;
+  }
+
+  const customer = kindFromUser(auth.user) === "customer";
+
+  if (isShopPath(pathname)) {
+    if (auth.isLoading && !auth.user) return <ConnectingScreen label="Opening the shop" />;
     return <ShopShell />;
+  }
+
+  if (customer) {
+    return <Navigate to="/" />;
   }
 
   if (!auth.isConfigured) {
@@ -118,7 +145,9 @@ export function AppShell() {
     );
   }
   if (auth.isLoading && !auth.user && !layoutQa) return <ConnectingScreen label="Checking your account" />;
-  if (!auth.user && !layoutQa) return <AuthScreen />;
+  if (!auth.user && !layoutQa) {
+    return <Navigate to="/login" search={{ as: "staff", next: isManagePath(pathname) ? pathname : "/manage" }} />;
+  }
   if (!store.ready && !layoutQa) return <ConnectingScreen label="Loading your workspace" />;
   if (store.loadError && !layoutQa) {
     return (
@@ -272,7 +301,7 @@ function SignedInShell() {
               <Plus className="size-4" />
               New entry
             </Button>
-            <Link to="/shop" className="nav-item mt-1">
+            <Link to="/" className="nav-item mt-1">
               <Store className="size-[18px]" />
               Customer shop
             </Link>
@@ -362,7 +391,7 @@ function SignedInShell() {
                     role="menuitem"
                     onClick={() => {
                       setAccountOpen(false);
-                      void navigate({ to: "/shop" });
+                      void navigate({ to: "/" });
                     }}
                   >
                     <Store className="size-4" />

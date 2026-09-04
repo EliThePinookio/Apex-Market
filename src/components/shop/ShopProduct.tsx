@@ -52,9 +52,9 @@ export function ShopProduct() {
   if (!group || !variant) {
     return (
       <div className="shop-body py-20 text-center space-y-4">
-        <p className="display-title text-[1.75rem]">That piece has left the floor</p>
-        <Button variant="secondary" onClick={() => void navigate({ to: "/shop" })}>
-          Back to the house
+        <p className="display-title text-[1.75rem]">This item is no longer listed</p>
+        <Button variant="secondary" onClick={() => void navigate({ to: "/" })}>
+          Continue shopping
         </Button>
       </div>
     );
@@ -80,7 +80,7 @@ export function ShopProduct() {
       },
       qty,
     );
-    toast.success("Added to your bag");
+    toast.success("Added to cart");
   };
 
   const waText = `Hello BEANNEL, I want ${group.name}${variant.size ? ` in ${variant.size}` : ""} (${variant.sku}).`;
@@ -129,12 +129,12 @@ export function ShopProduct() {
               <Plus className="size-4" />
             </button>
           </div>
-          <p className="text-[13px] text-fg-subtle tabular">{out ? "Held" : `${variant.stock} in the house`}</p>
+          <p className="text-[13px] text-fg-subtle tabular">{out ? "Out of stock" : `${variant.stock} in stock`}</p>
         </div>
 
         <div className="mt-6 flex flex-col gap-2">
           <Button size="lg" className="w-full" disabled={out} onClick={add}>
-            {out ? "Held" : "Add to bag"}
+            {out ? "Out of stock" : "Add to cart"}
           </Button>
           {store?.whatsapp ? (
             <a className="shop-wa" href={whatsappHref(store.whatsapp, waText)}>
@@ -142,8 +142,8 @@ export function ShopProduct() {
               Ask on WhatsApp
             </a>
           ) : null}
-          <Link to="/shop" className="text-center text-[15px] text-fg-muted min-h-11 grid place-items-center">
-            Continue browsing
+          <Link to="/" className="text-center text-[15px] text-fg-muted min-h-11 grid place-items-center">
+            Continue shopping
           </Link>
         </div>
       </div>
