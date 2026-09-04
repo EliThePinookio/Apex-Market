@@ -244,7 +244,7 @@ export function ShopProduct() {
           <h2 className="text-[1.05rem] font-semibold mb-4">You may also like</h2>
           <div className="mall-grid">
             {related.map((g) => (
-              <ShopCard key={g.slug} group={g} currency={cur} />
+              <ShopCard key={g.slug} group={g} currency={cur} saved={isSaved(g.variants[0]?.listingId || g.slug)} />
             ))}
           </div>
         </section>

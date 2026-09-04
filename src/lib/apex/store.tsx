@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useRouterState } from "@tanstack/react-router";
 import { toast } from "sonner";
 import type {
   BusinessProfile,
@@ -34,7 +35,7 @@ import {
 } from "@/lib/apex/db";
 import { computeSummary, filterTransactions } from "@/lib/apex/summary";
 import { useBeannelAuth } from "@/lib/beannel/auth";
-import { isOfficeRole, OWNER_EMAIL } from "@/lib/beannel/account";
+import { isOfficePath, isOfficeRole, OWNER_EMAIL } from "@/lib/beannel/account";
 import { mergeCatalog } from "@/lib/beannel/catalog";
 import type { OrderStatus, ShopOrder } from "@/lib/beannel/commerce";
 import { sourceIdFromListing } from "@/lib/beannel/shop-meta";
@@ -142,6 +143,7 @@ function changedCustomers(prev: Customer[], next: Customer[]): Customer[] {
 
 export function ApexStoreProvider({ children }: { children: ReactNode }) {
   const { user, businessId, role, isLoading: authLoading } = useBeannelAuth();
+  const officePath = useRouterState({ select: (s) => isOfficePath(s.location.pathname) });
   const [snapshot, setSnapshot] = useState<ApexSnapshot>(emptySnapshot());
   const [shopOrders, setShopOrders] = useState<ShopOrder[]>([]);
   const [period, setPeriod] = useState<PeriodPreset>("week");
@@ -258,14 +260,19 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (authLoading) {
-      setReady(false);
+      if (!officePath) setReady(true);
+      else setReady(false);
+      return;
+    }
+    if (!officePath) {
+      setReady(true);
       return;
     }
     void reload();
-  }, [authLoading, reload]);
+  }, [authLoading, officePath, reload]);
 
   useEffect(() => {
-    if (!user || !businessId || !isOfficeRole(role)) return;
+    if (!officePath || !user || !businessId || !isOfficeRole(role)) return;
     let silent = false;
     const unsub = subscribeShopOrders(() => {
       if (silent) return;
@@ -521,40 +528,79 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
     [user, businessId],
   );
 
-  const value: ApexStoreValue = {
-    ready,
-    loadError,
-    reload,
-    products,
-    categories,
-    transactions,
-    customers,
-    profile: profile.businessName ? profile : { ...EMPTY_PROFILE, ...profile },
-    shopOrders,
-    pendingShopCount,
-    period,
-    setPeriod,
-    periodTransactions,
-    summary,
-    periodSummary,
-    isOwnerUnlocked,
-    setOwnerUnlocked,
-    recordSale,
-    recordExpense,
-    recordCapital,
-    recordStockRefill,
-    saveProduct,
-    deleteProduct,
-    saveCustomer,
-    deleteCustomer,
-    settleDebt,
-    saveProfile,
-    deleteTransaction,
-    wipeAll,
-    claimShopOrder,
-    advanceShopOrder,
-    cancelShopOrder,
-  };
+  const displayProfile = useMemo(
+    () => (profile.businessName ? profile : { ...EMPTY_PROFILE, ...profile }),
+    [profile],
+  );
+
+  const value = useMemo<ApexStoreValue>(
+    () => ({
+      ready,
+      loadError,
+      reload,
+      products,
+      categories,
+      transactions,
+      customers,
+      profile: displayProfile,
+      shopOrders,
+      pendingShopCount,
+      period,
+      setPeriod,
+      periodTransactions,
+      summary,
+      periodSummary,
+      isOwnerUnlocked,
+      setOwnerUnlocked,
+      recordSale,
+      recordExpense,
+      recordCapital,
+      recordStockRefill,
+      saveProduct,
+      deleteProduct,
+      saveCustomer,
+      deleteCustomer,
+      settleDebt,
+      saveProfile,
+      deleteTransaction,
+      wipeAll,
+      claimShopOrder,
+      advanceShopOrder,
+      cancelShopOrder,
+    }),
+    [
+      ready,
+      loadError,
+      reload,
+      products,
+      categories,
+      transactions,
+      customers,
+      displayProfile,
+      shopOrders,
+      pendingShopCount,
+      period,
+      periodTransactions,
+      summary,
+      periodSummary,
+      isOwnerUnlocked,
+      recordSale,
+      recordExpense,
+      recordCapital,
+      recordStockRefill,
+      saveProduct,
+      deleteProduct,
+      saveCustomer,
+      deleteCustomer,
+      settleDebt,
+      saveProfile,
+      deleteTransaction,
+      wipeAll,
+      claimShopOrder,
+      advanceShopOrder,
+      cancelShopOrder,
+    ],
+  );
 
   return <ApexStoreContext.Provider value={value}>{children}</ApexStoreContext.Provider>;
 }

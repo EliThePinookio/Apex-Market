@@ -1,24 +1,31 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Heart } from "lucide-react";
+import { memo } from "react";
 import { toast } from "sonner";
 import { money } from "@/lib/apex/money";
 import { addToBag } from "@/lib/beannel/cart";
 import { slugProduct } from "@/lib/beannel/shop-meta";
 import type { ShopGroup } from "@/lib/beannel/shop";
-import { isSaved, toggleSaved, useSaved } from "@/lib/beannel/wishlist";
+import { toggleSaved } from "@/lib/beannel/wishlist";
 import { cn } from "@/lib/cn";
 
-export function ShopCard({ group, currency }: { group: ShopGroup; currency: string }) {
-  useSaved();
+export const ShopCard = memo(function ShopCard({
+  group,
+  currency,
+  saved = false,
+}: {
+  group: ShopGroup;
+  currency: string;
+  saved?: boolean;
+}) {
   const navigate = useNavigate();
   const v = group.variants.find((x) => x.stock > 0) || group.variants[0];
-  const saved = v ? isSaved(v.listingId) : false;
   const slug = group.slug || slugProduct(group.name, group.category);
 
   return (
     <article className="mall-card">
       <Link to="/shop/$productId" params={{ productId: slug }} className="mall-photo">
-        <img src={group.image} alt="" />
+        <img src={group.image} alt="" loading="lazy" decoding="async" />
         {group.stock <= 0 && <span className="shop-sold">Out of stock</span>}
       </Link>
       {v && (
@@ -92,4 +99,4 @@ export function ShopCard({ group, currency }: { group: ShopGroup; currency: stri
       </div>
     </article>
   );
-}
+});

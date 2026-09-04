@@ -1,16 +1,13 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { MessageCircle } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { startTransition, useEffect, useMemo, useState } from "react";
 import { CategoryChip } from "@/components/ui/category-tile";
 import { ShopCard } from "@/components/shop/ShopCard";
-import { useApex } from "@/lib/apex/store";
 import { CATALOG, shortFor } from "@/lib/beannel/catalog";
 import {
   fetchShopListings,
   fetchShopStorefront,
   groupListings,
-  listingsFromProducts,
-  publishListing,
   subscribeShopListings,
   whatsappHref,
   type ShopGroup,
@@ -18,14 +15,16 @@ import {
 } from "@/lib/beannel/shop";
 import { useBeannelAuth } from "@/lib/beannel/auth";
 import { canAccessOffice } from "@/lib/beannel/account";
+import { useSaved } from "@/lib/beannel/wishlist";
 
 type SortKey = "new" | "price" | "price-desc" | "name";
 
 export function ShopHome() {
   const search = useSearch({ strict: false }) as { q?: string; cat?: string; sort?: string; stock?: string };
   const navigate = useNavigate();
-  const { businessId, profile } = useBeannelAuth();
-  const { products, ready: stockReady } = useApex();
+  const { profile } = useBeannelAuth();
+  const saved = useSaved();
+  const savedIds = useMemo(() => new Set(saved.map((s) => s.listingId)), [saved]);
   const [store, setStore] = useState<ShopStorefront | null>(null);
   const [groups, setGroups] = useState<ShopGroup[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -38,37 +37,23 @@ export function ShopHome() {
   const staff = canAccessOffice(profile);
 
   useEffect(() => {
-    if (!staff || !businessId || !products.length) return;
-    void Promise.all(
-      products
-        .filter((p) => p.listed !== false && p.sellPrice > 0)
-        .map((p) => publishListing(businessId, p).catch(() => undefined)),
-    );
-  }, [staff, businessId, products]);
-
-  useEffect(() => {
     let live = true;
     const load = async () => {
       try {
         const [info, listings] = await Promise.all([fetchShopStorefront(), fetchShopListings()]);
         if (!live) return;
-        setStore(info);
-        setFailed(false);
-        setError(null);
-        let next = listings;
-        if (next.length === 0 && products.length) next = listingsFromProducts(products);
-        setGroups(groupListings(next));
+        startTransition(() => {
+          setStore(info);
+          setFailed(false);
+          setError(null);
+          setGroups(groupListings(listings));
+          setReady(true);
+        });
       } catch (err) {
         if (!live) return;
-        if (products.length) {
-          setFailed(false);
-          setGroups(groupListings(listingsFromProducts(products)));
-        } else {
-          setFailed(true);
-          setError(err instanceof Error ? err.message : "Could not open the shop.");
-        }
-      } finally {
-        if (live) setReady(true);
+        setFailed(true);
+        setError(err instanceof Error ? err.message : "Could not open the shop.");
+        setReady(true);
       }
     };
     void load();
@@ -79,7 +64,7 @@ export function ShopHome() {
       live = false;
       unsub();
     };
-  }, [products, stockReady]);
+  }, []);
 
   const cats = useMemo(() => CATALOG.map((c) => c.name), []);
 
@@ -155,7 +140,7 @@ export function ShopHome() {
               {CATALOG.map((item) => (
                 <button key={item.id} type="button" className="dept-tile" onClick={() => setCat(item.name)}>
                   <span className="dept-photo">
-                    <img src={item.cover} alt="" />
+                    <img src={item.cover} alt="" loading="lazy" decoding="async" />
                   </span>
                   <span className="dept-label">{shortFor(item.name)}</span>
                 </button>
@@ -210,7 +195,7 @@ export function ShopHome() {
             </div>
             <div className="mall-grid">
               {featured.map((g) => (
-                <ShopCard key={`f-${g.slug}`} group={g} currency={cur} />
+                <ShopCard key={`f-${g.slug}`} group={g} currency={cur} saved={savedIds.has(g.variants[0]?.listingId)} />
               ))}
             </div>
             {arrivals.length > 0 && (
@@ -220,7 +205,7 @@ export function ShopHome() {
                 </div>
                 <div className="mall-grid">
                   {arrivals.map((g) => (
-                    <ShopCard key={`n-${g.slug}`} group={g} currency={cur} />
+                    <ShopCard key={`n-${g.slug}`} group={g} currency={cur} saved={savedIds.has(g.variants[0]?.listingId)} />
                   ))}
                 </div>
               </>
@@ -274,7 +259,7 @@ export function ShopHome() {
         ) : landing && featured.length > 0 ? null : (
           <div className="mall-grid">
             {shown.map((g) => (
-              <ShopCard key={g.slug} group={g} currency={cur} />
+              <ShopCard key={g.slug} group={g} currency={cur} saved={savedIds.has(g.variants[0]?.listingId)} />
             ))}
           </div>
         )}

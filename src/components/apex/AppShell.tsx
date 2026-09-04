@@ -106,10 +106,31 @@ function isShopPath(pathname: string): boolean {
 }
 
 export function AppShell() {
-  const auth = useBeannelAuth();
-  const store = useApex();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const search = useSearch({ strict: false }) as { as?: "staff" | "customer"; next?: string };
+
+  if (pathname === "/login") return <LoginBranch search={search} />;
+  if (isShopPath(pathname)) return <ShopBranch />;
+  return <OfficeBranch pathname={pathname} />;
+}
+
+function LoginBranch({ search }: { search: { as?: "staff" | "customer"; next?: string } }) {
+  const auth = useBeannelAuth();
+  if (auth.user && !auth.isLoading) {
+    return <Navigate to={afterLoginPath(kindFromProfile(auth.profile, auth.user?.email), search.next)} />;
+  }
+  return <Outlet />;
+}
+
+function ShopBranch() {
+  const auth = useBeannelAuth();
+  if (auth.isLoading && !auth.user) return <ConnectingScreen label="Opening the shop" />;
+  return <ShopShell />;
+}
+
+function OfficeBranch({ pathname }: { pathname: string }) {
+  const auth = useBeannelAuth();
+  const store = useApex();
   const [layoutQa, setLayoutQa] = useState(() => {
     if (typeof window === "undefined") return false;
     return import.meta.env.DEV && sessionStorage.getItem("beannel_layout_qa") === "1";
@@ -120,18 +141,6 @@ export function AppShell() {
       setLayoutQa(true);
     }
   }, []);
-
-  if (pathname === "/login") {
-    if (auth.user && !auth.isLoading) {
-      return <Navigate to={afterLoginPath(kindFromProfile(auth.profile, auth.user?.email), search.next)} />;
-    }
-    return <Outlet />;
-  }
-
-  if (isShopPath(pathname)) {
-    if (auth.isLoading && !auth.user) return <ConnectingScreen label="Opening the shop" />;
-    return <ShopShell />;
-  }
 
   if (!auth.isConfigured) {
     return (
