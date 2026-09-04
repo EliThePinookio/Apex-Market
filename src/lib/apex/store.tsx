@@ -37,6 +37,7 @@ import { useBeannelAuth } from "@/lib/beannel/auth";
 import { isOfficeRole, OWNER_EMAIL } from "@/lib/beannel/account";
 import { mergeCatalog } from "@/lib/beannel/catalog";
 import type { OrderStatus, ShopOrder } from "@/lib/beannel/commerce";
+import { sourceIdFromListing } from "@/lib/beannel/shop-meta";
 import {
   cancelShopOrder as cancelShopOrderRemote,
   fetchShopInbox,
@@ -149,15 +150,18 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
   const [loadError, setLoadError] = useState<string | null>(null);
   const snapshotRef = useRef(snapshot);
   snapshotRef.current = snapshot;
-  const claimingRef = useRef(false);
 
   const applySaleFromOrder = useCallback(
     async (order: ShopOrder, biz: string, userId: string, current: ApexSnapshot) => {
       const items = order.items.map((item) => {
-        const prod = current.products.find((p) => p.id === item.productId);
+        const sourceId = sourceIdFromListing(item.productId);
+        const prod = current.products.find(
+          (p) => p.id === sourceId || p.id === item.productId,
+        );
         const unitBuy = prod?.buyPrice || 0;
         return {
           ...item,
+          productId: prod?.id || sourceId,
           unitBuyPrice: unitBuy,
           totalBuyPrice: unitBuy * item.quantity,
         };
@@ -230,30 +234,16 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
         ownerEmail: OWNER_EMAIL,
       }).catch(() => undefined);
 
-      const inbox = await fetchShopInbox(businessId).catch(() => []);
-      if (!claimingRef.current) {
-        claimingRef.current = true;
-        try {
-          for (const order of inbox) {
-            if (order.claimed || order.status !== "placed") continue;
-            try {
-              next = await applySaleFromOrder(order, businessId, user.id, next);
-            } catch {
-              /* leave unclaimed */
-            }
-          }
-        } finally {
-          claimingRef.current = false;
-        }
-      }
-
+      const inbox = await fetchShopInbox(businessId).catch((err) => {
+        console.warn("shop inbox", err);
+        return [] as ShopOrder[];
+      });
+      setShopOrders(inbox);
       await Promise.all(
         next.products
           .filter((p) => p.listed !== false && p.sellPrice > 0)
           .map((p) => publishListing(businessId, p).catch(() => undefined)),
       );
-      const orders = await fetchShopInbox(businessId).catch(() => inbox);
-      setShopOrders(orders);
       snapshotRef.current = next;
       setSnapshot(next);
     } catch (err) {

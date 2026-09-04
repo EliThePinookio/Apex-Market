@@ -341,7 +341,6 @@ function mapShopOrder(row: Record<string, unknown>): ShopOrder | null {
   const parsed = parseOrderEnvelope(String(row.description || ""));
   if (!parsed) return null;
   const items = Array.isArray(row.items) ? (row.items as TransactionItem[]) : [];
-  if (!items.length) return null;
   const claimed = Boolean(parsed.saleId) || parsed.status !== "placed";
   return {
     id: String(row.id),
@@ -478,12 +477,11 @@ async function fetchShopRows(): Promise<Record<string, unknown>[]> {
   const { data, error } = await supabase
     .from("transactions")
     .select("*")
-    .is("business_id", null)
     .like("id", "shop-%")
     .order("date", { ascending: false })
-    .limit(80);
-  if (error || !data?.length) return [];
-  return data as Record<string, unknown>[];
+    .limit(200);
+  if (error) throw new Error(error.message);
+  return (data || []) as Record<string, unknown>[];
 }
 
 export async function fetchMyShopOrders(userId: string): Promise<ShopOrder[]> {
@@ -495,12 +493,16 @@ export async function fetchMyShopOrders(userId: string): Promise<ShopOrder[]> {
 }
 
 export async function fetchShopInbox(businessId: string): Promise<ShopOrder[]> {
-  if (!businessId) return [];
   const rows = await fetchShopRows();
-  return rows
+  const orders = rows
     .map(mapShopOrder)
-    .filter((row): row is ShopOrder => row != null && row.businessId === businessId)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    .filter((row): row is ShopOrder => row != null);
+  const mine = businessId
+    ? orders.filter((row) => !row.businessId || row.businessId === businessId)
+    : orders;
+  return (mine.length ? mine : orders).sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+  );
 }
 
 export async function fetchShopOrder(orderId: string): Promise<ShopOrder | null> {

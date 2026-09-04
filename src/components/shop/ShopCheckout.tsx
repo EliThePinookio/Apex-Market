@@ -206,7 +206,7 @@ export function ShopCheckout() {
         <p className="shop-kicker">BEANNEL</p>
         <h1 className="display-title text-[2rem] mt-1">Order received</h1>
         <p className="text-[15px] text-fg-muted mt-2 mb-5">
-          It is already in the store office. Stock is held. Track it from your account.
+          The store has the ticket. It stays as “Order placed” until someone in the office confirms it. Track it from your account.
         </p>
         <Button className="w-full" onClick={() => void navigate({ to: "/account/order/$orderId", params: { orderId } })}>
           Track order
