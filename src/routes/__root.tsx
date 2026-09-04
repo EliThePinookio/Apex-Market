@@ -17,7 +17,7 @@ export const Route = createRootRoute({
       { name: "theme-color", content: "#f6f1e8" },
       {
         name: "description",
-        content: "BEANNEL — live POS, inventory, ledger and profit for your store.",
+        content: "BEANNEL — shop clothes and jewellery, or run the store office from the same stock.",
       },
     ],
     links: [

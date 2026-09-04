@@ -3,65 +3,128 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { money } from "@/lib/apex/money";
 import { useBeannelAuth } from "@/lib/beannel/auth";
-import { kindFromUser } from "@/lib/beannel/account";
-import { fetchMyShopOrders, fetchShopStorefront, type ShopInboxOrder, type ShopStorefront } from "@/lib/beannel/shop";
+import { canAccessOffice } from "@/lib/beannel/account";
+import { STATUS_LABEL, isOrderStatus, type ShopOrder } from "@/lib/beannel/commerce";
+import { fetchMyShopOrders, fetchShopStorefront, subscribeShopOrders, type ShopStorefront } from "@/lib/beannel/shop";
+import { cn } from "@/lib/cn";
 
 export function ShopAccount() {
-  const { user, profile, signOut } = useBeannelAuth();
+  const { user, profile, signOut, isLoading } = useBeannelAuth();
   const navigate = useNavigate();
-  const [orders, setOrders] = useState<ShopInboxOrder[]>([]);
+  const [orders, setOrders] = useState<ShopOrder[]>([]);
   const [store, setStore] = useState<ShopStorefront | null>(null);
 
   useEffect(() => {
-    if (!user) {
-      void navigate({ to: "/login", search: { as: "customer", next: "/account" } });
-      return;
+    if (!user) return;
+    let live = true;
+    const load = () => {
+      void fetchShopStorefront()
+        .then((info) => {
+          if (live) setStore(info);
+        })
+        .catch(() => undefined);
+      void fetchMyShopOrders(user.id)
+        .then((rows) => {
+          if (live) setOrders(Array.isArray(rows) ? rows : []);
+        })
+        .catch(() => {
+          if (live) setOrders([]);
+        });
+    };
+    try {
+      load();
+      return subscribeShopOrders(load);
+    } catch {
+      return () => {
+        live = false;
+      };
     }
-    void fetchShopStorefront().then(setStore).catch(() => undefined);
-    void fetchMyShopOrders(user.id).then(setOrders).catch(() => undefined);
-  }, [user, navigate]);
+  }, [user]);
 
-  if (!user) return null;
+  if (isLoading) {
+    return (
+      <div className="shop-body shop-checkout-wrap">
+        <p className="text-[15px] text-fg-muted">Opening your account…</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="shop-body shop-checkout-wrap">
+        <h1 className="display-title text-[2rem] mb-1">Your account</h1>
+        <p className="text-[15px] text-fg-muted mb-5 leading-relaxed">
+          Sign in to track orders, save pieces, and check out.
+        </p>
+        <div className="shop-account-actions">
+          <Button className="w-full" onClick={() => void navigate({ to: "/login", search: { next: "/account" } })}>
+            Sign in
+          </Button>
+          <Button
+            variant="secondary"
+            className="w-full"
+            onClick={() => void navigate({ to: "/login", search: { next: "/account", mode: "signup" } })}
+          >
+            Create account
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const cur = store?.currency || "GH₵";
-  const staff = kindFromUser(user) === "staff";
+  const office = canAccessOffice(profile, user.email);
 
   return (
     <div className="shop-body shop-checkout-wrap">
       <h1 className="display-title text-[2rem] mb-1">Your account</h1>
       <p className="text-[15px] text-fg-muted mb-5">{user.email}</p>
-      <div className="cushion p-4 mb-5">
+      <div className="mb-5">
         <p className="font-semibold">{profile?.fullName || "Shopper"}</p>
-        <p className="text-[13px] text-fg-subtle mt-1">{staff ? "Staff account" : "Customer account"}</p>
+        <p className="text-[13px] text-fg-subtle mt-1">{office ? "Store owner" : "Customer account"}</p>
       </div>
-      {staff && (
-        <Button className="w-full mb-3" onClick={() => void navigate({ to: "/manage" })}>
+      {office && (
+        <Button className="w-full mb-4" onClick={() => void navigate({ to: "/manage" })}>
           Open the office
         </Button>
       )}
-      <h2 className="text-[15px] font-semibold mb-3">Orders</h2>
+      <div className="flex items-baseline justify-between mb-3 text-left">
+        <h2 className="text-[15px] font-semibold">Orders</h2>
+        <Link to="/saved" className="text-[13px] text-accent font-medium">
+          Saved items
+        </Link>
+      </div>
       {orders.length === 0 ? (
-        <p className="text-[15px] text-fg-muted mb-6">No orders yet. Browse the shop and check out when you are ready.</p>
+        <p className="text-[15px] text-fg-muted mb-6 leading-relaxed">
+          No orders yet. Browse the shop and check out when you are ready.
+        </p>
       ) : (
-        <div className="space-y-3 mb-6">
-          {orders.map((o) => (
-            <div key={o.id} className="shop-line">
-              <div className="min-w-0 flex-1">
-                <p className="font-medium">{money(o.amount, cur)}</p>
-                <p className="text-[13px] text-fg-subtle">
-                  {o.items.map((i) => `${i.productName} × ${i.quantity}`).join(", ")}
-                </p>
-                <p className="text-[12px] text-fg-subtle mt-1">{new Date(o.date).toLocaleString()}</p>
-              </div>
-            </div>
-          ))}
+        <div className="shop-account-orders space-y-3 mb-6">
+          {orders.map((o) => {
+            const items = Array.isArray(o.items) ? o.items : [];
+            const status = isOrderStatus(String(o.status || "")) ? o.status : "placed";
+            return (
+              <Link key={o.id} to="/account/order/$orderId" params={{ orderId: o.id }} className="shop-line">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">{money(o.amount, cur)}</p>
+                  <p className="text-[13px] text-fg-subtle">
+                    {items.map((i) => `${i.productName} × ${i.quantity}`).join(", ") || "Order"}
+                  </p>
+                  <p className="text-[12px] text-fg-subtle mt-1">{o.date ? new Date(o.date).toLocaleString() : ""}</p>
+                </div>
+                <span className={cn("order-pill", `is-${status}`)}>{STATUS_LABEL[status]}</span>
+              </Link>
+            );
+          })}
         </div>
       )}
-      <div className="flex flex-col gap-2">
+      <div className="shop-account-actions">
         <Link to="/" className="text-center text-[15px] text-accent min-h-11 grid place-items-center">
           Continue shopping
         </Link>
         <Button
           variant="secondary"
+          className="w-full"
           onClick={() => {
             void signOut();
             void navigate({ to: "/" });

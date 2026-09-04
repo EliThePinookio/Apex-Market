@@ -9,8 +9,9 @@ import {
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import type { AppUserRole, UserProfile } from "@/types";
+import { canAccessOffice, isOwnerEmail, OWNER_EMAIL, type AccountKind } from "@/lib/beannel/account";
+import { fetchShopStorefront } from "@/lib/beannel/shop";
 import { isSupabaseConfigured, supabase } from "@/lib/beannel/supabase";
-import { kindFromUser, type AccountKind } from "@/lib/beannel/account";
 
 interface BeannelAuthValue {
   user: User | null;
@@ -36,42 +37,34 @@ interface BeannelAuthValue {
 
 const BeannelAuthContext = createContext<BeannelAuthValue | null>(null);
 
-async function ensureWorkspace(currentUser: User): Promise<UserProfile> {
-  const { data: existing, error: profErr } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", currentUser.id)
-    .maybeSingle();
+function mapExistingProfile(currentUser: User, existing: Record<string, unknown>): UserProfile {
+  const owner = isOwnerEmail(currentUser.email);
+  return {
+    id: String(existing.id),
+    email: String(existing.email || currentUser.email || ""),
+    fullName:
+      (existing.full_name ? String(existing.full_name) : "") ||
+      currentUser.user_metadata?.full_name ||
+      (owner ? "Store Owner" : "Customer"),
+    businessId: owner ? String(existing.business_id || currentUser.id) : undefined,
+    role: owner ? "owner" : "customer",
+    createdAt: String(existing.created_at || new Date().toISOString()),
+  };
+}
 
-  if (profErr) throw new Error(profErr.message);
+function shopperProfile(currentUser: User): UserProfile {
+  return {
+    id: currentUser.id,
+    email: currentUser.email || "",
+    fullName: currentUser.user_metadata?.full_name || currentUser.email?.split("@")[0] || "Customer",
+    businessId: undefined,
+    role: "customer",
+    createdAt: new Date().toISOString(),
+  };
+}
 
-  if (existing) {
-    const kind = kindFromUser(currentUser);
-    const bId = existing.business_id || (kind === "customer" ? undefined : currentUser.id);
-    return {
-      id: existing.id,
-      email: existing.email || currentUser.email || "",
-      fullName: existing.full_name || currentUser.user_metadata?.full_name || "Customer",
-      businessId: bId,
-      role: kind === "customer" ? "customer" : ((existing.role as AppUserRole) || "owner"),
-      createdAt: existing.created_at || new Date().toISOString(),
-    };
-  }
-
-  const kind = kindFromUser(currentUser);
-  if (kind === "customer") {
-    return {
-      id: currentUser.id,
-      email: currentUser.email || "",
-      fullName: currentUser.user_metadata?.full_name || currentUser.email?.split("@")[0] || "Customer",
-      businessId: undefined,
-      role: "customer",
-      createdAt: new Date().toISOString(),
-    };
-  }
-
-  const bId = currentUser.id;
-  const bName = currentUser.user_metadata?.business_name || "BEANNEL";
+async function provisionOwnerWorkspace(currentUser: User, existingBizId?: string): Promise<UserProfile> {
+  const bId = existingBizId || currentUser.id;
   const fName =
     currentUser.user_metadata?.full_name || currentUser.email?.split("@")[0] || "Store Owner";
   const now = new Date().toISOString();
@@ -80,9 +73,9 @@ async function ensureWorkspace(currentUser: User): Promise<UserProfile> {
   if (!biz) {
     const { error: bizErr } = await supabase.from("businesses").insert({
       id: bId,
-      name: bName,
+      name: "BEANNEL",
       owner_name: fName,
-      currency_symbol: "$",
+      currency_symbol: "GH₵",
       tax_rate: 0,
       low_stock_alert_enabled: true,
       allow_negative_stock: false,
@@ -92,26 +85,29 @@ async function ensureWorkspace(currentUser: User): Promise<UserProfile> {
       updated_at: now,
     });
     if (bizErr && !bizErr.message.toLowerCase().includes("duplicate")) {
-      throw new Error(bizErr.message);
+      /* keep going — profile may still attach to an existing row */
     }
   }
 
-  const { error: insErr } = await supabase.from("profiles").insert({
-    id: currentUser.id,
-    email: currentUser.email || "",
-    full_name: fName,
-    business_id: bId,
-    role: "owner",
-    created_at: now,
-    updated_at: now,
-  });
+  const { error: insErr } = await supabase.from("profiles").upsert(
+    {
+      id: currentUser.id,
+      email: currentUser.email || OWNER_EMAIL,
+      full_name: fName,
+      business_id: bId,
+      role: "owner",
+      created_at: now,
+      updated_at: now,
+    },
+    { onConflict: "id" },
+  );
   if (insErr && !insErr.message.toLowerCase().includes("duplicate")) {
-    throw new Error(insErr.message);
+    /* in-memory owner profile still returned */
   }
 
   return {
     id: currentUser.id,
-    email: currentUser.email || "",
+    email: currentUser.email || OWNER_EMAIL,
     fullName: fName,
     businessId: bId,
     role: "owner",
@@ -119,18 +115,38 @@ async function ensureWorkspace(currentUser: User): Promise<UserProfile> {
   };
 }
 
+async function ensureWorkspace(currentUser: User): Promise<UserProfile> {
+  if (!isOwnerEmail(currentUser.email)) {
+    return shopperProfile(currentUser);
+  }
+
+  const { data: existing, error: profErr } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", currentUser.id)
+    .maybeSingle();
+  if (profErr) throw new Error(profErr.message);
+
+  if (existing?.business_id) {
+    return mapExistingProfile(currentUser, existing as Record<string, unknown>);
+  }
+
+  const store = await fetchShopStorefront().catch(() => null);
+  return provisionOwnerWorkspace(currentUser, existing?.business_id ? String(existing.business_id) : store?.businessId);
+}
+
 export function BeannelAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [businessId, setBusinessId] = useState<string | null>(null);
-  const [role, setRole] = useState<AppUserRole>("owner");
+  const [role, setRole] = useState<AppUserRole>("customer");
   const [isLoading, setIsLoading] = useState(false);
   const [configError, setConfigError] = useState<string | null>(null);
 
   const applyProfile = (p: UserProfile) => {
     setProfile(p);
-    setBusinessId(p.businessId || (p.role === "customer" ? null : p.id));
+    setBusinessId(canAccessOffice(p, p.email) ? p.businessId || p.id : null);
     setRole(p.role);
   };
 
@@ -181,7 +197,7 @@ export function BeannelAuthProvider({ children }: { children: ReactNode }) {
       } else {
         setProfile(null);
         setBusinessId(null);
-        setRole("owner");
+        setRole("customer");
       }
       setIsLoading(false);
     });
@@ -222,44 +238,33 @@ export function BeannelAuthProvider({ children }: { children: ReactNode }) {
         }
       },
       signInWithGoogle: async () => {
-        const asCustomer = new URLSearchParams(window.location.search).get("as") !== "staff";
         const { error } = await supabase.auth.signInWithOAuth({
           provider: "google",
           options: {
-            redirectTo: `${window.location.origin}/login?as=${asCustomer ? "customer" : "staff"}`,
-            queryParams: asCustomer ? { prompt: "select_account" } : undefined,
+            redirectTo: `${window.location.origin}/login`,
+            queryParams: { prompt: "select_account" },
           },
         });
         if (error) return { success: false, error: error.message };
         return { success: true };
       },
-      signUp: async (email, password, fullName, businessName, kind = "staff") => {
+      signUp: async (email, password, fullName, _businessName, _kind = "customer") => {
         try {
           const { data, error } = await supabase.auth.signUp({
             email: email.trim(),
             password,
             options: {
               data: {
-                full_name: fullName?.trim() || (kind === "customer" ? "Customer" : "Store Owner"),
-                business_name: businessName?.trim() || "BEANNEL",
-                account_kind: kind,
+                full_name: fullName?.trim() || "Customer",
+                account_kind: "customer",
               },
             },
           });
           if (error) return { success: false, error: error.message };
-          if (data.user && !data.user.user_metadata?.account_kind) {
-            await supabase.auth.updateUser({ data: { account_kind: kind } });
-          }
           if (data.session && data.user) {
-            setUser({
-              ...data.user,
-              user_metadata: { ...data.user.user_metadata, account_kind: kind },
-            });
+            setUser(data.user);
             setSession(data.session);
-            await loadProfile({
-              ...data.user,
-              user_metadata: { ...data.user.user_metadata, account_kind: kind },
-            });
+            await loadProfile(data.user);
             return { success: true, message: "Account created. You are signed in." };
           }
           return {
@@ -286,6 +291,7 @@ export function BeannelAuthProvider({ children }: { children: ReactNode }) {
         setSession(null);
         setProfile(null);
         setBusinessId(null);
+        setRole("customer");
       },
     }),
     [user, session, profile, businessId, role, isLoading, configError, loadProfile],

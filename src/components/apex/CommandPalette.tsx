@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Command } from "cmdk";
 import {
   BarChart3,
+  ClipboardList,
   LayoutDashboard,
   Lock,
   Package,
@@ -88,12 +89,13 @@ export function CommandPalette({ open, onClose, onQuick, onLockToggle }: Props) 
             )}
           </Command.Group>
           <Command.Group heading="Go to" className="text-[10px] uppercase tracking-wider text-fg-subtle [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5">
-            <Item icon={LayoutDashboard} label="Dashboard" onSelect={() => go("/manage")} />
-            <Item icon={ShoppingCart} label="Open register" onSelect={() => go("/pos")} />
-            <Item icon={Package} label="Inventory" onSelect={() => go("/inventory")} />
-            <Item icon={Receipt} label="Ledger" onSelect={() => go("/ledger")} />
+            <Item icon={LayoutDashboard} label="Home" onSelect={() => go("/manage")} />
+            <Item icon={ClipboardList} label="Orders" onSelect={() => go("/orders")} />
+            <Item icon={ShoppingCart} label="Point of sale" onSelect={() => go("/pos")} />
+            <Item icon={Package} label="Products" onSelect={() => go("/inventory")} />
+            <Item icon={Receipt} label="Finance" onSelect={() => go("/ledger")} />
             <Item icon={Users} label="Customers" onSelect={() => go("/customers")} />
-            <Item icon={BarChart3} label="Advisor" onSelect={() => go("/advisor")} />
+            <Item icon={BarChart3} label="Analytics" onSelect={() => go("/advisor")} />
             <Item icon={Settings} label="Settings" onSelect={() => go("/settings")} />
           </Command.Group>
           <Command.Group heading="Products" className="text-[10px] uppercase tracking-wider text-fg-subtle [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5">

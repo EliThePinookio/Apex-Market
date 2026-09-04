@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   AlertCircle,
-  Building2,
   CheckCircle2,
   KeyRound,
   Loader2,
@@ -17,22 +16,21 @@ import { BrandMark, Wordmark } from "@/components/ui/brand-mark";
 import { Group } from "@/components/ui/group";
 import { useBeannelAuth } from "@/lib/beannel/auth";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { afterLoginPath, kindFromUser } from "@/lib/beannel/account";
-import { supabase } from "@/lib/beannel/supabase";
+import { afterLoginPath, kindFromProfile } from "@/lib/beannel/account";
 
 type Mode = "signin" | "signup" | "forgot";
 
 export function AuthScreen() {
-  const { signIn, signInWithGoogle, signUp, resetPassword, user } = useBeannelAuth();
+  const { signIn, signInWithGoogle, signUp, resetPassword, user, profile, isLoading } = useBeannelAuth();
   const navigate = useNavigate();
-  const search = useSearch({ strict: false }) as { as?: "staff" | "customer"; next?: string };
-  const asStaff = search.as === "staff";
-  const [mode, setMode] = useState<Mode>("signin");
+  const search = useSearch({ strict: false }) as { next?: string; mode?: Mode };
+  const [mode, setMode] = useState<Mode>(() =>
+    search.mode === "signup" || search.mode === "forgot" ? search.mode : "signin",
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [businessName, setBusinessName] = useState("");
   const [busy, setBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,19 +50,9 @@ export function AuthScreen() {
   }, []);
 
   useEffect(() => {
-    if (!user) return;
-    const go = async () => {
-      const created = new Date(user.created_at || 0).getTime();
-      const fresh = Date.now() - created < 20 * 60 * 1000;
-      if (!asStaff && fresh && !user.user_metadata?.account_kind) {
-        await supabase.auth.updateUser({ data: { account_kind: "customer" } });
-        void navigate({ to: afterLoginPath("customer", search.next) });
-        return;
-      }
-      void navigate({ to: afterLoginPath(kindFromUser(user), search.next) });
-    };
-    void go();
-  }, [user, asStaff, search.next, navigate]);
+    if (!user || isLoading) return;
+    void navigate({ to: afterLoginPath(kindFromProfile(profile, user.email), search.next) });
+  }, [user, profile, isLoading, search.next, navigate]);
 
   const toggleTheme = () => {
     const next = !dark;
@@ -105,7 +93,7 @@ export function AuthScreen() {
         return;
       }
       setBusy(true);
-      const res = await signUp(email, password, fullName, asStaff ? businessName : "BEANNEL", asStaff ? "staff" : "customer");
+      const res = await signUp(email, password, fullName);
       setBusy(false);
       if (res.success) setSuccess(res.message || "Account created.");
       else setError(res.error || "Could not create account.");
@@ -158,15 +146,6 @@ export function AuthScreen() {
             </div>
           </div>
 
-          <div className="tag-row justify-center mb-4">
-            <Link to="/login" search={{ as: "customer", next: search.next }} className="tag-chip" data-active={!asStaff}>
-              Shop
-            </Link>
-            <Link to="/login" search={{ as: "staff", next: search.next }} className="tag-chip" data-active={asStaff}>
-              Office
-            </Link>
-          </div>
-
           {mode !== "forgot" && (
             <div className="tag-row justify-center mb-4">
               <button type="button" className="tag-chip" data-active={mode === "signin"} onClick={() => switchMode("signin")}>
@@ -180,17 +159,13 @@ export function AuthScreen() {
 
           <div className="mb-3">
             <h2 className="text-[1.25rem] font-semibold tracking-tight">
-              {mode === "signin" && (asStaff ? "Staff sign in" : "Sign in to shop")}
-              {mode === "signup" && (asStaff ? "Register your store" : "Create your account")}
+              {mode === "signin" && "Sign in"}
+              {mode === "signup" && "Create your account"}
               {mode === "forgot" && "Reset password"}
             </h2>
             <p className="text-[13px] text-fg-muted mt-0.5 leading-snug">
-              {mode === "signin" &&
-                (asStaff
-                  ? "Open the office — restock, sales, and profit."
-                  : "Same BEANNEL account. Browse free. Sign in to buy.")}
-              {mode === "signup" &&
-                (asStaff ? "New workspaces start empty." : "Free to browse. An account is required to check out.")}
+              {mode === "signin" && "Browse free. Sign in to buy, track orders, and save items."}
+              {mode === "signup" && "Free to browse. An account is required to check out."}
               {mode === "forgot" && "We will send a recovery link to this email."}
             </p>
           </div>
@@ -211,30 +186,16 @@ export function AuthScreen() {
           <form onSubmit={onSubmit} className="space-y-3">
             <Group indent="icon">
               {mode === "signup" && (
-                <>
-                  <label className="group-row">
-                    <User className="size-4 text-fg-subtle shrink-0" />
-                    <input
-                      required
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="field"
-                      placeholder="Full name"
-                    />
-                  </label>
-                  {asStaff && (
-                    <label className="group-row">
-                      <Building2 className="size-4 text-fg-subtle shrink-0" />
-                      <input
-                        required
-                        value={businessName}
-                        onChange={(e) => setBusinessName(e.target.value)}
-                        className="field"
-                        placeholder="Store name"
-                      />
-                    </label>
-                  )}
-                </>
+                <label className="group-row">
+                  <User className="size-4 text-fg-subtle shrink-0" />
+                  <input
+                    required
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="field"
+                    placeholder="Full name"
+                  />
+                </label>
               )}
               <label className="group-row">
                 <Mail className="size-4 text-fg-subtle shrink-0" />

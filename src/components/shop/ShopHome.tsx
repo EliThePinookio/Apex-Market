@@ -2,7 +2,7 @@ import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { MessageCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { CategoryChip } from "@/components/ui/category-tile";
-import { money } from "@/lib/apex/money";
+import { ShopCard } from "@/components/shop/ShopCard";
 import { useApex } from "@/lib/apex/store";
 import { CATALOG, shortFor } from "@/lib/beannel/catalog";
 import {
@@ -11,88 +11,130 @@ import {
   groupListings,
   listingsFromProducts,
   publishListing,
+  subscribeShopListings,
   whatsappHref,
   type ShopGroup,
   type ShopStorefront,
 } from "@/lib/beannel/shop";
 import { useBeannelAuth } from "@/lib/beannel/auth";
-import { kindFromUser } from "@/lib/beannel/account";
-import { addToBag } from "@/lib/beannel/cart";
-import { toast } from "sonner";
+import { canAccessOffice } from "@/lib/beannel/account";
+
+type SortKey = "new" | "price" | "price-desc" | "name";
 
 export function ShopHome() {
-  const search = useSearch({ strict: false }) as { q?: string; cat?: string };
+  const search = useSearch({ strict: false }) as { q?: string; cat?: string; sort?: string; stock?: string };
   const navigate = useNavigate();
-  const { user, businessId } = useBeannelAuth();
+  const { businessId, profile } = useBeannelAuth();
   const { products, ready: stockReady } = useApex();
   const [store, setStore] = useState<ShopStorefront | null>(null);
   const [groups, setGroups] = useState<ShopGroup[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
   const [ready, setReady] = useState(false);
   const cat = search.cat || "All";
   const q = (search.q || "").trim().toLowerCase();
-  const staff = kindFromUser(user) === "staff" && Boolean(user);
+  const sort = (search.sort as SortKey) || "new";
+  const inStockOnly = search.stock === "in";
+  const staff = canAccessOffice(profile);
+
+  useEffect(() => {
+    if (!staff || !businessId || !products.length) return;
+    void Promise.all(
+      products
+        .filter((p) => p.listed !== false && p.sellPrice > 0)
+        .map((p) => publishListing(businessId, p).catch(() => undefined)),
+    );
+  }, [staff, businessId, products]);
 
   useEffect(() => {
     let live = true;
-    (async () => {
+    const load = async () => {
       try {
-        if (staff && businessId && products.length) {
-          await Promise.all(
-            products
-              .filter((p) => p.listed !== false && p.sellPrice > 0)
-              .map((p) => publishListing(businessId, p).catch(() => undefined)),
-          );
-        }
         const [info, listings] = await Promise.all([fetchShopStorefront(), fetchShopListings()]);
         if (!live) return;
         setStore(info);
+        setFailed(false);
+        setError(null);
         let next = listings;
         if (next.length === 0 && products.length) next = listingsFromProducts(products);
         setGroups(groupListings(next));
       } catch (err) {
         if (!live) return;
         if (products.length) {
+          setFailed(false);
           setGroups(groupListings(listingsFromProducts(products)));
         } else {
+          setFailed(true);
           setError(err instanceof Error ? err.message : "Could not open the shop.");
         }
       } finally {
         if (live) setReady(true);
       }
-    })();
+    };
+    void load();
+    const unsub = subscribeShopListings(() => {
+      void load();
+    });
     return () => {
       live = false;
+      unsub();
     };
-  }, [user, businessId, products, stockReady, staff]);
+  }, [products, stockReady]);
 
   const cats = useMemo(() => CATALOG.map((c) => c.name), []);
 
   const shown = useMemo(() => {
-    return groups.filter((g) => {
+    const filtered = groups.filter((g) => {
       if (cat !== "All" && g.category !== cat) return false;
+      if (inStockOnly && g.stock <= 0) return false;
       if (!q) return true;
       const hay = `${g.name} ${g.category} ${g.garmentType} ${g.variants.map((v) => v.sku).join(" ")}`.toLowerCase();
       return hay.includes(q);
     });
-  }, [groups, cat, q]);
+    const copy = [...filtered];
+    copy.sort((a, b) => {
+      if (sort === "price") return a.priceFrom - b.priceFrom;
+      if (sort === "price-desc") return b.priceFrom - a.priceFrom;
+      if (sort === "name") return a.name.localeCompare(b.name);
+      return (b.updatedAt || "").localeCompare(a.updatedAt || "");
+    });
+    return copy;
+  }, [groups, cat, q, sort, inStockOnly]);
+
+  const featured = useMemo(
+    () => [...groups].filter((g) => g.stock > 0).sort((a, b) => b.stock - a.stock).slice(0, 8),
+    [groups],
+  );
+  const arrivals = useMemo(
+    () => [...groups].sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || "")).slice(0, 8),
+    [groups],
+  );
 
   const cur = store?.currency || "GH₵";
   const wa = store?.whatsapp || "";
   const landing = cat === "All" && !q;
 
   const setCat = (name: string) => {
-    void navigate({ to: "/", search: { q: search.q, cat: name === "All" ? undefined : name } });
+    void navigate({
+      to: "/",
+      search: { q: search.q, cat: name === "All" ? undefined : name, sort: search.sort, stock: search.stock },
+    });
+  };
+
+  const setSort = (key: SortKey) => {
+    void navigate({
+      to: "/",
+      search: { q: search.q, cat: search.cat, sort: key === "new" ? undefined : key, stock: search.stock },
+    });
   };
 
   return (
     <div>
       <section className="shop-hero">
-        <img src="/brand/lifestyle.jpg" alt="" />
         <div className="shop-hero-banner">
-          <p className="shop-kicker">Official store</p>
+          <p className="shop-kicker">Accra · Official store</p>
           <p className="shop-banner-title">BEANNEL</p>
-          <p className="shop-hero-line">Clothes, jewellery, watches — shop like the big markets.</p>
+          <p className="shop-hero-line">{store?.tagline || "Clothes, jewellery, watches — cloth from Ghana."}</p>
         </div>
       </section>
 
@@ -112,8 +154,10 @@ export function ShopHome() {
             <div className="dept-grid">
               {CATALOG.map((item) => (
                 <button key={item.id} type="button" className="dept-tile" onClick={() => setCat(item.name)}>
-                  <img src={item.cover} alt="" />
-                  <span>{shortFor(item.name)}</span>
+                  <span className="dept-photo">
+                    <img src={item.cover} alt="" />
+                  </span>
+                  <span className="dept-label">{shortFor(item.name)}</span>
                 </button>
               ))}
             </div>
@@ -126,14 +170,74 @@ export function ShopHome() {
           </p>
         )}
 
-        <div className="mall-section">
-          <h2>{landing ? "For you" : cat === "All" ? "Results" : cat}</h2>
-          {shown.length > 0 && (
-            <span className="text-[12px] text-fg-subtle tabular">
-              {shown.length} item{shown.length === 1 ? "" : "s"}
-            </span>
-          )}
-        </div>
+        {!landing && (
+          <div className="shop-toolbar">
+            <div className="tag-row">
+              {(
+                [
+                  ["new", "Newest"],
+                  ["price", "Price ↑"],
+                  ["price-desc", "Price ↓"],
+                  ["name", "Name"],
+                ] as const
+              ).map(([id, label]) => (
+                <button key={id} type="button" className="tag-chip" data-active={sort === id} onClick={() => setSort(id)}>
+                  {label}
+                </button>
+              ))}
+              <button
+                type="button"
+                className="tag-chip"
+                data-active={inStockOnly}
+                onClick={() =>
+                  void navigate({
+                    to: "/",
+                    search: { q: search.q, cat: search.cat, sort: search.sort, stock: inStockOnly ? undefined : "in" },
+                  })
+                }
+              >
+                In stock
+              </button>
+            </div>
+          </div>
+        )}
+
+        {landing && featured.length > 0 && (
+          <>
+            <div className="mall-section">
+              <h2>Featured</h2>
+              <span className="text-[12px] text-fg-subtle tabular">{groups.length} listed</span>
+            </div>
+            <div className="mall-grid">
+              {featured.map((g) => (
+                <ShopCard key={`f-${g.slug}`} group={g} currency={cur} />
+              ))}
+            </div>
+            {arrivals.length > 0 && (
+              <>
+                <div className="mall-section">
+                  <h2>New arrivals</h2>
+                </div>
+                <div className="mall-grid">
+                  {arrivals.map((g) => (
+                    <ShopCard key={`n-${g.slug}`} group={g} currency={cur} />
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        )}
+
+        {!landing && (
+          <div className="mall-section">
+            <h2>{cat === "All" ? "Results" : cat}</h2>
+            {shown.length > 0 && (
+              <span className="text-[12px] text-fg-subtle tabular">
+                {shown.length} item{shown.length === 1 ? "" : "s"}
+              </span>
+            )}
+          </div>
+        )}
 
         {!ready ? (
           <div className="mall-grid">
@@ -141,8 +245,11 @@ export function ShopHome() {
               <div key={i} className="mall-card shop-card-skel" />
             ))}
           </div>
-        ) : error ? (
-          <p className="text-[15px] text-fg-muted py-16 text-center">{error}</p>
+        ) : failed ? (
+          <div className="shop-empty">
+            <p className="display-title text-[1.75rem]">Could not load the shop</p>
+            <p className="text-[15px] text-fg-muted mt-2 max-w-sm mx-auto">{error || "Check your connection and try again."}</p>
+          </div>
         ) : shown.length === 0 ? (
           <div className="shop-empty">
             <p className="display-title text-[1.75rem]">{q ? "No matching pieces" : cat !== "All" ? `No ${cat} listed yet` : "New stock lands here"}</p>
@@ -164,50 +271,11 @@ export function ShopHome() {
               </a>
             ) : null}
           </div>
-        ) : (
+        ) : landing && featured.length > 0 ? null : (
           <div className="mall-grid">
-            {shown.map((g) => {
-              const v = g.variants.find((x) => x.stock > 0) || g.variants[0];
-              return (
-                <article key={g.slug} className="mall-card">
-                  <Link to="/shop/$productId" params={{ productId: g.slug }} className="mall-photo">
-                    <img src={g.image} alt="" />
-                    {g.stock <= 0 && <span className="shop-sold">Out of stock</span>}
-                  </Link>
-                  <div className="mall-body">
-                    <p className="mall-cat">{g.category}</p>
-                    <Link to="/shop/$productId" params={{ productId: g.slug }} className="mall-name">
-                      {g.name}
-                    </Link>
-                    <p className="mall-price">
-                      {g.variants.length > 1 ? "From " : ""}
-                      {money(g.priceFrom, cur)}
-                    </p>
-                    <button
-                      type="button"
-                      className="mall-add"
-                      disabled={!v || v.stock <= 0}
-                      onClick={() => {
-                        if (!v || v.stock <= 0) return;
-                        addToBag({
-                          productId: v.productId,
-                          listingId: v.listingId,
-                          name: v.name,
-                          sku: v.sku,
-                          size: v.size,
-                          price: v.price,
-                          image: v.image,
-                          category: v.category,
-                        });
-                        toast.success("Added to cart");
-                      }}
-                    >
-                      Add to cart
-                    </button>
-                  </div>
-                </article>
-              );
-            })}
+            {shown.map((g) => (
+              <ShopCard key={g.slug} group={g} currency={cur} />
+            ))}
           </div>
         )}
       </div>

@@ -22,10 +22,10 @@ export function ShopCart() {
 
   if (items.length === 0) {
     return (
-      <div className="shop-body py-20 text-center space-y-4">
-        <p className="display-title text-[1.75rem]">Your cart is empty</p>
-        <p className="text-[15px] text-fg-muted">Find a piece and add it to cart.</p>
-        <Button onClick={() => void navigate({ to: "/" })}>Continue shopping</Button>
+      <div className="shop-body shop-checkout-wrap">
+        <p className="display-title text-[1.75rem] mb-1">Your cart is empty</p>
+        <p className="text-[15px] text-fg-muted mb-5">Find a piece and add it to cart.</p>
+        <Button className="w-full" onClick={() => void navigate({ to: "/" })}>Continue shopping</Button>
       </div>
     );
   }

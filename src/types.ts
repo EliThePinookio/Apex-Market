@@ -36,6 +36,13 @@ export interface Product {
   garmentType?: string;
   imageUrl?: string;
   listed?: boolean;
+  status?: "active" | "draft" | "archived";
+  vendor?: string;
+  tags?: string[];
+  compareAt?: number;
+  images?: string[];
+  chargeTax?: boolean;
+  continueSelling?: boolean;
 }
 
 export interface TransactionItem {
@@ -182,6 +189,7 @@ export interface UserProfile {
 
 export type NavId =
   | "dashboard"
+  | "orders"
   | "pos"
   | "inventory"
   | "ledger"

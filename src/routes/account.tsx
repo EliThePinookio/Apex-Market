@@ -1,6 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { ShopAccount } from "@/components/shop/ShopAccount";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { ShopPageError } from "@/lib/error-component";
 
 export const Route = createFileRoute("/account")({
-  component: ShopAccount,
+  component: AccountLayout,
+  errorComponent: ShopPageError,
 });
+
+function AccountLayout() {
+  return <Outlet />;
+}

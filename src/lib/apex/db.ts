@@ -205,8 +205,20 @@ export function saveProductOn(
   const unpacked = parseShopMeta(productData.notes);
   const size = (productData.size ?? unpacked.meta.size ?? "").trim();
   const garmentType = (productData.garmentType ?? unpacked.meta.garmentType ?? "").trim();
-  const imageUrl = (productData.imageUrl ?? unpacked.meta.imageUrl ?? "").trim();
-  const listed = productData.listed ?? unpacked.meta.listed !== false;
+  const images = [...(productData.images ?? unpacked.meta.images ?? [])].filter(Boolean);
+  const imageUrl = (productData.imageUrl ?? unpacked.meta.imageUrl ?? images[0] ?? "").trim();
+  if (imageUrl && !images.includes(imageUrl)) images.unshift(imageUrl);
+  const status = productData.status ?? unpacked.meta.status ?? "active";
+  const listed =
+    status === "active"
+      ? (productData.listed ?? unpacked.meta.listed !== false)
+      : false;
+  const vendor = (productData.vendor ?? unpacked.meta.vendor ?? "").trim();
+  const tags = productData.tags ?? unpacked.meta.tags ?? [];
+  const compareAt = Number(productData.compareAt ?? unpacked.meta.compareAt) || 0;
+  const chargeTax = productData.chargeTax ?? unpacked.meta.chargeTax ?? false;
+  const continueSelling = productData.continueSelling ?? unpacked.meta.continueSelling ?? false;
+  const description = unpacked.notes;
   const product: Product = {
     id,
     name: productData.name?.trim() || "New Product",
@@ -218,13 +230,32 @@ export function saveProductOn(
     minStockThreshold: Number(productData.minStockThreshold) ?? 5,
     unit: productData.unit?.trim() || "pcs",
     barcode: productData.barcode || "",
-    notes: writeShopMeta(unpacked.notes, { size, garmentType, imageUrl, listed }),
+    notes: writeShopMeta(description, {
+      size,
+      garmentType,
+      imageUrl,
+      images,
+      listed,
+      status,
+      vendor,
+      tags,
+      compareAt,
+      chargeTax,
+      continueSelling,
+    }),
     createdAt: productData.createdAt || now,
     updatedAt: now,
     size,
     garmentType,
     imageUrl,
+    images,
     listed,
+    status,
+    vendor,
+    tags,
+    compareAt,
+    chargeTax,
+    continueSelling,
   };
   const exists = snapshot.products.some((p) => p.id === id);
   const products = exists

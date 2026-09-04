@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { toast } from "sonner";
 import type {
   BusinessProfile,
   Customer,
@@ -33,15 +34,19 @@ import {
 } from "@/lib/apex/db";
 import { computeSummary, filterTransactions } from "@/lib/apex/summary";
 import { useBeannelAuth } from "@/lib/beannel/auth";
-import { kindFromUser } from "@/lib/beannel/account";
+import { isOfficeRole, OWNER_EMAIL } from "@/lib/beannel/account";
 import { mergeCatalog } from "@/lib/beannel/catalog";
+import type { OrderStatus, ShopOrder } from "@/lib/beannel/commerce";
 import {
-  dropInboxOrder,
+  cancelShopOrder as cancelShopOrderRemote,
   fetchShopInbox,
   fetchShopStorefront,
+  markShopOrderClaimed,
   persistShopInfo,
   publishListing,
+  subscribeShopOrders,
   unpublishListing,
+  updateShopOrderStatus,
 } from "@/lib/beannel/shop";
 import {
   EMPTY_PROFILE,
@@ -72,6 +77,8 @@ interface ApexStoreValue {
   transactions: Transaction[];
   customers: Customer[];
   profile: BusinessProfile;
+  shopOrders: ShopOrder[];
+  pendingShopCount: number;
   period: PeriodPreset;
   setPeriod: (p: PeriodPreset) => void;
   periodTransactions: Transaction[];
@@ -111,6 +118,9 @@ interface ApexStoreValue {
   saveProfile: (p: Partial<BusinessProfile>) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
   wipeAll: () => Promise<void>;
+  claimShopOrder: (orderId: string) => Promise<void>;
+  advanceShopOrder: (orderId: string, status: OrderStatus) => Promise<void>;
+  cancelShopOrder: (orderId: string) => Promise<void>;
 }
 
 const ApexStoreContext = createContext<ApexStoreValue | null>(null);
@@ -130,31 +140,71 @@ function changedCustomers(prev: Customer[], next: Customer[]): Customer[] {
 }
 
 export function ApexStoreProvider({ children }: { children: ReactNode }) {
-  const { user, businessId, isLoading: authLoading } = useBeannelAuth();
+  const { user, businessId, role, isLoading: authLoading } = useBeannelAuth();
   const [snapshot, setSnapshot] = useState<ApexSnapshot>(emptySnapshot());
+  const [shopOrders, setShopOrders] = useState<ShopOrder[]>([]);
   const [period, setPeriod] = useState<PeriodPreset>("week");
   const [isOwnerUnlocked, setOwnerUnlocked] = useState(false);
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const snapshotRef = useRef(snapshot);
   snapshotRef.current = snapshot;
+  const claimingRef = useRef(false);
+
+  const applySaleFromOrder = useCallback(
+    async (order: ShopOrder, biz: string, userId: string, current: ApexSnapshot) => {
+      const items = order.items.map((item) => {
+        const prod = current.products.find((p) => p.id === item.productId);
+        const unitBuy = prod?.buyPrice || 0;
+        return {
+          ...item,
+          unitBuyPrice: unitBuy,
+          totalBuyPrice: unitBuy * item.quantity,
+        };
+      });
+      const result = recordSaleOn(current, {
+        items,
+        customerName: order.name,
+        paymentMethod: order.payment,
+        description: `Online · ${order.name} · ${order.phone}${order.address ? ` · ${order.address}` : ""}`,
+      });
+      const subtotal = items.reduce((s, i) => s + i.totalSellPrice, 0);
+      await persistSale({
+        businessId: biz,
+        userId,
+        transaction: result.transaction,
+        items,
+        products: result.snapshot.products,
+        changedCustomers: changedCustomers(current.customers, result.snapshot.customers),
+        discount: 0,
+        subtotal,
+      });
+      await markShopOrderClaimed(order.id, result.transaction.id);
+      const touched = new Set(items.map((i) => i.productId));
+      for (const id of touched) {
+        const prod = result.snapshot.products.find((p) => p.id === id);
+        if (prod) await publishListing(biz, prod).catch(() => undefined);
+      }
+      return result.snapshot;
+    },
+    [],
+  );
 
   const reload = useCallback(async () => {
     if (!user) {
       setSnapshot(emptySnapshot());
+      setShopOrders([]);
       setLoadError(null);
       setReady(true);
       setOwnerUnlocked(false);
       return;
     }
-    if (kindFromUser(user) === "customer") {
+    if (!isOfficeRole(role) || !businessId) {
       setSnapshot(emptySnapshot());
+      setShopOrders([]);
       setLoadError(null);
       setReady(true);
-      return;
-    }
-    if (!businessId) {
-      setReady(false);
+      setOwnerUnlocked(false);
       return;
     }
     setReady(false);
@@ -177,62 +227,44 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
         tagline: next.profile.shopTagline,
         currency: next.profile.currencySymbol,
         whatsapp: next.profile.whatsappNumber || "",
+        ownerEmail: OWNER_EMAIL,
       }).catch(() => undefined);
+
       const inbox = await fetchShopInbox(businessId).catch(() => []);
-      for (const order of inbox) {
+      if (!claimingRef.current) {
+        claimingRef.current = true;
         try {
-          const items = order.items.map((item) => {
-            const prod = next.products.find((p) => p.id === item.productId);
-            const unitBuy = prod?.buyPrice || 0;
-            return {
-              ...item,
-              unitBuyPrice: unitBuy,
-              totalBuyPrice: unitBuy * item.quantity,
-            };
-          });
-          const result = recordSaleOn(next, {
-            items,
-            customerName: order.name,
-            paymentMethod: order.payment,
-            description: `Online · ${order.name} · ${order.phone}${order.address ? ` · ${order.address}` : ""}`,
-          });
-          const subtotal = items.reduce((s, i) => s + i.totalSellPrice, 0);
-          await persistSale({
-            businessId,
-            userId: user.id,
-            transaction: result.transaction,
-            items,
-            products: result.snapshot.products,
-            changedCustomers: changedCustomers(next.customers, result.snapshot.customers),
-            discount: 0,
-            subtotal,
-          });
-          await dropInboxOrder(order.id);
-          next = result.snapshot;
-          const touched = new Set(items.map((i) => i.productId));
-          for (const id of touched) {
-            const prod = next.products.find((p) => p.id === id);
-            if (prod) await publishListing(businessId, prod).catch(() => undefined);
+          for (const order of inbox) {
+            if (order.claimed || order.status !== "placed") continue;
+            try {
+              next = await applySaleFromOrder(order, businessId, user.id, next);
+            } catch {
+              /* leave unclaimed */
+            }
           }
-        } catch {
-          /* leave in inbox */
+        } finally {
+          claimingRef.current = false;
         }
       }
+
       await Promise.all(
         next.products
           .filter((p) => p.listed !== false && p.sellPrice > 0)
           .map((p) => publishListing(businessId, p).catch(() => undefined)),
       );
+      const orders = await fetchShopInbox(businessId).catch(() => inbox);
+      setShopOrders(orders);
       snapshotRef.current = next;
       setSnapshot(next);
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : "Could not load workspace.");
       snapshotRef.current = emptySnapshot();
       setSnapshot(emptySnapshot());
+      setShopOrders([]);
     } finally {
       setReady(true);
     }
-  }, [user, businessId]);
+  }, [user, businessId, role, applySaleFromOrder]);
 
   useEffect(() => {
     if (authLoading) {
@@ -241,6 +273,28 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
     }
     void reload();
   }, [authLoading, reload]);
+
+  useEffect(() => {
+    if (!user || !businessId || !isOfficeRole(role)) return;
+    let silent = false;
+    const unsub = subscribeShopOrders(() => {
+      if (silent) return;
+      silent = true;
+      void fetchShopInbox(businessId)
+        .then((orders) => {
+          setShopOrders(orders);
+          const fresh = orders.filter((o) => o.status === "placed" && !o.claimed);
+          if (fresh.length) {
+            toast.message(`${fresh.length} new shop order${fresh.length === 1 ? "" : "s"}`);
+            void reload();
+          }
+        })
+        .finally(() => {
+          silent = false;
+        });
+    });
+    return unsub;
+  }, [user, businessId, reload]);
 
   const requireSession = () => {
     if (!user || !businessId) throw new Error("Sign in required.");
@@ -252,6 +306,10 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
   const transactions = snapshot.transactions;
   const customers = snapshot.customers;
   const profile = snapshot.profile;
+  const pendingShopCount = useMemo(
+    () => shopOrders.filter((o) => o.status !== "delivered" && o.status !== "cancelled" && o.status !== "refunded").length,
+    [shopOrders],
+  );
 
   const periodTransactions = useMemo(
     () => filterTransactions(transactions, period),
@@ -433,7 +491,45 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
     const next = wipeBusiness(snapshotRef.current.profile);
     snapshotRef.current = next;
     setSnapshot(next);
+    setShopOrders([]);
   }, [user, businessId]);
+
+  const claimShopOrder = useCallback(
+    async (orderId: string) => {
+      const { userId, businessId: biz } = requireSession();
+      const order = shopOrders.find((o) => o.id === orderId);
+      if (!order) throw new Error("Order not found.");
+      if (order.claimed && order.status !== "placed") return;
+      const next = await applySaleFromOrder(order, biz, userId, snapshotRef.current);
+      snapshotRef.current = next;
+      setSnapshot(next);
+      const orders = await fetchShopInbox(biz);
+      setShopOrders(orders);
+    },
+    [user, businessId, shopOrders, applySaleFromOrder],
+  );
+
+  const advanceShopOrder = useCallback(
+    async (orderId: string, status: OrderStatus) => {
+      requireSession();
+      if (status === "confirmed") {
+        await claimShopOrder(orderId);
+        return;
+      }
+      const updated = await updateShopOrderStatus(orderId, status);
+      setShopOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
+    },
+    [user, businessId, claimShopOrder],
+  );
+
+  const cancelShopOrder = useCallback(
+    async (orderId: string) => {
+      requireSession();
+      const updated = await cancelShopOrderRemote(orderId);
+      setShopOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
+    },
+    [user, businessId],
+  );
 
   const value: ApexStoreValue = {
     ready,
@@ -444,6 +540,8 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
     transactions,
     customers,
     profile: profile.businessName ? profile : { ...EMPTY_PROFILE, ...profile },
+    shopOrders,
+    pendingShopCount,
     period,
     setPeriod,
     periodTransactions,
@@ -463,6 +561,9 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
     saveProfile,
     deleteTransaction,
     wipeAll,
+    claimShopOrder,
+    advanceShopOrder,
+    cancelShopOrder,
   };
 
   return <ApexStoreContext.Provider value={value}>{children}</ApexStoreContext.Provider>;

@@ -1,4 +1,5 @@
 import { cn } from "@/lib/cn";
+import { Adinkra } from "@/components/ui/adinkra";
 
 export function BrandMark({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
   const dim =
@@ -32,9 +33,7 @@ export function BrandRule() {
   return (
     <div className="brand-rule" aria-hidden>
       <span className="brand-rule-line" />
-      <svg viewBox="0 0 20 12" className="brand-rule-gem">
-        <path d="M10 1.4 12.4 6 10 10.6 7.6 6Z" fill="currentColor" />
-      </svg>
+      <Adinkra name="adinkrahene" className="brand-rule-gem" />
       <span className="brand-rule-line" />
     </div>
   );

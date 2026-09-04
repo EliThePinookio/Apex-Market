@@ -1,7 +1,7 @@
 import { coverFor } from "@/lib/beannel/catalog";
 import { supabase } from "@/lib/beannel/supabase";
 import { newId } from "@/lib/apex/money";
-import type { PaymentMethod, Product, TransactionItem } from "@/types";
+import type { Product, TransactionItem } from "@/types";
 import {
   listingIdFor,
   parseShopMeta,
@@ -10,9 +10,20 @@ import {
   sourceIdFromListing,
   waDigits,
   writeShopMeta,
+  isShopVisible,
   type ShopMeta,
 } from "@/lib/beannel/shop-meta";
 import type { BagItem } from "@/lib/beannel/cart";
+import {
+  canTransition,
+  parseOrderEnvelope,
+  patchOrderEnvelope,
+  writeOrderEnvelope,
+  type OrderStatus,
+  type ShopOrder,
+} from "@/lib/beannel/commerce";
+
+export type { ShopOrder } from "@/lib/beannel/commerce";
 
 export interface ShopListing {
   listingId: string;
@@ -27,6 +38,11 @@ export interface ShopListing {
   garmentType: string;
   image: string;
   listed: boolean;
+  compareAt?: number;
+  description?: string;
+  images?: string[];
+  vendor?: string;
+  tags?: string[];
   updatedAt: string;
 }
 
@@ -39,6 +55,12 @@ export interface ShopGroup {
   priceFrom: number;
   stock: number;
   variants: ShopListing[];
+  compareAt?: number;
+  description?: string;
+  images?: string[];
+  vendor?: string;
+  tags?: string[];
+  updatedAt: string;
 }
 
 export interface ShopStorefront {
@@ -47,17 +69,7 @@ export interface ShopStorefront {
   tagline: string;
   currency: string;
   whatsapp: string;
-}
-
-export interface ShopInboxOrder {
-  id: string;
-  name: string;
-  phone: string;
-  address: string;
-  payment: PaymentMethod;
-  items: TransactionItem[];
-  amount: number;
-  date: string;
+  ownerEmail: string;
 }
 
 const INFO_SKU = "SHOPINFO";
@@ -82,6 +94,12 @@ export function groupListings(listings: ShopListing[]): ShopGroup[] {
         priceFrom: item.price,
         stock: item.stock,
         variants: [item],
+        compareAt: item.compareAt,
+        description: item.description,
+        images: item.images,
+        vendor: item.vendor,
+        tags: item.tags,
+        updatedAt: item.updatedAt,
       });
       continue;
     }
@@ -89,6 +107,11 @@ export function groupListings(listings: ShopListing[]): ShopGroup[] {
     existing.stock += item.stock;
     existing.priceFrom = Math.min(existing.priceFrom, item.price);
     if (!existing.image && item.image) existing.image = item.image;
+    if (!existing.description && item.description) existing.description = item.description;
+    if ((!existing.images || existing.images.length === 0) && item.images?.length) existing.images = item.images;
+    if (!existing.vendor && item.vendor) existing.vendor = item.vendor;
+    if (item.compareAt && (!existing.compareAt || item.compareAt < existing.compareAt)) existing.compareAt = item.compareAt;
+    if (item.updatedAt > existing.updatedAt) existing.updatedAt = item.updatedAt;
   }
   return [...map.values()];
 }
@@ -96,9 +119,10 @@ export function groupListings(listings: ShopListing[]): ShopGroup[] {
 function mapListing(row: Record<string, unknown>): ShopListing | null {
   const id = String(row.id || "");
   if (!id.startsWith("list-")) return null;
-  const { meta } = parseShopMeta(typeof row.notes === "string" ? row.notes : "");
-  if (meta.listed === false) return null;
+  const { meta, notes } = parseShopMeta(typeof row.notes === "string" ? row.notes : "");
+  if (!isShopVisible(meta)) return null;
   const category = String(row.category || "Apparels");
+  const images = (meta.images && meta.images.length ? meta.images : meta.imageUrl ? [meta.imageUrl] : []).filter(Boolean);
   return {
     listingId: id,
     productId: String(row.barcode || sourceIdFromListing(id)),
@@ -110,17 +134,26 @@ function mapListing(row: Record<string, unknown>): ShopListing | null {
     unit: String(row.unit || "pcs"),
     size: meta.size || "",
     garmentType: meta.garmentType || "",
-    image: listingImage(meta, category),
+    image: listingImage({ ...meta, imageUrl: images[0] || meta.imageUrl }, category),
     listed: true,
+    compareAt: meta.compareAt,
+    description: notes,
+    images,
+    vendor: meta.vendor,
+    tags: meta.tags,
     updatedAt: String(row.updated_at || ""),
   };
 }
 
 export function listingsFromProducts(products: Product[]): ShopListing[] {
   return products
-    .filter((p) => p.listed !== false && p.sellPrice > 0)
-    .map((p) => {
+    .filter((p) => {
       const { meta } = parseShopMeta(p.notes);
+      return isShopVisible({ ...meta, listed: p.listed ?? meta.listed, status: p.status ?? meta.status }) && p.sellPrice > 0;
+    })
+    .map((p) => {
+      const { meta, notes } = parseShopMeta(p.notes);
+      const images = (p.images || meta.images || (p.imageUrl ? [p.imageUrl] : [])).filter(Boolean);
       return {
         listingId: listingIdFor(p.id),
         productId: p.id,
@@ -132,8 +165,13 @@ export function listingsFromProducts(products: Product[]): ShopListing[] {
         unit: p.unit,
         size: p.size || meta.size || "",
         garmentType: p.garmentType || meta.garmentType || "",
-        image: listingImage({ ...meta, imageUrl: p.imageUrl || meta.imageUrl }, p.category),
+        image: listingImage({ ...meta, imageUrl: p.imageUrl || images[0] || meta.imageUrl }, p.category),
         listed: true,
+        compareAt: p.compareAt || meta.compareAt,
+        description: notes,
+        images,
+        vendor: p.vendor || meta.vendor,
+        tags: p.tags || meta.tags,
         updatedAt: p.updatedAt,
       };
     });
@@ -158,39 +196,56 @@ export async function fetchShopStorefront(): Promise<ShopStorefront> {
     tagline: "Clothes · Jewelry · Watches · Fashion",
     currency: "GH₵",
     whatsapp: "",
+    ownerEmail: "",
   };
   const { data, error } = await supabase
     .from("products")
-    .select("id,name,notes,sku")
+    .select("id,name,notes,sku,updated_at")
     .eq("sku", INFO_SKU)
     .like("id", "info-%")
-    .limit(1);
-  if (error || !data?.[0]) return fallback;
-  const row = data[0];
-  if (!row) return fallback;
-  const { meta, notes } = parseShopMeta(typeof row.notes === "string" ? row.notes : "");
+    .order("updated_at", { ascending: false });
+  if (error || !data?.length) return fallback;
+  const picked =
+    data.find((row) => {
+      const { meta } = parseShopMeta(typeof row.notes === "string" ? row.notes : "");
+      return Boolean(meta.ownerEmail);
+    }) || data[0];
+  if (!picked) return fallback;
+  const { meta, notes } = parseShopMeta(typeof picked.notes === "string" ? picked.notes : "");
   return {
-    businessId: meta.businessId || String(row.id).replace(/^info-/, ""),
-    name: String(row.name || fallback.name),
+    businessId: meta.businessId || String(picked.id).replace(/^info-/, ""),
+    name: String(picked.name || fallback.name),
     tagline: notes || fallback.tagline,
     currency: meta.garmentType || fallback.currency,
     whatsapp: meta.size || "",
+    ownerEmail: (meta.ownerEmail || "").trim().toLowerCase(),
   };
 }
 
 export async function publishListing(businessId: string, product: Product): Promise<void> {
-  const { meta } = parseShopMeta(product.notes);
-  const listed = product.listed ?? meta.listed !== false;
+  const { meta, notes } = parseShopMeta(product.notes);
+  const listed = isShopVisible({
+    ...meta,
+    listed: product.listed ?? meta.listed,
+    status: product.status ?? meta.status,
+  });
   const id = listingIdFor(product.id);
   if (!listed || product.sellPrice <= 0) {
     await supabase.from("products").delete().eq("id", id);
     return;
   }
-  const packed = writeShopMeta("", {
+  const images = (product.images || meta.images || []).filter(Boolean);
+  const imageUrl = product.imageUrl || images[0] || meta.imageUrl;
+  const packed = writeShopMeta(notes, {
     size: product.size || meta.size,
     garmentType: product.garmentType || meta.garmentType,
-    imageUrl: product.imageUrl || meta.imageUrl,
+    imageUrl,
+    images: images.length ? images : imageUrl ? [imageUrl] : undefined,
     listed: true,
+    status: "active",
+    vendor: product.vendor || meta.vendor,
+    tags: product.tags || meta.tags,
+    compareAt: product.compareAt || meta.compareAt,
     businessId,
   });
   const now = new Date().toISOString();
@@ -222,7 +277,7 @@ export async function unpublishListing(productId: string): Promise<void> {
 
 export async function persistShopInfo(
   businessId: string,
-  info: { name: string; tagline?: string; currency: string; whatsapp: string },
+  info: { name: string; tagline?: string; currency: string; whatsapp: string; ownerEmail?: string },
 ): Promise<void> {
   const now = new Date().toISOString();
   const { error } = await supabase.from("products").upsert(
@@ -243,6 +298,7 @@ export async function persistShopInfo(
         garmentType: info.currency,
         listed: false,
         businessId,
+        ownerEmail: info.ownerEmail,
       }),
       created_at: now,
       updated_at: now,
@@ -280,6 +336,30 @@ export function orderMessage(args: {
     .join("\n");
 }
 
+function mapShopOrder(row: Record<string, unknown>): ShopOrder | null {
+  const parsed = parseOrderEnvelope(String(row.description || ""));
+  if (!parsed) return null;
+  const items = Array.isArray(row.items) ? (row.items as TransactionItem[]) : [];
+  if (!items.length) return null;
+  const claimed = Boolean(parsed.saleId) || parsed.status !== "placed";
+  return {
+    id: String(row.id),
+    businessId: parsed.businessId,
+    customerId: parsed.userId || String(row.customer_id || ""),
+    name: parsed.name || String(row.customer_name || "Customer"),
+    phone: parsed.phone,
+    address: parsed.address,
+    payment: parsed.payment,
+    items,
+    amount: Number(row.amount) || 0,
+    date: String(row.date || ""),
+    status: parsed.status,
+    claimed,
+    saleId: parsed.saleId,
+    updatedAt: parsed.updatedAt || String(row.date || ""),
+  };
+}
+
 export async function placeShopOrder(args: {
   businessId: string;
   customerName: string;
@@ -294,6 +374,7 @@ export async function placeShopOrder(args: {
   if (!name) throw new Error("Please leave your name.");
   if (phone.replace(/\D/g, "").length < 9) throw new Error("Please leave a working phone number.");
   if (!args.items.length) throw new Error("Your bag is empty.");
+  if (!args.businessId) throw new Error("The shop is not taking orders yet.");
 
   const listings = await fetchShopListings();
   const byId = new Map(listings.map((l) => [l.listingId, l]));
@@ -317,27 +398,28 @@ export async function placeShopOrder(args: {
     });
   }
 
+  const now = new Date().toISOString();
   for (const item of args.items) {
     const listing = byId.get(item.listingId)!;
     const nextStock = listing.stock - item.qty;
     const { error } = await supabase
       .from("products")
-      .update({ stock_quantity: nextStock, updated_at: new Date().toISOString() })
+      .update({ stock_quantity: nextStock, updated_at: now })
       .eq("id", listing.listingId);
     if (error) throw new Error(`Could not hold stock for ${item.name}.`);
   }
 
-  const now = new Date().toISOString();
   const orderId = newId("shop");
-  const description = [
-    "SHOP",
-    args.businessId,
+  const description = writeOrderEnvelope({
+    businessId: args.businessId,
     name,
     phone,
-    args.payment,
-    args.address.replace(/\|/g, " "),
-    args.userId ? `uid:${args.userId}` : "",
-  ].join("|");
+    payment: args.payment,
+    address: args.address,
+    userId: args.userId || "",
+    status: "placed",
+    updatedAt: now,
+  });
 
   const { error } = await supabase.from("transactions").insert({
     id: orderId,
@@ -360,90 +442,85 @@ export async function placeShopOrder(args: {
   return { orderId };
 }
 
-function parseInboxDescription(description: string): {
-  businessId: string;
-  name: string;
-  phone: string;
-  payment: PaymentMethod;
-  address: string;
-} | null {
-  if (!description.startsWith("SHOP|")) return null;
-  const parts = description.split("|");
-  if (parts.length < 5) return null;
-  const rawPay = parts[4] || "other";
-  const payment: PaymentMethod =
-    rawPay === "cash" || rawPay === "card" || rawPay === "transfer" || rawPay === "mobile_money" || rawPay === "other"
-      ? rawPay
-      : "other";
-  return {
-    businessId: parts[1] || "",
-    name: parts[2] || "Customer",
-    phone: parts[3] || "",
-    payment,
-    address: (parts[5] || "").replace(/^uid:.*$/, ""),
-  };
-}
-
-export async function fetchMyShopOrders(userId: string): Promise<ShopInboxOrder[]> {
-  if (!userId) return [];
+async function fetchShopRows(): Promise<Record<string, unknown>[]> {
   const { data, error } = await supabase
     .from("transactions")
     .select("*")
     .is("business_id", null)
     .like("id", "shop-%")
     .order("date", { ascending: false })
-    .limit(50);
+    .limit(80);
   if (error || !data?.length) return [];
-  const mine = data.filter((row) => {
-    const desc = String(row.description || "");
-    const ref = String(row.reference_no || "");
-    return desc.includes(`uid:${userId}`) || ref === `SHOP-${userId}` || String(row.customer_id || "") === userId;
-  });
-  const orders: ShopInboxOrder[] = [];
-  for (const row of mine) {
-    const parsed = parseInboxDescription(String(row.description || ""));
-    const items = Array.isArray(row.items) ? (row.items as TransactionItem[]) : [];
-    orders.push({
-      id: String(row.id),
-      name: parsed?.name || String(row.customer_name || "You"),
-      phone: parsed?.phone || "",
-      address: parsed?.address || "",
-      payment: parsed?.payment || "other",
-      items,
-      amount: Number(row.amount) || 0,
-      date: String(row.date || ""),
-    });
-  }
-  return orders;
+  return data as Record<string, unknown>[];
 }
 
-export async function fetchShopInbox(businessId: string): Promise<ShopInboxOrder[]> {
-  const { data, error } = await supabase
-    .from("transactions")
-    .select("*")
-    .is("business_id", null)
-    .like("id", "shop-%")
-    .order("date", { ascending: true })
-    .limit(50);
-  if (error || !data?.length) return [];
-  const orders: ShopInboxOrder[] = [];
-  for (const row of data) {
-    const parsed = parseInboxDescription(String(row.description || ""));
-    if (!parsed || parsed.businessId !== businessId) continue;
-    const items = Array.isArray(row.items) ? (row.items as TransactionItem[]) : [];
-    if (!items.length) continue;
-    orders.push({
-      id: String(row.id),
-      name: parsed.name,
-      phone: parsed.phone,
-      address: parsed.address,
-      payment: parsed.payment,
-      items,
-      amount: Number(row.amount) || 0,
-      date: String(row.date || ""),
-    });
+export async function fetchMyShopOrders(userId: string): Promise<ShopOrder[]> {
+  if (!userId) return [];
+  const rows = await fetchShopRows();
+  return rows
+    .map(mapShopOrder)
+    .filter((row): row is ShopOrder => row != null && row.customerId === userId);
+}
+
+export async function fetchShopInbox(businessId: string): Promise<ShopOrder[]> {
+  if (!businessId) return [];
+  const rows = await fetchShopRows();
+  return rows
+    .map(mapShopOrder)
+    .filter((row): row is ShopOrder => row != null && row.businessId === businessId)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}
+
+export async function fetchShopOrder(orderId: string): Promise<ShopOrder | null> {
+  const { data, error } = await supabase.from("transactions").select("*").eq("id", orderId).limit(1);
+  if (error || !data?.[0]) return null;
+  return mapShopOrder(data[0] as Record<string, unknown>);
+}
+
+export async function updateShopOrderStatus(orderId: string, status: OrderStatus): Promise<ShopOrder> {
+  const current = await fetchShopOrder(orderId);
+  if (!current) throw new Error("Order not found.");
+  if (current.status === status) return current;
+  if (!canTransition(current.status, status)) {
+    throw new Error(`Cannot move this order from ${current.status} to ${status}.`);
   }
-  return orders;
+  const { data, error } = await supabase.from("transactions").select("description").eq("id", orderId).limit(1);
+  if (error || !data?.[0]) throw new Error("Could not update the order.");
+  const description = patchOrderEnvelope(String(data[0].description || ""), { status });
+  const { error: upd } = await supabase.from("transactions").update({ description }).eq("id", orderId);
+  if (upd) throw new Error(upd.message);
+  return { ...current, status, updatedAt: new Date().toISOString(), claimed: current.claimed || status !== "placed" };
+}
+
+export async function markShopOrderClaimed(orderId: string, saleId: string): Promise<void> {
+  const { data, error } = await supabase.from("transactions").select("description").eq("id", orderId).limit(1);
+  if (error || !data?.[0]) throw new Error("Could not confirm the order.");
+  const description = patchOrderEnvelope(String(data[0].description || ""), {
+    status: "confirmed",
+    saleId,
+  });
+  const { error: upd } = await supabase.from("transactions").update({ description }).eq("id", orderId);
+  if (upd) throw new Error(upd.message);
+}
+
+export async function cancelShopOrder(orderId: string): Promise<ShopOrder> {
+  const current = await fetchShopOrder(orderId);
+  if (!current) throw new Error("Order not found.");
+  if (current.status === "cancelled" || current.status === "refunded" || current.status === "delivered") {
+    throw new Error("This order can no longer be cancelled.");
+  }
+  if (current.status === "placed" && !current.claimed) {
+    for (const item of current.items) {
+      const listingId = listingIdFor(item.productId);
+      const { data } = await supabase.from("products").select("stock_quantity").eq("id", listingId).limit(1);
+      const stock = Number(data?.[0]?.stock_quantity) || 0;
+      await supabase
+        .from("products")
+        .update({ stock_quantity: stock + item.quantity, updated_at: new Date().toISOString() })
+        .eq("id", listingId);
+    }
+  }
+  return updateShopOrderStatus(orderId, "cancelled");
 }
 
 export async function dropInboxOrder(orderId: string): Promise<void> {
@@ -464,4 +541,34 @@ export async function wipeShopPublic(businessId: string): Promise<void> {
     );
   }
   await supabase.from("transactions").delete().like("id", "shop-%").ilike("description", `%${businessId}%`);
+}
+
+export function subscribeShopOrders(onChange: () => void): () => void {
+  try {
+    const channel = supabase
+      .channel("beannel-shop-orders")
+      .on("postgres_changes", { event: "*", schema: "public", table: "transactions" }, (payload) => {
+        const row = (payload.new || payload.old) as { id?: string } | null;
+        if (String(row?.id || "").startsWith("shop-")) onChange();
+      })
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  } catch {
+    return () => undefined;
+  }
+}
+
+export function subscribeShopListings(onChange: () => void): () => void {
+  const channel = supabase
+    .channel("beannel-shop-listings")
+    .on("postgres_changes", { event: "*", schema: "public", table: "products" }, (payload) => {
+      const row = (payload.new || payload.old) as { id?: string } | null;
+      if (String(row?.id || "").startsWith("list-")) onChange();
+    })
+    .subscribe();
+  return () => {
+    void supabase.removeChannel(channel);
+  };
 }

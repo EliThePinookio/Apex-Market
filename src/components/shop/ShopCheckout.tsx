@@ -27,7 +27,7 @@ export function ShopCheckout() {
   const [address, setAddress] = useState("");
   const [pay, setPay] = useState<Pay>("mobile_money");
   const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -49,7 +49,7 @@ export function ShopCheckout() {
     try {
       const businessId = store?.businessId || "";
       if (!businessId) throw new Error("The shop is not taking orders yet. Message us on WhatsApp.");
-      await placeShopOrder({
+      const result = await placeShopOrder({
         businessId,
         customerName: name,
         phone,
@@ -71,7 +71,7 @@ export function ShopCheckout() {
         window.open(whatsappHref(store?.whatsapp || "", text), "_blank", "noopener");
       }
       clearBag();
-      setDone(true);
+      setOrderId(result.orderId);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not place the order");
     } finally {
@@ -81,16 +81,16 @@ export function ShopCheckout() {
 
   if (!user) return null;
 
-  if (done) {
+  if (orderId) {
     return (
-      <div className="shop-body py-20 text-center space-y-3">
+      <div className="shop-body shop-checkout-wrap">
         <p className="shop-kicker">BEANNEL</p>
-        <h1 className="display-title text-[2rem]">Order received</h1>
-        <p className="text-[15px] text-fg-muted max-w-sm mx-auto">
-          It is already in the store office. Track it from your account.
+        <h1 className="display-title text-[2rem] mt-1">Order received</h1>
+        <p className="text-[15px] text-fg-muted mt-2 mb-5">
+          It is already in the store office. Stock is held. Track it from your account.
         </p>
-        <Button className="mt-4" onClick={() => void navigate({ to: "/account" })}>
-          View orders
+        <Button className="w-full" onClick={() => void navigate({ to: "/account/order/$orderId", params: { orderId } })}>
+          Track order
         </Button>
       </div>
     );
@@ -98,9 +98,9 @@ export function ShopCheckout() {
 
   if (items.length === 0) {
     return (
-      <div className="shop-body py-20 text-center space-y-4">
-        <p className="display-title text-[1.75rem]">Nothing to check out</p>
-        <Button onClick={() => void navigate({ to: "/" })}>Browse the shop</Button>
+      <div className="shop-body shop-checkout-wrap">
+        <p className="display-title text-[1.75rem] mb-5">Nothing to check out</p>
+        <Button className="w-full" onClick={() => void navigate({ to: "/" })}>Browse the shop</Button>
       </div>
     );
   }

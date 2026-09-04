@@ -31,9 +31,10 @@ export function LedgerView() {
   }, [transactions, q, type]);
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-5">
+    <div className="office-page">
       <PageHeader
-        title="Ledger"
+        compact
+        title="Finance"
         subtitle={`${list.length} records in view`}
         actions={
           <>

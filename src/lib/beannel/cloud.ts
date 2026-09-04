@@ -63,6 +63,13 @@ function mapProduct(d: Record<string, unknown>): Product {
     garmentType: meta.garmentType || "",
     imageUrl: meta.imageUrl || "",
     listed: meta.listed !== false,
+    status: meta.status || (meta.listed === false ? "draft" : "active"),
+    vendor: meta.vendor || "",
+    tags: meta.tags || [],
+    compareAt: meta.compareAt || 0,
+    images: meta.images || (meta.imageUrl ? [meta.imageUrl] : []),
+    chargeTax: Boolean(meta.chargeTax),
+    continueSelling: Boolean(meta.continueSelling),
   };
 }
 

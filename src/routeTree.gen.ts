@@ -19,10 +19,17 @@ import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as LedgerRouteImport } from './routes/ledger'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ManageRouteImport } from './routes/manage'
+import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as PosRouteImport } from './routes/pos'
+import { Route as SavedRouteImport } from './routes/saved'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as AccountIndexRouteImport } from './routes/account.index'
+import { Route as InventoryIndexRouteImport } from './routes/inventory.index'
+import { Route as InventoryProductIdRouteImport } from './routes/inventory.$productId'
+import { Route as InventoryNewRouteImport } from './routes/inventory.new'
 import { Route as ShopIndexRouteImport } from './routes/shop/index'
 import { Route as ShopProductIdRouteImport } from './routes/shop/$productId'
+import { Route as AccountOrderOrderIdRouteImport } from './routes/account.order.$orderId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -74,15 +81,45 @@ const ManageRoute = ManageRouteImport.update({
   path: '/manage',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrdersRoute = OrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PosRoute = PosRouteImport.update({
   id: '/pos',
   path: '/pos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SavedRoute = SavedRouteImport.update({
+  id: '/saved',
+  path: '/saved',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AccountIndexRoute = AccountIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AccountRoute,
+} as any)
+const InventoryIndexRoute = InventoryIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => InventoryRoute,
+} as any)
+const InventoryProductIdRoute = InventoryProductIdRouteImport.update({
+  id: '/$productId',
+  path: '/$productId',
+  getParentRoute: () => InventoryRoute,
+} as any)
+const InventoryNewRoute = InventoryNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => InventoryRoute,
 } as any)
 const ShopIndexRoute = ShopIndexRouteImport.update({
   id: '/shop/',
@@ -94,55 +131,79 @@ const ShopProductIdRoute = ShopProductIdRouteImport.update({
   path: '/shop/$productId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountOrderOrderIdRoute = AccountOrderOrderIdRouteImport.update({
+  id: '/order/$orderId',
+  path: '/order/$orderId',
+  getParentRoute: () => AccountRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/account': typeof AccountRoute
+  '/account': typeof AccountRouteWithChildren
   '/advisor': typeof AdvisorRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/customers': typeof CustomersRoute
-  '/inventory': typeof InventoryRoute
+  '/inventory': typeof InventoryRouteWithChildren
   '/ledger': typeof LedgerRoute
   '/login': typeof LoginRoute
   '/manage': typeof ManageRoute
+  '/orders': typeof OrdersRoute
   '/pos': typeof PosRoute
+  '/saved': typeof SavedRoute
   '/settings': typeof SettingsRoute
+  '/inventory/$productId': typeof InventoryProductIdRoute
+  '/inventory/new': typeof InventoryNewRoute
   '/shop/$productId': typeof ShopProductIdRoute
+  '/account/': typeof AccountIndexRoute
+  '/inventory/': typeof InventoryIndexRoute
   '/shop/': typeof ShopIndexRoute
+  '/account/order/$orderId': typeof AccountOrderOrderIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/account': typeof AccountRoute
   '/advisor': typeof AdvisorRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/customers': typeof CustomersRoute
-  '/inventory': typeof InventoryRoute
   '/ledger': typeof LedgerRoute
   '/login': typeof LoginRoute
   '/manage': typeof ManageRoute
+  '/orders': typeof OrdersRoute
   '/pos': typeof PosRoute
+  '/saved': typeof SavedRoute
   '/settings': typeof SettingsRoute
+  '/inventory/$productId': typeof InventoryProductIdRoute
+  '/inventory/new': typeof InventoryNewRoute
   '/shop/$productId': typeof ShopProductIdRoute
+  '/account': typeof AccountIndexRoute
+  '/inventory': typeof InventoryIndexRoute
   '/shop': typeof ShopIndexRoute
+  '/account/order/$orderId': typeof AccountOrderOrderIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/account': typeof AccountRoute
+  '/account': typeof AccountRouteWithChildren
   '/advisor': typeof AdvisorRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/customers': typeof CustomersRoute
-  '/inventory': typeof InventoryRoute
+  '/inventory': typeof InventoryRouteWithChildren
   '/ledger': typeof LedgerRoute
   '/login': typeof LoginRoute
   '/manage': typeof ManageRoute
+  '/orders': typeof OrdersRoute
   '/pos': typeof PosRoute
+  '/saved': typeof SavedRoute
   '/settings': typeof SettingsRoute
+  '/inventory/$productId': typeof InventoryProductIdRoute
+  '/inventory/new': typeof InventoryNewRoute
   '/shop/$productId': typeof ShopProductIdRoute
+  '/account/': typeof AccountIndexRoute
+  '/inventory/': typeof InventoryIndexRoute
   '/shop/': typeof ShopIndexRoute
+  '/account/order/$orderId': typeof AccountOrderOrderIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -157,26 +218,38 @@ export interface FileRouteTypes {
     | '/ledger'
     | '/login'
     | '/manage'
+    | '/orders'
     | '/pos'
+    | '/saved'
     | '/settings'
+    | '/inventory/$productId'
+    | '/inventory/new'
     | '/shop/$productId'
+    | '/account/'
+    | '/inventory/'
     | '/shop/'
+    | '/account/order/$orderId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/account'
     | '/advisor'
     | '/cart'
     | '/checkout'
     | '/customers'
-    | '/inventory'
     | '/ledger'
     | '/login'
     | '/manage'
+    | '/orders'
     | '/pos'
+    | '/saved'
     | '/settings'
+    | '/inventory/$productId'
+    | '/inventory/new'
     | '/shop/$productId'
+    | '/account'
+    | '/inventory'
     | '/shop'
+    | '/account/order/$orderId'
   id:
     | '__root__'
     | '/'
@@ -189,24 +262,33 @@ export interface FileRouteTypes {
     | '/ledger'
     | '/login'
     | '/manage'
+    | '/orders'
     | '/pos'
+    | '/saved'
     | '/settings'
+    | '/inventory/$productId'
+    | '/inventory/new'
     | '/shop/$productId'
+    | '/account/'
+    | '/inventory/'
     | '/shop/'
+    | '/account/order/$orderId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AccountRoute: typeof AccountRoute
+  AccountRoute: typeof AccountRouteWithChildren
   AdvisorRoute: typeof AdvisorRoute
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
   CustomersRoute: typeof CustomersRoute
-  InventoryRoute: typeof InventoryRoute
+  InventoryRoute: typeof InventoryRouteWithChildren
   LedgerRoute: typeof LedgerRoute
   LoginRoute: typeof LoginRoute
   ManageRoute: typeof ManageRoute
+  OrdersRoute: typeof OrdersRoute
   PosRoute: typeof PosRoute
+  SavedRoute: typeof SavedRoute
   SettingsRoute: typeof SettingsRoute
   ShopProductIdRoute: typeof ShopProductIdRoute
   ShopIndexRoute: typeof ShopIndexRoute
@@ -284,11 +366,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ManageRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/orders': {
+      id: '/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof OrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pos': {
       id: '/pos'
       path: '/pos'
       fullPath: '/pos'
       preLoaderRoute: typeof PosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/saved': {
+      id: '/saved'
+      path: '/saved'
+      fullPath: '/saved'
+      preLoaderRoute: typeof SavedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -297,6 +393,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/account/': {
+      id: '/account/'
+      path: '/'
+      fullPath: '/account/'
+      preLoaderRoute: typeof AccountIndexRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/inventory/': {
+      id: '/inventory/'
+      path: '/'
+      fullPath: '/inventory/'
+      preLoaderRoute: typeof InventoryIndexRouteImport
+      parentRoute: typeof InventoryRoute
+    }
+    '/inventory/$productId': {
+      id: '/inventory/$productId'
+      path: '/$productId'
+      fullPath: '/inventory/$productId'
+      preLoaderRoute: typeof InventoryProductIdRouteImport
+      parentRoute: typeof InventoryRoute
+    }
+    '/inventory/new': {
+      id: '/inventory/new'
+      path: '/new'
+      fullPath: '/inventory/new'
+      preLoaderRoute: typeof InventoryNewRouteImport
+      parentRoute: typeof InventoryRoute
     }
     '/shop/': {
       id: '/shop/'
@@ -312,21 +436,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopProductIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account/order/$orderId': {
+      id: '/account/order/$orderId'
+      path: '/order/$orderId'
+      fullPath: '/account/order/$orderId'
+      preLoaderRoute: typeof AccountOrderOrderIdRouteImport
+      parentRoute: typeof AccountRoute
+    }
   }
 }
 
+interface AccountRouteChildren {
+  AccountIndexRoute: typeof AccountIndexRoute
+  AccountOrderOrderIdRoute: typeof AccountOrderOrderIdRoute
+}
+
+const AccountRouteChildren: AccountRouteChildren = {
+  AccountIndexRoute: AccountIndexRoute,
+  AccountOrderOrderIdRoute: AccountOrderOrderIdRoute,
+}
+
+const AccountRouteWithChildren =
+  AccountRoute._addFileChildren(AccountRouteChildren)
+
+interface InventoryRouteChildren {
+  InventoryProductIdRoute: typeof InventoryProductIdRoute
+  InventoryNewRoute: typeof InventoryNewRoute
+  InventoryIndexRoute: typeof InventoryIndexRoute
+}
+
+const InventoryRouteChildren: InventoryRouteChildren = {
+  InventoryProductIdRoute: InventoryProductIdRoute,
+  InventoryNewRoute: InventoryNewRoute,
+  InventoryIndexRoute: InventoryIndexRoute,
+}
+
+const InventoryRouteWithChildren = InventoryRoute._addFileChildren(
+  InventoryRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AccountRoute: AccountRoute,
+  AccountRoute: AccountRouteWithChildren,
   AdvisorRoute: AdvisorRoute,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
   CustomersRoute: CustomersRoute,
-  InventoryRoute: InventoryRoute,
+  InventoryRoute: InventoryRouteWithChildren,
   LedgerRoute: LedgerRoute,
   LoginRoute: LoginRoute,
   ManageRoute: ManageRoute,
+  OrdersRoute: OrdersRoute,
   PosRoute: PosRoute,
+  SavedRoute: SavedRoute,
   SettingsRoute: SettingsRoute,
   ShopProductIdRoute: ShopProductIdRoute,
   ShopIndexRoute: ShopIndexRoute,

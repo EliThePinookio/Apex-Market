@@ -1,5 +1,6 @@
-import type { FinancialSummary, Product, Transaction } from "@/types";
+import type { Customer, FinancialSummary, Product, Transaction } from "@/types";
 import type { TrustedBusinessContext } from "@/lib/apex/advisor";
+import { buildMoneyDesk } from "@/lib/apex/money-desk";
 
 export function buildTrustedContext(params: {
   businessName: string;
@@ -8,8 +9,19 @@ export function buildTrustedContext(params: {
   summary: FinancialSummary;
   products: Product[];
   transactions: Transaction[];
+  customers?: Customer[];
+  prevSummary?: FinancialSummary | null;
+  pendingOrders?: number;
 }): TrustedBusinessContext {
   const { businessName, currency, periodLabel, summary, products, transactions } = params;
+  const desk = buildMoneyDesk({
+    products,
+    periodTx: transactions,
+    customers: params.customers || [],
+    periodSummary: summary,
+    prevSummary: params.prevSummary ?? null,
+    pendingOrders: params.pendingOrders || 0,
+  });
 
   const salesMap = new Map<string, { name: string; qty: number; revenue: number; profit: number }>();
   const expenseCategories = new Map<string, number>();
@@ -73,5 +85,17 @@ export function buildTrustedContext(params: {
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 6),
     txCount: transactions.length,
+    aov: desk.aov,
+    orders: desk.orders,
+    units: desk.units,
+    margin: desk.margin,
+    debt: desk.debt,
+    pendingOrders: params.pendingOrders || 0,
+    salesDelta: desk.salesDelta,
+    netDelta: desk.netDelta,
+    headline: desk.headline,
+    subhead: desk.subhead,
+    trend: desk.series.length > 2 ? `${desk.series[desk.series.length - 1].sales >= desk.series[0].sales ? "up" : "down"} over the window` : "flat",
+    actions: desk.actions.map((a) => ({ title: a.title, why: a.why, impact: a.impact })),
   };
 }

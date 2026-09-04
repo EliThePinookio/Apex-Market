@@ -1,28 +1,16 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import {
-  AlertTriangle,
-  ChevronRight,
-  Package,
-  Percent,
-  Sparkles,
-  TrendingDown,
-  TrendingUp,
-  Wallet,
-} from "lucide-react";
+import { AlertTriangle, ChevronRight, Package, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from "recharts";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { CategoryTile } from "@/components/ui/category-tile";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Group, GroupLabel } from "@/components/ui/group";
-import { PageHeader } from "@/components/ui/page-header";
 import { askApexAdvisor } from "@/lib/apex/advisor";
 import { buildTrustedContext } from "@/lib/apex/ai-context";
 import { money, pct } from "@/lib/apex/money";
 import { explainDelta, previousPeriod, computeSummary } from "@/lib/apex/summary";
 import { useApex, type PeriodPreset } from "@/lib/apex/store";
-import { catalogPulse } from "@/lib/beannel/catalog";
 import { readOpenRouterKey } from "@/lib/beannel/keys";
 import { cn } from "@/lib/cn";
 
@@ -44,6 +32,8 @@ export function DashboardView() {
     periodTransactions,
     periodSummary,
     summary,
+    shopOrders,
+    pendingShopCount,
   } = useApex();
   const navigate = useNavigate();
   const cur = profile.currencySymbol;
@@ -105,11 +95,6 @@ export function DashboardView() {
     }
     return [...m.values()].sort((a, b) => b.revenue - a.revenue);
   }, [periodTransactions]);
-
-  const floor = useMemo(
-    () => catalogPulse(products, periodTransactions),
-    [products, periodTransactions],
-  );
 
   const recent = useMemo(
     () =>
@@ -189,10 +174,6 @@ export function DashboardView() {
           openrouterKey: readOpenRouterKey(),
         },
       });
-      if (!res.ok) {
-        toast.error(res.error);
-        return;
-      }
       setBrief(res.text);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Advisor unavailable");
@@ -203,39 +184,81 @@ export function DashboardView() {
 
   const empty = products.length === 0 && transactions.length === 0;
   const periodLabel = PERIODS.find((p) => p.id === period)?.label || "This window";
-  const onlineSales = transactions.filter((t) => t.type === "sale" && t.description.startsWith("Online ·"));
-  const onlineToday = onlineSales.filter((t) => t.date.slice(0, 10) === new Date().toISOString().slice(0, 10));
+  const onlineToday = shopOrders.filter((t) => t.date.slice(0, 10) === new Date().toISOString().slice(0, 10));
+  const hour = new Date().getHours();
+  const hello = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const rawName = (profile.ownerName || "").trim();
+  const firstName = rawName && !/^store owner$/i.test(rawName) ? rawName.split(" ")[0] : "";
+
+  const dateLabel = new Date().toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-5">
-      <PageHeader
-        kicker={profile.businessName || "BEANNEL"}
-        title="Overview"
-        subtitle="Track the floor, the till, and the books in one place."
-      />
-      {onlineSales.length > 0 && (
-        <button
-          type="button"
-          className="cushion w-full text-left px-4 py-3 flex items-center justify-between gap-3"
-          onClick={() => void navigate({ to: "/ledger" })}
-        >
-          <span>
-            <span className="text-[13px] font-medium text-fg-muted">Customer shop</span>
-            <span className="block text-[15px] font-semibold">
-              {onlineToday.length > 0
-                ? `${onlineToday.length} online order${onlineToday.length === 1 ? "" : "s"} today`
-                : `${onlineSales.length} online order${onlineSales.length === 1 ? "" : "s"} in the books`}
-            </span>
-          </span>
-          <ChevronRight className="size-4 text-fg-subtle" />
-        </button>
+    <div className="office-page">
+      <div className="office-home-head">
+        <h1>{firstName ? `${hello}, ${firstName}` : hello}</h1>
+        <p>{dateLabel}</p>
+      </div>
+
+      {(pendingShopCount > 0 || lowStock.length > 0 || empty) && (
+        <section className="office-card">
+          <h2 className="office-card-title">To do</h2>
+          <div className="office-todo">
+            {empty && (
+              <button type="button" onClick={() => void navigate({ to: "/inventory" })}>
+                <span>
+                  <strong>Add your first product</strong>
+                  <span>Stock, sizes, and prices feed the shop and the till.</span>
+                </span>
+                <ChevronRight className="size-4" />
+              </button>
+            )}
+            {pendingShopCount > 0 && (
+              <button type="button" onClick={() => void navigate({ to: "/orders" })}>
+                <span>
+                  <strong>
+                    {pendingShopCount} order{pendingShopCount === 1 ? "" : "s"} to fulfill
+                  </strong>
+                  <span>Confirm to take stock, then pack and ship.</span>
+                </span>
+                <ChevronRight className="size-4" />
+              </button>
+            )}
+            {lowStock.length > 0 && (
+              <button type="button" onClick={() => void navigate({ to: "/inventory" })}>
+                <span>
+                  <strong>
+                    {lowStock.length} product{lowStock.length === 1 ? "" : "s"} low on stock
+                  </strong>
+                  <span>{lowStock.slice(0, 2).map((p) => p.name).join(", ")}</span>
+                </span>
+                <ChevronRight className="size-4" />
+              </button>
+            )}
+            {onlineToday.length > 0 && pendingShopCount === 0 && (
+              <button type="button" onClick={() => void navigate({ to: "/orders" })}>
+                <span>
+                  <strong>
+                    {onlineToday.length} shop order{onlineToday.length === 1 ? "" : "s"} today
+                  </strong>
+                  <span>From the customer store.</span>
+                </span>
+                <ChevronRight className="size-4" />
+              </button>
+            )}
+          </div>
+        </section>
       )}
-      <div className="tag-row">
+
+      <div className="office-period">
         {PERIODS.map((p) => (
           <button
             key={p.id}
             type="button"
-            className="tag-chip"
+            className="office-period-btn"
             data-active={period === p.id}
             onClick={() => setPeriod(p.id)}
           >
@@ -244,33 +267,53 @@ export function DashboardView() {
         ))}
       </div>
 
-      <div className="pulse-row">
-        <div className="pulse-cell">
-          <p>Tickets</p>
-          <p>{saleCount}</p>
+      <div className="office-kpi">
+        <div className="office-kpi-card">
+          <p className="office-kpi-label">Total sales</p>
+          <p className="office-kpi-value">{money(periodSummary.totalRevenue, cur)}</p>
+          {typeof revDelta === "number" && Number.isFinite(revDelta) ? (
+            <p className={cn("office-kpi-delta", revDelta >= 0 ? "is-up" : "is-down")}>
+              {revDelta >= 0 ? <TrendingUp className="size-3.5" /> : <TrendingDown className="size-3.5" />}
+              {pct(revDelta)} vs prior
+            </p>
+          ) : (
+            <p className="office-kpi-hint">{periodLabel}</p>
+          )}
+          <div className="office-kpi-spark">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={spark}>
+                <Area type="monotone" dataKey="amount" stroke="var(--color-fg)" fill="var(--color-bg-subtle)" strokeWidth={1.5} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-        <div className="pulse-cell">
-          <p>Avg ticket</p>
-          <p>{money(avgTicket, cur)}</p>
-        </div>
-        <div className="pulse-cell">
-          <p>Items sold</p>
-          <p>{itemsSold}</p>
-        </div>
-        <div className="pulse-cell">
-          <p>Stock alerts</p>
-          <p className={summary.lowStockCount + summary.outOfStockCount ? "text-warning" : undefined}>
-            {summary.lowStockCount + summary.outOfStockCount}
+        <div className="office-kpi-card">
+          <p className="office-kpi-label">Orders</p>
+          <p className="office-kpi-value">{saleCount}</p>
+          <p className="office-kpi-hint">
+            {itemsSold} item{itemsSold === 1 ? "" : "s"} · avg {money(avgTicket, cur)}
           </p>
         </div>
-        <div className="pulse-cell">
-          <p>Open debt</p>
-          <p className={debt > 0 ? "text-danger" : undefined}>{money(debt, cur)}</p>
+        <div className="office-kpi-card">
+          <p className="office-kpi-label">Net profit</p>
+          <p className={cn("office-kpi-value", periodSummary.netProfit < 0 && "is-down")}>
+            {money(periodSummary.netProfit, cur)}
+          </p>
+          <p className="office-kpi-hint">{margin.toFixed(1)}% margin</p>
+        </div>
+        <div className="office-kpi-card">
+          <p className="office-kpi-label">Inventory</p>
+          <p className="office-kpi-value">{money(summary.totalInventoryValuation, cur)}</p>
+          <p className={cn("office-kpi-hint", summary.lowStockCount + summary.outOfStockCount ? "is-warn" : undefined)}>
+            {summary.lowStockCount + summary.outOfStockCount
+              ? `${summary.lowStockCount + summary.outOfStockCount} need restock`
+              : "At cost"}
+          </p>
         </div>
       </div>
 
       {empty && (
-        <div className="panel">
+        <div className="office-card">
           <EmptyState
             icon={Package}
             title="This workspace is empty"
@@ -280,68 +323,8 @@ export function DashboardView() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Metric
-          label="Revenue"
-          value={money(periodSummary.totalRevenue, cur)}
-          delta={revDelta}
-          tone="gold"
-          icon={Wallet}
-          hint={periodLabel}
-        />
-        <Metric
-          label="Net profit"
-          value={money(periodSummary.netProfit, cur)}
-          tone={periodSummary.netProfit >= 0 ? "good" : "bad"}
-          icon={TrendingUp}
-          hint="After expenses"
-        />
-        <Metric
-          label="Margin"
-          value={`${margin.toFixed(1)}%`}
-          tone={margin >= 0 ? "good" : "bad"}
-          icon={Percent}
-          hint="Net on revenue"
-        />
-        <Metric
-          label="Inventory"
-          value={money(summary.totalInventoryValuation, cur)}
-          tone="stock"
-          icon={Package}
-          hint="Stock at cost"
-        />
-      </div>
-
-      <section>
-        <div className="flex items-end justify-between px-1 mb-3">
-          <div>
-            <p className="group-label mb-0">The floor</p>
-            <h2 className="text-[15px] font-semibold tracking-tight -mt-1">Departments</h2>
-          </div>
-          <button
-            type="button"
-            className="text-[15px] text-accent font-medium min-h-11 px-2"
-            onClick={() => void navigate({ to: "/inventory" })}
-          >
-            Open stock
-          </button>
-        </div>
-        <div className="floor-rail no-scrollbar">
-          {floor.map((c) => (
-            <CategoryTile
-              key={c.id}
-              name={c.name}
-              className="floor-card"
-              kicker={c.count ? `${c.count} SKU${c.count === 1 ? "" : "s"} · ${c.units} in hand` : "No stock yet"}
-              detail={c.revenue ? `${money(c.revenue, cur)} this window` : money(c.value, cur)}
-              onClick={() => void navigate({ to: "/inventory", search: { cat: c.name } })}
-            />
-          ))}
-        </div>
-      </section>
-
       <div className="grid lg:grid-cols-5 gap-3">
-        <section className="lg:col-span-3 panel p-5 md:p-6 min-w-0 overflow-hidden">
+        <section className="lg:col-span-3 office-card p-5 md:p-6 min-w-0 overflow-hidden">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-[15px] font-semibold tracking-tight">Revenue</h2>
             <span className="text-[13px] text-fg-subtle">Last 14 days</span>
@@ -377,7 +360,7 @@ export function DashboardView() {
           </div>
         </section>
 
-        <section className="lg:col-span-2 panel p-5 md:p-6 space-y-4">
+        <section className="lg:col-span-2 office-card p-5 md:p-6 space-y-4">
           <h2 className="text-[15px] font-semibold tracking-tight">Why it’s moving</h2>
           {explanation ? (
             <div className="space-y-2 text-[15px] leading-relaxed">
@@ -514,50 +497,6 @@ export function DashboardView() {
           </section>
         )}
       </div>
-    </div>
-  );
-}
-
-function Metric({
-  label,
-  value,
-  delta,
-  tone,
-  icon: Icon,
-  hint,
-}: {
-  label: string;
-  value: string;
-  delta?: number | null;
-  tone?: "gold" | "good" | "bad" | "stock";
-  icon: typeof Wallet;
-  hint?: string;
-}) {
-  return (
-    <div className="cushion metric-card p-5 md:p-6" data-tone={tone || "gold"}>
-      <div className="flex items-start justify-between gap-3">
-        <p className="metric-label text-[13px] tracking-wide">{label}</p>
-        <span className="metric-icon">
-          <Icon className="size-4" strokeWidth={1.8} />
-        </span>
-      </div>
-      <p
-        className={cn(
-          "mt-2 text-[1.6rem] md:text-[1.85rem] metric-value leading-none",
-          tone === "good" && "text-success",
-          tone === "bad" && "text-danger",
-        )}
-      >
-        {value}
-      </p>
-      {typeof delta === "number" && Number.isFinite(delta) ? (
-        <p className={cn("mt-2.5 text-[13px] flex items-center gap-1 font-medium", delta >= 0 ? "text-success" : "text-danger")}>
-          {delta >= 0 ? <TrendingUp className="size-3.5" /> : <TrendingDown className="size-3.5" />}
-          {pct(delta)} vs prior
-        </p>
-      ) : hint ? (
-        <p className="mt-2.5 text-[13px] text-fg-subtle">{hint}</p>
-      ) : null}
     </div>
   );
 }

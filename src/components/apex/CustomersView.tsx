@@ -50,8 +50,9 @@ export function CustomersView() {
     : [];
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-5">
+    <div className="office-page">
       <PageHeader
+        compact
         title="Customers"
         subtitle={`${customers.length} in this workspace`}
         actions={<Button onClick={() => setAdding(true)}>Add customer</Button>}

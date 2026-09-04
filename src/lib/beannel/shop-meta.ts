@@ -1,41 +1,68 @@
 export const FASHION_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "One size"] as const;
 export const GARMENT_TYPES = ["Casual", "Formal", "Traditional", "Sport", "Lounge", "Work"] as const;
 
+export type ProductStatus = "active" | "draft" | "archived";
+
 export interface ShopMeta {
   size?: string;
   garmentType?: string;
   imageUrl?: string;
+  images?: string[];
   listed?: boolean;
+  status?: ProductStatus;
+  vendor?: string;
+  tags?: string[];
+  compareAt?: number;
+  chargeTax?: boolean;
+  continueSelling?: boolean;
   businessId?: string;
+  ownerEmail?: string;
 }
 
 const PREFIX = "BEANNEL_SHOP:";
 
 export function parseShopMeta(raw?: string | null): { meta: ShopMeta; notes: string } {
   const text = raw || "";
-  if (!text.startsWith(PREFIX)) return { meta: { listed: true }, notes: text };
+  if (!text.startsWith(PREFIX)) return { meta: { listed: true, status: "active" }, notes: text };
   const nl = text.indexOf("\n");
   const json = nl === -1 ? text.slice(PREFIX.length) : text.slice(PREFIX.length, nl);
   const notes = nl === -1 ? "" : text.slice(nl + 1);
   try {
     const parsed = JSON.parse(json) as ShopMeta;
-    return { meta: { listed: parsed.listed !== false, ...parsed }, notes };
+    return { meta: { listed: parsed.listed !== false, status: parsed.status || "active", ...parsed }, notes };
   } catch {
-    return { meta: { listed: true }, notes: text };
+    return { meta: { listed: true, status: "active" }, notes: text };
   }
 }
 
 export function writeShopMeta(notes: string, meta: ShopMeta): string {
   const payload: ShopMeta = {
     listed: meta.listed !== false,
+    status: meta.status || (meta.listed === false ? "draft" : "active"),
   };
   if (meta.size) payload.size = meta.size;
   if (meta.garmentType) payload.garmentType = meta.garmentType;
   if (meta.imageUrl) payload.imageUrl = meta.imageUrl;
+  if (meta.images && meta.images.length) payload.images = meta.images.slice(0, 8);
+  if (meta.vendor) payload.vendor = meta.vendor;
+  if (meta.tags && meta.tags.length) payload.tags = meta.tags;
+  if (typeof meta.compareAt === "number" && meta.compareAt > 0) payload.compareAt = meta.compareAt;
+  if (meta.chargeTax) payload.chargeTax = true;
+  if (meta.continueSelling) payload.continueSelling = true;
   if (meta.businessId) payload.businessId = meta.businessId;
+  if (meta.ownerEmail) payload.ownerEmail = meta.ownerEmail;
   const body = `${PREFIX}${JSON.stringify(payload)}`;
   const rest = notes.trim();
   return rest ? `${body}\n${rest}` : body;
+}
+
+export function familyKey(name: string, category: string): string {
+  return `${name.trim().toLowerCase()}::${(category || "").trim().toLowerCase()}`;
+}
+
+export function isShopVisible(meta: ShopMeta): boolean {
+  if (meta.status === "draft" || meta.status === "archived") return false;
+  return meta.listed !== false;
 }
 
 export function listingIdFor(productId: string): string {
@@ -89,3 +116,4 @@ export async function compressImage(file: File): Promise<string> {
     URL.revokeObjectURL(url);
   }
 }
+

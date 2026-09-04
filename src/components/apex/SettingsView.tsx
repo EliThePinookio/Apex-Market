@@ -35,12 +35,12 @@ export function SettingsView() {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-4 md:p-8 space-y-7">
-      <PageHeader title="Settings" subtitle="Workspace identity, operations, and data." />
+    <div className="office-page max-w-xl">
+      <PageHeader compact title="Settings" subtitle="Workspace identity, operations, and data." />
 
       <section>
         <GroupLabel>Account</GroupLabel>
-        <Group footer="Connected to your live BEANNEL database. Sales, stock and customers persist on this account.">
+        <Group footer="Only oelijah054@gmail.com can open this admin. Every other email stays in the shop.">
           <GroupRow>
             <span>Signed in</span>
             <span className="group-value truncate">{user?.email || "unknown"}</span>
