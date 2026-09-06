@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode, type TransitionEvent } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
+import { tick } from "@/lib/feel";
 
 const CLOSE_MS = 480;
 
@@ -12,6 +13,7 @@ export function useSheetPresence(open: boolean) {
     if (open) {
       setPresent(true);
       setShown(false);
+      tick("light");
       const id = requestAnimationFrame(() => setShown(true));
       return () => cancelAnimationFrame(id);
     }

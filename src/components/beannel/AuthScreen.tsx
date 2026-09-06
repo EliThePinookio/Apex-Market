@@ -19,6 +19,7 @@ import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { afterLoginPath, kindFromProfile } from "@/lib/beannel/account";
 import { applyDark, readDark } from "@/lib/beannel/theme";
 import { passwordIssue } from "@/lib/beannel/guard";
+import { tick } from "@/lib/feel";
 
 type Mode = "signin" | "signup" | "forgot";
 
@@ -63,6 +64,7 @@ export function AuthScreen() {
   };
 
   const switchMode = (next: Mode) => {
+    tick("light");
     setMode(next);
     setError(null);
     setSuccess(null);
@@ -70,6 +72,7 @@ export function AuthScreen() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    tick("medium");
     setError(null);
     setSuccess(null);
     if (!email.includes("@")) {
@@ -118,6 +121,7 @@ export function AuthScreen() {
 
   const onGoogle = async () => {
     setError(null);
+    tick("medium");
     setGoogleBusy(true);
     const res = await signInWithGoogle();
     if (!res.success) {
