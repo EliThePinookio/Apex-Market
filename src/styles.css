@@ -1253,6 +1253,25 @@ html.dark .auth-hero-light { display: none; }
 .auth-lockup h1 {
   font-size: 2.15rem;
   line-height: 0.92;
+  font-family: var(--font-brand);
+  font-style: italic;
+  font-weight: 600;
+}
+.auth-stage,
+.auth-panel,
+.auth-panel .field,
+.auth-panel .tag-chip,
+.auth-panel p,
+.auth-panel h2 {
+  font-family: Inter, "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  font-style: normal;
+}
+.auth-panel h2 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.auth-panel-inner {
+  position: relative;
 }
 .auth-panel .group-list,
 .sheet-panel .group-list {
