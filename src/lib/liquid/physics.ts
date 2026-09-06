@@ -1,8 +1,8 @@
 /** Event-driven liquid field. Still at rest; physics only when the user acts. */
 
 export const LIQUID = {
-  cols: 48,
-  rows: 28,
+  cols: 24,
+  rows: 14,
   waveSpeed: 0.28,
   waveDamp: 0.12,
   waveVisc: 0.1,
@@ -471,7 +471,7 @@ export class LiquidWorld {
     const steps = dt > 24 ? 2 : 1;
     for (let s = 0; s < steps; s++) this.stepWave();
     this.stepBodies();
-    this.paint();
+    /* Skip full-screen caustic paint — CSS blur stays on nav/search only. */
 
     const e = this.energy();
     if (!this.down && this.phase !== "proximity" && e < LIQUID.idle) {

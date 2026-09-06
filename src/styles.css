@@ -1484,7 +1484,7 @@ input[type="range"]::-moz-range-thumb {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  filter: blur(10px) saturate(1.05);
+  filter: blur(4px) saturate(1.04);
   transform: scale(1.08);
 }
 .adinkra-ground {
@@ -1532,7 +1532,7 @@ input[type="range"]::-moz-range-thumb {
   height: 0;
 }
 .cloth-photo {
-  filter: blur(8px) saturate(1.12);
+  filter: blur(4px) saturate(1.04);
 }
 .cloth-caustic {
   position: absolute;
@@ -1610,11 +1610,8 @@ html.dark .adinkra-ground .adinkra {
   height: 3.5rem;
   padding: 0 0.75rem;
   background: color-mix(in oklab, var(--color-bg-elevated) 92%, transparent);
-  backdrop-filter: blur(var(--blur-md)) saturate(1.5);
-  -webkit-backdrop-filter: blur(var(--blur-md)) saturate(1.5);
-  border-bottom: 1px solid var(--color-border);
-  box-shadow: var(--shadow-lift);
-}
+  backdrop-filter: blur(16px) saturate(1.45);
+  -webkit-backdrop-filter: blur(16px) saturate(1.45);
 html.dark .shop-top {
   background: color-mix(in oklab, #0b0b0b 88%, transparent);
   border-bottom: 1px solid color-mix(in oklab, #c9a96e 28%, transparent);
@@ -3509,11 +3506,17 @@ html.dark .liquid-caustic {
 }
 
 /* —— Liquid glass: tiles suspended in viscous water —— */
+/* Glass fill stays on tiles. Blur only on small chrome (dock, search, top bar). */
+.shop-top {
+  backdrop-filter: blur(16px) saturate(1.45);
+  -webkit-backdrop-filter: blur(16px) saturate(1.45);
+}
+.shop-search {
+  backdrop-filter: blur(16px) saturate(1.55);
+  -webkit-backdrop-filter: blur(16px) saturate(1.55);
+}
 .cushion,
 .panel,
-.shop-top,
-.shop-dock,
-.shop-search,
 .shop-order-card,
 .shop-orders-empty,
 .mall-card,
@@ -3525,8 +3528,8 @@ html.dark .liquid-caustic {
 .field,
 .tag-chip,
 .glass {
-  backdrop-filter: blur(var(--blur-liquid)) saturate(2.05) contrast(1.08) brightness(1.06);
-  -webkit-backdrop-filter: blur(var(--blur-liquid)) saturate(2.05) contrast(1.08) brightness(1.06);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 .cushion,
 .panel,
@@ -3588,12 +3591,12 @@ html.dark .glass {
 .mall-grid > *:nth-child(8), .shop-order-list > *:nth-child(8) { animation-delay: 350ms; }
 
 @keyframes liquid-page {
-  from { opacity: 0; filter: blur(14px); transform: translateY(16px) scale(0.975); }
-  to { opacity: 1; filter: blur(0); transform: none; }
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
 }
 @keyframes liquid-tile {
-  from { opacity: 0; filter: blur(8px); }
-  to { opacity: 1; filter: blur(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .shop-main,
