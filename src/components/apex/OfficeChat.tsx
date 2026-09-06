@@ -7,6 +7,7 @@ import { useApex } from "@/lib/apex/store";
 import { readOpenRouterKey } from "@/lib/beannel/keys";
 import { cn } from "@/lib/cn";
 import { tick } from "@/lib/feel";
+import { useSheetPresence } from "@/components/ui/sheet";
 
 const MEMORY_KEY = "beannel_office_chat";
 const SUGGESTIONS = [
@@ -59,6 +60,7 @@ export function OfficeChat({
   const [busy, setBusy] = useState(false);
   const [messages, setMessages] = useState<Bubble[]>(loadMemory);
   const scroller = useRef<HTMLDivElement>(null);
+  const { present, shown, onPanelTransitionEnd } = useSheetPresence(open);
 
   const prevBounds = previousPeriod(period);
   const prevSummary = useMemo(() => {
@@ -148,8 +150,13 @@ export function OfficeChat({
         {open ? <X className="size-5" /> : <Sparkles className="size-5" />}
       </button>
 
-      {open && (
-        <section className="office-chat-panel" role="dialog" aria-label="Ask Beannel">
+      {present && (
+        <section
+          className={cn("office-chat-panel", shown && "is-open")}
+          role="dialog"
+          aria-label="Ask Beannel"
+          onTransitionEnd={onPanelTransitionEnd}
+        >
           <header className="office-chat-head">
             <div>
               <p>Ask Beannel</p>

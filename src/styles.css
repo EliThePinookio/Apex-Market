@@ -2898,15 +2898,20 @@ html.dark .office-frame {
   border-radius: 999px;
   display: grid;
   place-items: center;
-  background: var(--color-accent);
-  color: var(--color-accent-fg);
-  box-shadow: var(--highlight), var(--shadow-3);
-  transition: transform var(--motion-fast) var(--ease-spring), background var(--motion-fast);
+  background-image: var(--gold-grad);
+  background-color: var(--gold);
+  color: #1c1612;
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 40%, transparent),
+    var(--shadow-3);
+  transition: transform var(--motion-release) var(--ease-spring), filter var(--motion-fast) var(--ease-soft);
 }
 .office-chat-fab:hover { transform: translateY(-2px); }
 .office-chat-fab.is-open {
-  background: var(--color-fg);
-  color: var(--color-bg-elevated);
+  background-image: none;
+  background: color-mix(in oklab, #161310 70%, transparent);
+  color: #f3e6c8;
+  border: 1px solid color-mix(in oklab, var(--gold) 36%, transparent);
 }
 @media (min-width: 768px) {
   .office-chat-fab {
@@ -2923,13 +2928,33 @@ html.dark .office-frame {
   height: min(32rem, calc(100dvh - 11rem));
   display: flex;
   flex-direction: column;
-  background: color-mix(in oklab, var(--color-bg-elevated) 92%, transparent);
-  backdrop-filter: blur(22px) saturate(1.4);
-  -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  background: color-mix(in oklab, #161310 14%, color-mix(in oklab, var(--gold) 6%, transparent));
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border: 1px solid color-mix(in oklab, var(--gold) 36%, transparent);
   border-radius: 20px;
-  box-shadow: var(--highlight), var(--shadow-3);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 28%, transparent),
+    var(--shadow-3);
   overflow: hidden;
-  color: var(--color-fg);
+  color: #f3e6c8;
+  --color-fg: #f3e6c8;
+  --color-fg-muted: #c9b896;
+  --color-fg-subtle: #a89478;
+  --color-bg: #161310;
+  --color-bg-elevated: #1c1814;
+  --color-border: color-mix(in oklab, var(--gold) 28%, transparent);
+  opacity: 0;
+  transform: translateY(14px);
+  pointer-events: none;
+  transition:
+    transform var(--sheet-duration) var(--ease-sheet),
+    opacity var(--sheet-duration) var(--ease-sheet);
+}
+.office-chat-panel.is-open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 @media (min-width: 768px) {
   .office-chat-panel {
@@ -2950,6 +2975,7 @@ html.dark .office-frame {
   font-size: 0.9375rem;
   font-weight: 700;
   letter-spacing: -0.02em;
+  font-family: Inter, "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 }
 .office-chat-head span {
   display: block;
@@ -2988,11 +3014,12 @@ html.dark .office-frame {
   min-height: 2.5rem;
   border-radius: 999px;
   padding: 0 0.9rem;
-  background: color-mix(in oklab, var(--color-bg-elevated) 80%, transparent);
-  box-shadow: var(--shadow-1);
+  background: color-mix(in oklab, #161310 22%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 16%, transparent);
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-fg);
+  color: #f3e6c8;
 }
 .office-chat-bubble {
   max-width: 88%;
@@ -3005,14 +3032,16 @@ html.dark .office-frame {
 }
 .office-chat-bubble.is-user {
   margin-left: auto;
-  background: var(--color-accent);
-  color: var(--color-accent-fg);
+  background-image: var(--gold-grad);
+  background-color: var(--gold);
+  color: #1c1612;
   border-bottom-right-radius: 6px;
 }
 .office-chat-bubble.is-bot {
   margin-right: auto;
-  background: color-mix(in oklab, var(--color-fg) 6%, var(--color-bg-elevated));
-  color: var(--color-fg);
+  background: color-mix(in oklab, #161310 28%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold) 22%, transparent);
+  color: #f3e6c8;
   border-bottom-left-radius: 6px;
 }
 .office-chat-bubble.is-wait { color: var(--color-fg-muted); }
@@ -3027,16 +3056,18 @@ html.dark .office-frame {
   min-height: 2.6rem;
   border-radius: 999px;
   padding: 0 0.95rem;
-  background: var(--color-bg);
-  color: var(--color-fg);
+  background: color-mix(in oklab, #161310 22%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold) 26%, transparent);
+  color: #f3e6c8;
   font-size: 0.875rem;
 }
 .office-chat-composer button {
   min-height: 2.6rem;
   padding: 0 0.95rem;
   border-radius: 999px;
-  background: var(--color-accent);
-  color: var(--color-accent-fg);
+  background-image: var(--gold-grad);
+  background-color: var(--gold);
+  color: #1c1612;
   font-size: 0.8125rem;
   font-weight: 700;
 }
