@@ -114,7 +114,7 @@ export function ShopHome() {
   };
 
   return (
-    <div>
+    <div className="shop-home">
       <section className="shop-hero">
         <div className="shop-hero-banner">
           <p className="shop-kicker">Accra · Official store</p>

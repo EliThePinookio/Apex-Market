@@ -3815,6 +3815,72 @@ html.dark .shop-shell > .shop-dock {
   transition-timing-function: var(--ease-press);
 }
 
+/* ShopHome — hero, chips, cards. Cream parchment + gold. Same layout. */
+.shop-hero-banner {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    color-mix(in oklab, #1c1612 28%, transparent) 42%,
+    color-mix(in oklab, #1c1612 62%, #a67c2d 10%) 100%
+  );
+}
+.shop-kicker {
+  color: var(--gold-bright);
+}
+.shop-banner-title {
+  text-shadow: 0 1px 0 color-mix(in oklab, #a67c2d 40%, transparent);
+}
+.shop-home .tag-chip {
+  background: color-mix(in oklab, var(--shop-cream-elev, #fffdf8) 82%, transparent);
+  color: var(--shop-ink, #1c1612);
+  border: 1px solid color-mix(in oklab, var(--gold) 22%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, #fff 70%, transparent),
+    0 6px 14px -10px color-mix(in oklab, var(--gold-deep) 30%, transparent);
+}
+.shop-home .tag-chip[data-active="true"] {
+  background-image: var(--gold-grad);
+  background-color: var(--gold);
+  color: #1c1612;
+  border-color: color-mix(in oklab, var(--gold-deep) 40%, transparent);
+}
+.shop-home .mall-card,
+.shop-home .dept-tile {
+  background: color-mix(in oklab, var(--shop-cream-elev, #fffdf8) 80%, transparent);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid color-mix(in oklab, var(--gold) 20%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, #fff 72%, transparent),
+    0 10px 22px -16px color-mix(in oklab, #1c1612 26%, transparent);
+  color: var(--shop-ink, #1c1612);
+}
+.shop-home .mall-card:active,
+.shop-home .dept-tile:active {
+  filter: brightness(0.98);
+  box-shadow:
+    inset 0 2px 8px color-mix(in oklab, #1c1612 10%, transparent),
+    0 4px 12px -10px color-mix(in oklab, var(--gold-deep) 30%, transparent);
+}
+.shop-home .mall-add {
+  background-image: var(--gold-grad);
+  background-color: var(--gold);
+  color: #1c1612;
+}
+.shop-home .mall-section h2 {
+  background: color-mix(in oklab, var(--shop-cream-elev, #fffdf8) 70%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold) 24%, transparent);
+  color: var(--shop-ink, #1c1612);
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+}
+.shop-home .mall-price {
+  color: var(--gold-deep, #a67c2d);
+}
+.shop-home .mall-cat {
+  color: var(--shop-ink-muted, #6e6256);
+}
+
 
 
 
