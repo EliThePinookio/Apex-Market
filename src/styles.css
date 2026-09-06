@@ -1266,7 +1266,8 @@ html.dark .auth-hero-light { display: none; }
   font-family: Inter, "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   font-style: normal;
 }
-.auth-panel h2 {
+.auth-panel h2,
+.auth-title {
   font-weight: 600;
   letter-spacing: -0.02em;
 }

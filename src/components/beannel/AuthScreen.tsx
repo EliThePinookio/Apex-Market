@@ -58,6 +58,7 @@ export function AuthScreen() {
   }, [user, profile, isLoading, search.next, navigate]);
 
   const toggleTheme = () => {
+    tick("light");
     const next = !dark;
     setDark(next);
     applyDark(next);
@@ -168,7 +169,7 @@ export function AuthScreen() {
           )}
 
           <div className="mb-3">
-            <h2 className="text-[1.25rem] font-semibold tracking-tight">
+            <h2 className="auth-title text-[1.25rem] font-semibold tracking-tight">
               {mode === "signin" && "Sign in"}
               {mode === "signup" && "Create your account"}
               {mode === "forgot" && "Reset password"}
