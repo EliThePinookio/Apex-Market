@@ -3808,12 +3808,13 @@ a.shop-line:active,
 
 .office-chat-bubble {
   transform-origin: center bottom;
-  transition: transform var(--motion-bubble) var(--ease-spring), filter var(--motion-search) var(--ease-out);
+  transition: transform var(--motion-release) var(--ease-spring);
 }
 .office-chat-bubble.is-user { transform-origin: right bottom; }
 .office-chat-bubble.is-bot { transform-origin: left bottom; }
-.office-chat-bubble:active {
-  transform: scale(var(--motion-scale-bubble));
+.office-chat-bubble.is-user:active,
+.office-chat-bubble.is-bot:active {
+  transform: scale(0.98);
   transition-duration: var(--motion-press);
   transition-timing-function: var(--ease-press);
 }
