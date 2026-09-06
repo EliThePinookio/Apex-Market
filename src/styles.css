@@ -1927,13 +1927,14 @@ html.dark .shop-dock {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: color-mix(in oklab, var(--color-bg-elevated) 72%, transparent);
-  backdrop-filter: blur(var(--blur-lg)) saturate(1.65);
-  -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(1.65);
+  background: color-mix(in oklab, var(--shop-cream-elev, #fffdf8) 82%, transparent);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border-radius: var(--radius-md);
   overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--gold, #d4af37) 20%, transparent);
   box-shadow: var(--highlight), var(--shadow-lift);
-  color: var(--color-fg);
+  color: var(--shop-ink, #1c1612);
   min-height: 0;
   transition: transform var(--motion-fast) var(--ease-spring), box-shadow var(--motion-fast) var(--ease-spring);
 }
@@ -2043,13 +2044,14 @@ html.dark .shop-dock {
   flex-direction: column;
   min-width: 0;
   height: 100%;
-  background: color-mix(in oklab, var(--color-bg-elevated) 70%, transparent);
-  backdrop-filter: blur(var(--blur-lg)) saturate(1.65);
-  -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(1.65);
+  background: color-mix(in oklab, var(--shop-cream-elev, #fffdf8) 80%, transparent);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border-radius: 14px;
   overflow: hidden;
-  color: var(--color-fg);
+  color: var(--shop-ink, #1c1612);
   text-align: center;
+  border: 1px solid color-mix(in oklab, var(--gold, #d4af37) 20%, transparent);
   box-shadow: var(--highlight), var(--shadow-lift);
   transition: transform var(--motion-fast) var(--ease-spring), box-shadow var(--motion-fast) var(--ease-spring);
 }
@@ -2159,7 +2161,7 @@ html.dark .shop-dock {
   border-radius: 999px;
 }
 .shop-card-skel {
-  background: var(--color-bg-subtle);
+  background: color-mix(in oklab, var(--shop-cream, #f6f1e8) 70%, transparent);
   min-height: 16rem;
 }
 .shop-empty {
@@ -2167,11 +2169,11 @@ html.dark .shop-dock {
   margin: 1.25rem auto 0;
   padding: 1.6rem 1.2rem 1.7rem;
   text-align: center;
-  background: color-mix(in oklab, var(--color-bg-elevated) 92%, transparent);
-  backdrop-filter: blur(22px) saturate(1.4);
-  -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  background: color-mix(in oklab, var(--shop-cream-elev, #fffdf8) 86%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold, #d4af37) 22%, transparent);
   border-radius: 20px;
   box-shadow: var(--highlight), var(--shadow-lift);
+  color: var(--shop-ink, #1c1612);
 }
 .shop-empty .display-title { text-wrap: balance; }
 .shop-wa {
