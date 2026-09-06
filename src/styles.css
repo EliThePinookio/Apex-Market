@@ -462,10 +462,13 @@ html.dark .switch { background: #39393d; }
 .sheet-panel {
   width: 100%;
   max-width: 28rem;
-  background: color-mix(in oklab, #161310 46%, transparent);
+  background: color-mix(in oklab, #161310 12%, color-mix(in oklab, var(--gold) 6%, transparent));
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border: 1px solid color-mix(in oklab, var(--gold) 38%, transparent);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   box-shadow:
-    inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 32%, transparent),
+    inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 36%, transparent),
     0 22px 48px -18px rgba(0, 0, 0, 0.5);
   padding: 1.25rem 1.25rem max(1.5rem, env(safe-area-inset-bottom));
   animation: sheet-up var(--sheet-duration) var(--ease-sheet);
@@ -1181,8 +1184,11 @@ html.dark .auth-hero-light { display: none; }
   position: relative;
   min-height: 0;
   overflow-y: auto;
-  background: color-mix(in oklab, #161310 42%, transparent);
-  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 22%, transparent);
+  background: color-mix(in oklab, #161310 12%, color-mix(in oklab, var(--gold) 5%, transparent));
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border-top: 1px solid color-mix(in oklab, var(--gold) 32%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 28%, transparent);
 }
 .auth-panel-inner {
   width: 100%;
@@ -1213,15 +1219,13 @@ html.dark .auth-hero-light { display: none; }
 }
 .auth-panel .group-list,
 .sheet-panel .group-list {
-  background: color-mix(in oklab, #161310 40%, transparent);
-  border: 1px solid color-mix(in oklab, var(--gold) 26%, transparent);
-  box-shadow:
-    inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 18%, transparent),
-    var(--shadow-lift);
+  background: color-mix(in oklab, #161310 16%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 22%, transparent);
 }
 .auth-stage .tag-chip,
 .sheet-panel .tag-chip {
-  background: color-mix(in oklab, #161310 50%, transparent);
+  background: color-mix(in oklab, #161310 18%, transparent);
   color: #f3e6c8;
   border: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
 }
