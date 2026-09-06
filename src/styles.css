@@ -462,10 +462,7 @@ html.dark .switch { background: #39393d; }
 .sheet-panel {
   width: 100%;
   max-width: 28rem;
-  background: color-mix(in oklab, #161310 28%, transparent);
-  backdrop-filter: blur(16px) saturate(1.2);
-  -webkit-backdrop-filter: blur(16px) saturate(1.2);
-  border: 1px solid color-mix(in oklab, var(--gold) 38%, transparent);
+  background: color-mix(in oklab, #161310 46%, transparent);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   box-shadow:
     inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 32%, transparent),
@@ -1184,10 +1181,7 @@ html.dark .auth-hero-light { display: none; }
   position: relative;
   min-height: 0;
   overflow-y: auto;
-  background: color-mix(in oklab, #161310 22%, transparent);
-  backdrop-filter: blur(16px) saturate(1.2);
-  -webkit-backdrop-filter: blur(16px) saturate(1.2);
-  border-top: 1px solid color-mix(in oklab, var(--gold) 32%, transparent);
+  background: color-mix(in oklab, #161310 42%, transparent);
   box-shadow: inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 22%, transparent);
 }
 .auth-panel-inner {
@@ -1224,6 +1218,18 @@ html.dark .auth-hero-light { display: none; }
   box-shadow:
     inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 18%, transparent),
     var(--shadow-lift);
+}
+.auth-stage .tag-chip,
+.sheet-panel .tag-chip {
+  background: color-mix(in oklab, #161310 50%, transparent);
+  color: #f3e6c8;
+  border: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
+}
+.auth-stage .tag-chip[data-active="true"],
+.sheet-panel .tag-chip[data-active="true"] {
+  background-image: var(--gold-grad);
+  background-color: var(--gold);
+  color: #1c1612;
 }
 @media (min-width: 960px) {
   .auth-stage {
