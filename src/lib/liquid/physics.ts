@@ -291,27 +291,8 @@ export class LiquidWorld {
     this.lastScan = performance.now();
   }
 
-  private impulse(clientX: number, clientY: number, radius: number, force: number) {
-    const { cols: w, rows: h } = LIQUID;
-    const cx = (clientX / window.innerWidth) * (w - 1);
-    const cy = (clientY / window.innerHeight) * (h - 1);
-    const r = radius * w;
-    const r2 = r * r;
-    const dirX = this.pvx / 40;
-    const dirY = this.pvy / 40;
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        const dx = x - cx;
-        const dy = (y - cy) * (w / h);
-        const d2 = dx * dx + dy * dy;
-        if (d2 > r2) continue;
-        const fall = Math.exp(-d2 / (r2 * 0.42));
-        const i = y * w + x;
-        this.vel[i] += force * fall;
-        this.height[i] += force * 0.25 * fall;
-        this.vel[i] += (dirX * dx + dirY * dy) * 0.015 * fall;
-      }
-    }
+  private impulse(_clientX: number, _clientY: number, _radius: number, _force: number) {
+    /* No circle / finger ripples. Springs stay on CSS :active only. */
   }
 
   private sample(nx: number, ny: number) {
