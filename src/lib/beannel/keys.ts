@@ -1,5 +1,4 @@
 export const OPENROUTER_KEY_STORAGE = "beannel_openrouter_key";
-const PAYSTACK_SECRET_STORAGE = "beannel_paystack_secret";
 
 export function readOpenRouterKey(): string {
   if (typeof window === "undefined") return "";
@@ -21,7 +20,7 @@ export function writeOpenRouterKey(value: string): void {
 export function forgetBrowserPaystackSecret(): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.removeItem(PAYSTACK_SECRET_STORAGE);
+    localStorage.removeItem("beannel_paystack_secret");
   } catch {
     /* ignore */
   }
