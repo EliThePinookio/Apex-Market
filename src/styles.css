@@ -3,7 +3,7 @@
 @theme {
   --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, system-ui, sans-serif;
   --font-brand: "Fraunces", "Iowan Old Style", Palatino, "Palatino Linotype", serif;
-  --font-display: var(--font-brand);
+  --font-display: "Cinzel Decorative", "Cinzel", var(--font-brand);
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
   --color-bg: #f6f1e8;
@@ -117,10 +117,10 @@
     --gold: #d4af37;
     --gold-deep: #a67c2d;
     --gold-grad: linear-gradient(165deg, #e8c872 0%, #d4af37 46%, #a67c2d 100%);
-    --glass-fill: color-mix(in oklab, #fff 16%, transparent);
-    --glass-tint: color-mix(in oklab, #fff 32%, transparent);
-    --glass-stroke: color-mix(in oklab, #fff 48%, transparent);
-    --blur-liquid: 14px;
+    --glass-fill: color-mix(in oklab, #fffdf8 8%, transparent);
+    --glass-tint: color-mix(in oklab, #ffffff 16%, transparent);
+    --glass-stroke: color-mix(in oklab, #e8c872 32%, transparent);
+    --blur-liquid: 16px;
     color-scheme: light;
   }
 
@@ -249,11 +249,11 @@ html.dark .brand-wordmark-sm {
   text-shadow: 0 0 28px color-mix(in oklab, #c9a96e 40%, transparent);
 }
 .display-title {
-  font-family: var(--font-brand);
+  font-family: var(--font-display);
   font-optical-sizing: auto;
-  font-weight: 600;
-  font-variation-settings: "SOFT" 18, "opsz" 36;
-  letter-spacing: -0.03em;
+  font-weight: 700;
+  font-style: normal;
+  letter-spacing: 0.02em;
   font-synthesis: none;
 }
 .metric-value {
@@ -1622,15 +1622,13 @@ html.dark .adinkra-ground .adinkra {
   gap: 0.65rem;
   height: calc(3.5rem + env(safe-area-inset-top));
   padding: env(safe-area-inset-top) 0.75rem 0;
-  background: color-mix(in oklab, var(--shop-cream-elev) 88%, transparent);
-  backdrop-filter: blur(16px) saturate(1.45);
-  -webkit-backdrop-filter: blur(16px) saturate(1.45);
+  background: color-mix(in oklab, var(--shop-cream-elev) 42%, transparent);
   border-bottom: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
   box-shadow: var(--shadow-lift);
   color: var(--shop-ink);
 }
 html.dark .shop-top {
-  background: color-mix(in oklab, var(--shop-cream-elev) 86%, transparent);
+  background: color-mix(in oklab, var(--shop-cream-elev) 38%, transparent);
   border-bottom: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
   color: var(--shop-ink);
 }
@@ -1647,7 +1645,7 @@ html.dark .shop-dock {
   height: 2.5rem;
   padding: 0 0.22rem 0 0.85rem;
   border-radius: 999px;
-  background: color-mix(in oklab, var(--shop-cream) 78%, transparent);
+  background: color-mix(in oklab, var(--shop-cream) 36%, transparent);
   color: var(--shop-ink);
   border: 1px solid color-mix(in oklab, var(--gold) 26%, transparent);
   box-shadow:
@@ -1662,7 +1660,7 @@ html.dark .shop-dock {
     transform var(--motion-release) var(--ease-spring);
 }
 .shop-search:focus-within {
-  background: color-mix(in oklab, var(--shop-cream-elev) 92%, transparent);
+  background: color-mix(in oklab, var(--shop-cream-elev) 48%, transparent);
   border-color: color-mix(in oklab, var(--gold) 62%, transparent);
   transform: scale(1.012);
   box-shadow:
@@ -1825,12 +1823,12 @@ html.dark .shop-dock {
   color: #f6f1e8;
 }
 .shop-banner-title {
-  font-family: var(--font-brand);
-  font-style: italic;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-style: normal;
+  font-weight: 700;
   font-size: clamp(1.5rem, 5vw, 2.35rem);
   line-height: 0.95;
-  letter-spacing: -0.03em;
+  letter-spacing: 0.02em;
   color: #f6f1e8;
 }
 .shop-hero-banner .shop-hero-line { color: color-mix(in oklab, #f6f1e8 88%, transparent); }
@@ -1839,7 +1837,7 @@ html.dark .shop-dock {
   margin: 0 auto;
   padding: 1.25rem 1rem 0.25rem;
 }
-.shop-intro h1 { font-size: 2.75rem; line-height: 0.9; color: var(--color-fg); }
+.shop-intro h1 { font-family: var(--font-display); font-size: 2.75rem; line-height: 0.9; color: var(--color-fg); }
 .shop-kicker {
   font-size: 0.6875rem;
   letter-spacing: 0.18em;
@@ -1977,6 +1975,8 @@ html.dark .shop-dock {
   font-weight: 600;
 }
 .mall-name {
+  font-family: var(--font-brand);
+  font-style: italic;
   font-size: 0.875rem;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -3541,11 +3541,6 @@ html.dark .liquid-caustic {
 }
 .cushion,
 .panel,
-.shop-top,
-.shop-dock,
-.shop-order-card,
-.mall-card,
-.dept-tile,
 .office-kpi-card,
 .office-sidebar,
 .glass {
@@ -3558,6 +3553,15 @@ html.dark .liquid-caustic {
     inset 0 -10px 28px color-mix(in oklab, #fff 10%, transparent),
     inset 0 0 0 1px color-mix(in oklab, #fff 22%, transparent),
     0 18px 44px -18px color-mix(in oklab, #1c1612 38%, transparent);
+}
+.mall-card,
+.dept-tile,
+.shop-order-card {
+  background: color-mix(in oklab, var(--shop-cream-elev, #fffdf8) 86%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold) 20%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, #fff 70%, transparent),
+    0 10px 24px -16px color-mix(in oklab, #1c1612 28%, transparent);
 }
 html.dark .cushion,
 html.dark .panel,
@@ -3772,27 +3776,27 @@ a.shop-line:active,
   backdrop-filter: blur(16px) saturate(1.7);
   -webkit-backdrop-filter: blur(16px) saturate(1.7);
   background:
-    linear-gradient(180deg, color-mix(in oklab, #fff 42%, transparent), color-mix(in oklab, var(--color-bg-elevated) 36%, transparent) 46%),
-    color-mix(in oklab, var(--color-bg) 40%, transparent);
-  border: 1px solid color-mix(in oklab, var(--gold-bright) 34%, transparent);
+    linear-gradient(180deg, color-mix(in oklab, #fff 22%, transparent), color-mix(in oklab, var(--shop-cream-elev) 10%, transparent) 46%),
+    color-mix(in oklab, var(--shop-cream) 22%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold-bright) 40%, transparent);
   box-shadow:
-    inset 0 1px 0 color-mix(in oklab, #fff 78%, transparent),
-    inset 0 -1px 0 color-mix(in oklab, var(--gold-deep) 16%, transparent),
-    0 1px 0 color-mix(in oklab, #fff 28%, transparent),
-    0 10px 28px -14px color-mix(in oklab, #1c1612 38%, transparent),
-    0 22px 40px -22px color-mix(in oklab, var(--gold-deep) 30%, transparent);
+    inset 0 1px 0 color-mix(in oklab, #fff 82%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, var(--gold-deep) 18%, transparent),
+    0 1px 0 color-mix(in oklab, #fff 22%, transparent),
+    0 10px 28px -14px color-mix(in oklab, #1c1612 28%, transparent),
+    0 22px 40px -22px color-mix(in oklab, var(--gold-deep) 22%, transparent);
 }
 html.dark .shop-shell > .shop-dock {
   background:
-    linear-gradient(180deg, color-mix(in oklab, #fff 48%, transparent), color-mix(in oklab, var(--shop-cream-elev) 40%, transparent) 46%),
-    color-mix(in oklab, var(--shop-cream) 46%, transparent);
-  border-color: color-mix(in oklab, var(--gold-bright) 38%, transparent);
+    linear-gradient(180deg, color-mix(in oklab, #fff 18%, transparent), color-mix(in oklab, var(--shop-cream-elev) 12%, transparent) 46%),
+    color-mix(in oklab, var(--shop-cream) 20%, transparent);
+  border-color: color-mix(in oklab, var(--gold-bright) 42%, transparent);
   box-shadow:
-    inset 0 1px 0 color-mix(in oklab, #fff 78%, transparent),
+    inset 0 1px 0 color-mix(in oklab, #fff 70%, transparent),
     inset 0 -1px 0 color-mix(in oklab, var(--gold-deep) 16%, transparent),
-    0 1px 0 color-mix(in oklab, #fff 28%, transparent),
-    0 10px 28px -14px color-mix(in oklab, #1c1612 28%, transparent),
-    0 22px 40px -22px color-mix(in oklab, var(--gold-deep) 28%, transparent);
+    0 1px 0 color-mix(in oklab, #fff 18%, transparent),
+    0 10px 28px -14px color-mix(in oklab, #1c1612 24%, transparent),
+    0 22px 40px -22px color-mix(in oklab, var(--gold-deep) 22%, transparent);
 }
 
 .shop-dock a,
