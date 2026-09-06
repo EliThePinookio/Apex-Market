@@ -1593,15 +1593,18 @@ html.dark .adinkra-ground .adinkra {
 .theme-toggle:hover {
   color: var(--color-accent);
 }
+.shop-top .theme-toggle {
+  color: var(--shop-ink);
+  background: color-mix(in oklab, var(--shop-cream) 70%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold) 22%, transparent);
+}
 .office-icon-btn.theme-toggle,
 .shop-icon-btn.theme-toggle {
   width: 2.35rem;
   height: 2.35rem;
   min-width: 2.35rem;
   min-height: 2.35rem;
-  background: color-mix(in oklab, #fff 8%, transparent);
   box-shadow: none;
-  color: inherit;
 }
 .shop-top,
 .shop-main,
@@ -1673,6 +1676,8 @@ html.dark .shop-dock {
   background: transparent;
   border: 0;
   outline: none;
+  font-size: 1rem;
+  line-height: 1.2;
   color: var(--shop-ink);
 }
 .shop-search input::placeholder {
@@ -1685,7 +1690,7 @@ html.dark .shop-dock {
   border-radius: 999px;
   background-image: var(--gold-grad);
   background-color: var(--gold);
-  color: var(--color-accent-fg);
+  color: #1c1612;
   font-size: 0.75rem;
   font-weight: 700;
   flex-shrink: 0;
@@ -1708,14 +1713,6 @@ html.dark .shop-dock {
     padding: 0;
     width: 2.05rem;
   }
-  .shop-search button::after {
-    content: "";
-    width: 0.45rem;
-    height: 0.45rem;
-    border-radius: 999px;
-    background: var(--color-accent-fg);
-    opacity: 0.85;
-  }
 }
 .shop-top-actions {
   display: flex;
@@ -1731,7 +1728,7 @@ html.dark .shop-dock {
   min-width: 2.75rem;
   min-height: 2.75rem;
   padding: 0 0.35rem;
-  color: var(--color-fg);
+  color: var(--shop-ink);
   font-size: 0.625rem;
   font-weight: 600;
   position: relative;
@@ -1754,15 +1751,7 @@ html.dark .shop-dock {
   align-items: center;
   gap: 0.65rem;
   min-width: 0;
-  color: var(--color-fg);
-}
-.shop-brand-kicker {
-  display: block;
-  font-size: 0.6875rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-fg-subtle);
-  margin-top: 0.15rem;
+  color: var(--shop-ink);
 }
 .shop-bag-btn {
   position: relative;
@@ -1771,7 +1760,7 @@ html.dark .shop-dock {
   display: grid;
   place-items: center;
   border-radius: 12px;
-  color: var(--color-fg);
+  color: var(--shop-ink);
 }
 .shop-bag-count {
   position: absolute;
@@ -1781,8 +1770,9 @@ html.dark .shop-dock {
   height: 1rem;
   padding: 0 0.25rem;
   border-radius: 999px;
-  background: var(--color-accent);
-  color: var(--color-accent-fg);
+  background-image: var(--gold-grad);
+  background-color: var(--gold);
+  color: #1c1612;
   font-size: 0.625rem;
   font-weight: 700;
   display: grid;
