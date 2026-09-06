@@ -1469,6 +1469,16 @@ input[type="range"]::-moz-range-thumb {
   flex-direction: column;
   background: transparent;
   color: var(--color-fg);
+  --shop-cream: #f6f1e8;
+  --shop-cream-elev: #fffdf8;
+  --shop-ink: #1c1612;
+  --shop-ink-muted: #6e6256;
+}
+html.dark .shop-shell {
+  --shop-cream: #f6f1e8;
+  --shop-cream-elev: #fffdf8;
+  --shop-ink: #1c1612;
+  --shop-ink-muted: #6e6256;
 }
 .cloth-ground {
   position: fixed;
@@ -1609,19 +1619,21 @@ html.dark .adinkra-ground .adinkra {
   gap: 0.65rem;
   height: calc(3.5rem + env(safe-area-inset-top));
   padding: env(safe-area-inset-top) 0.75rem 0;
-  background: color-mix(in oklab, var(--color-bg-elevated) 92%, transparent);
+  background: color-mix(in oklab, var(--shop-cream-elev) 88%, transparent);
   backdrop-filter: blur(16px) saturate(1.45);
   -webkit-backdrop-filter: blur(16px) saturate(1.45);
   border-bottom: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
   box-shadow: var(--shadow-lift);
+  color: var(--shop-ink);
 }
 html.dark .shop-top {
-  background: color-mix(in oklab, #0b0b0b 88%, transparent);
+  background: color-mix(in oklab, var(--shop-cream-elev) 86%, transparent);
   border-bottom: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
+  color: var(--shop-ink);
 }
 html.dark .shop-dock {
-  background: color-mix(in oklab, #0b0b0b 90%, transparent);
-  border-top-color: color-mix(in oklab, #c9a96e 22%, transparent);
+  background: color-mix(in oklab, var(--shop-cream-elev) 82%, transparent);
+  border-color: color-mix(in oklab, var(--gold) 34%, transparent);
 }
 .shop-search {
   flex: 1;
@@ -1632,8 +1644,8 @@ html.dark .shop-dock {
   height: 2.5rem;
   padding: 0 0.22rem 0 0.85rem;
   border-radius: 999px;
-  background: color-mix(in oklab, var(--color-bg) 68%, transparent);
-  color: var(--color-fg);
+  background: color-mix(in oklab, var(--shop-cream) 78%, transparent);
+  color: var(--shop-ink);
   border: 1px solid color-mix(in oklab, var(--gold) 26%, transparent);
   box-shadow:
     inset 0 1px 0 color-mix(in oklab, #fff 70%, transparent),
@@ -1647,7 +1659,7 @@ html.dark .shop-dock {
     transform var(--motion-release) var(--ease-spring);
 }
 .shop-search:focus-within {
-  background: color-mix(in oklab, var(--color-bg-elevated) 88%, transparent);
+  background: color-mix(in oklab, var(--shop-cream-elev) 92%, transparent);
   border-color: color-mix(in oklab, var(--gold) 62%, transparent);
   transform: scale(1.012);
   box-shadow:
@@ -1661,11 +1673,10 @@ html.dark .shop-dock {
   background: transparent;
   border: 0;
   outline: none;
-  font-size: 0.9375rem;
-  color: var(--color-fg);
+  color: var(--shop-ink);
 }
 .shop-search input::placeholder {
-  color: var(--color-fg-subtle);
+  color: var(--shop-ink-muted);
 }
 .shop-search button {
   height: 2.05rem;
@@ -2320,10 +2331,10 @@ html.dark .shop-dock {
   gap: 0.15rem;
   padding: 0.28rem;
   border-radius: 28px;
-  background: color-mix(in oklab, var(--color-bg-elevated) 88%, transparent);
+  background: color-mix(in oklab, var(--shop-cream-elev) 88%, transparent);
   backdrop-filter: blur(var(--blur-lg)) saturate(1.85);
   -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(1.85);
-  border: 1px solid color-mix(in oklab, var(--color-accent) 26%, var(--glass-stroke));
+  border: 1px solid color-mix(in oklab, var(--gold) 28%, var(--glass-stroke));
   box-shadow: var(--highlight), var(--shadow-3);
 }
 .shop-dock a {
@@ -2338,15 +2349,16 @@ html.dark .shop-dock {
   font-size: 0.625rem;
   letter-spacing: 0.01em;
   gap: 0.12rem;
-  color: var(--color-fg-muted);
+  color: var(--shop-ink-muted);
 }
 .shop-dock a[data-active="true"] {
-  color: var(--color-fg);
+  color: var(--shop-ink);
   font-weight: 700;
-  background: color-mix(in oklab, var(--color-accent) 28%, var(--color-bg-elevated));
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--gold-bright) 42%, transparent), color-mix(in oklab, var(--gold) 22%, var(--shop-cream-elev)));
   box-shadow:
     inset 0 1px 0 color-mix(in oklab, #fff 70%, transparent),
-    0 8px 16px -10px color-mix(in oklab, var(--color-accent) 55%, transparent);
+    0 8px 16px -10px color-mix(in oklab, var(--gold-deep) 55%, transparent);
 }
 .shop-dock a[data-active="true"]::after {
   content: "";
@@ -3559,11 +3571,6 @@ html.dark .liquid-caustic {
 }
 html.dark .cushion,
 html.dark .panel,
-html.dark .shop-top,
-html.dark .shop-dock,
-html.dark .shop-order-card,
-html.dark .mall-card,
-html.dark .dept-tile,
 html.dark .office-kpi-card,
 html.dark .office-sidebar,
 html.dark .glass {
@@ -3787,13 +3794,15 @@ a.shop-line:active,
 }
 html.dark .shop-shell > .shop-dock {
   background:
-    linear-gradient(180deg, color-mix(in oklab, #e8c872 10%, transparent), color-mix(in oklab, #0b0b0b 58%, transparent)),
-    color-mix(in oklab, #0b0b0b 62%, transparent);
-  border-color: color-mix(in oklab, var(--gold) 34%, transparent);
+    linear-gradient(180deg, color-mix(in oklab, #fff 48%, transparent), color-mix(in oklab, var(--shop-cream-elev) 40%, transparent) 46%),
+    color-mix(in oklab, var(--shop-cream) 46%, transparent);
+  border-color: color-mix(in oklab, var(--gold-bright) 38%, transparent);
   box-shadow:
-    inset 0 1px 0 color-mix(in oklab, #e8c872 26%, transparent),
-    inset 0 -1px 0 color-mix(in oklab, #000 35%, transparent),
-    0 14px 36px -14px rgba(0, 0, 0, 0.72);
+    inset 0 1px 0 color-mix(in oklab, #fff 78%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, var(--gold-deep) 16%, transparent),
+    0 1px 0 color-mix(in oklab, #fff 28%, transparent),
+    0 10px 28px -14px color-mix(in oklab, #1c1612 28%, transparent),
+    0 22px 40px -22px color-mix(in oklab, var(--gold-deep) 28%, transparent);
 }
 
 .shop-dock a,
