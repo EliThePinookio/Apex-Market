@@ -42,6 +42,10 @@ export function bindFeel(root: HTMLElement | Document = document) {
     const hit = t.closest(PRESSABLE);
     if (!hit) return;
     if (hit instanceof HTMLElement && hit.closest("[disabled], [aria-disabled='true']")) return;
+    if (hit.closest(".office-chat-composer")) {
+      gated("light");
+      return;
+    }
     if (hit instanceof HTMLButtonElement && hit.type === "submit") {
       gated("medium");
       return;

@@ -3081,6 +3081,12 @@ html.dark .office-frame {
   color: #1c1612;
   font-size: 0.8125rem;
   font-weight: 700;
+  transition: transform var(--motion-release) var(--ease-spring);
+}
+.office-chat-composer button:active:not(:disabled) {
+  transform: scale(0.96);
+  transition-duration: var(--motion-press);
+  transition-timing-function: var(--ease-press);
 }
 .office-chat-composer button:disabled { opacity: 0.45; }
 

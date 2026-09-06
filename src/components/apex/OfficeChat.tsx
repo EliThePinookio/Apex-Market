@@ -92,7 +92,7 @@ export function OfficeChat({
     setMessages(next);
     setDraft("");
     setBusy(true);
-    tick("medium");
+    tick("light");
     try {
       const ctx = buildTrustedContext({
         businessName: profile.businessName || "BEANNEL",
