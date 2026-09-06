@@ -2,7 +2,7 @@ import { coverFor } from "@/lib/beannel/catalog";
 import { supabase } from "@/lib/beannel/supabase";
 import { newId } from "@/lib/apex/money";
 import { sanitizeText } from "@/lib/beannel/guard";
-import type { Product, TransactionItem } from "@/types";
+import type { PaymentMethod, Product, TransactionItem } from "@/types";
 import {
   listingIdFor,
   parseShopMeta,
@@ -17,6 +17,7 @@ import {
 import type { BagItem } from "@/lib/beannel/cart";
 import {
   canTransition,
+  isOrderStatus,
   parseOrderEnvelope,
   patchOrderEnvelope,
   writeOrderEnvelope,
@@ -360,6 +361,133 @@ function mapShopOrder(row: Record<string, unknown>): ShopOrder | null {
   };
 }
 
+function asPayment(raw: string): PaymentMethod {
+  const v = raw.trim().toLowerCase().replace(/\s+/g, "_");
+  if (v === "mobile_money" || v === "momo" || v === "mobile") return "mobile_money";
+  if (v === "cash" || v === "cod" || v === "cash_on_delivery") return "cash";
+  if (v === "card") return "card";
+  if (v === "transfer" || v === "bank") return "transfer";
+  return "other";
+}
+
+function isPosLedgerSale(id: string): boolean {
+  return id.startsWith("tx-");
+}
+
+function contactFromSaleNotes(notes: string, fallbackName: string): {
+  name: string;
+  phone: string;
+  address: string;
+  userId: string;
+  status?: OrderStatus;
+} {
+  if (!notes) return { name: fallbackName, phone: "", address: "", userId: "" };
+  const env = parseOrderEnvelope(notes);
+  if (env) {
+    return { name: env.name, phone: env.phone, address: env.address, userId: env.userId, status: env.status };
+  }
+  try {
+    const j = JSON.parse(notes) as Record<string, unknown>;
+    if (j && typeof j === "object") {
+      const st = String(j.status || j.fulfillment || "");
+      return {
+        name: String(j.name || j.customer_name || j.full_name || fallbackName),
+        phone: String(j.phone || j.tel || j.contact || ""),
+        address: String(j.address || j.delivery_address || j.delivery || ""),
+        userId: String(j.telegram_user_id || j.tg_id || j.user_id || j.uid || ""),
+        status: isOrderStatus(st) ? st : undefined,
+      };
+    }
+  } catch {
+    /* plain text */
+  }
+  const lower = notes.toLowerCase();
+  const phoneMatch = notes.match(/\+?\d[\d\s()-]{8,}\d/);
+  const addrMatch = notes.match(/(?:deliver(?:y| to)?|address)\s*[:\-]\s*(.+)/i);
+  return {
+    name: fallbackName,
+    phone: phoneMatch ? phoneMatch[0].replace(/[^\d+]/g, "") : "",
+    address: addrMatch ? addrMatch[1].trim() : /telegram|mini app/.test(lower) ? notes.slice(0, 180) : "",
+    userId: "",
+  };
+}
+
+function mapSaleItems(raw: unknown): TransactionItem[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((item) => {
+    const row = (item || {}) as Record<string, unknown>;
+    const qty = Number(row.quantity) || 1;
+    const unitSell = Number(row.unit_price ?? row.unitSellPrice) || 0;
+    const unitBuy = Number(row.cost_price ?? row.unitBuyPrice) || 0;
+    return {
+      productId: String(row.product_id || row.productId || ""),
+      productName: String(row.product_name || row.productName || "Item"),
+      quantity: qty,
+      unitBuyPrice: unitBuy,
+      unitSellPrice: unitSell,
+      totalSellPrice: Number(row.line_total ?? row.totalSellPrice) || unitSell * qty,
+      totalBuyPrice: Number(row.line_cogs ?? row.totalBuyPrice) || unitBuy * qty,
+    };
+  });
+}
+
+function mapSaleOrder(row: Record<string, unknown>): ShopOrder | null {
+  const id = String(row.id || "");
+  if (!id || isPosLedgerSale(id)) return null;
+  const name = String(row.customer_name || "Customer");
+  const contact = contactFromSaleNotes(String(row.notes || ""), name);
+  const payStatus = String(row.payment_status || "");
+  let status: OrderStatus = contact.status || "placed";
+  if (!contact.status && payStatus === "refunded") status = "refunded";
+  return {
+    id,
+    businessId: String(row.business_id || ""),
+    customerId: contact.userId || String(row.customer_id || ""),
+    name: contact.name || name,
+    phone: contact.phone,
+    address: contact.address,
+    payment: asPayment(String(row.payment_method || "other")),
+    items: mapSaleItems(row.sale_items ?? row.items),
+    amount: Number(row.total ?? row.amount) || 0,
+    date: String(row.sale_date || row.created_at || ""),
+    status,
+    claimed: status !== "placed",
+    saleId: id,
+    updatedAt: String(row.updated_at || row.sale_date || row.created_at || ""),
+  };
+}
+
+const SALE_SELECT =
+  "id,business_id,customer_id,reference_no,sale_date,total,payment_method,payment_status,customer_name,notes,updated_at,created_at,sale_items(product_id,product_name,quantity,unit_price,cost_price,line_total,line_cogs)";
+
+async function fetchSaleRows(businessId?: string): Promise<Record<string, unknown>[]> {
+  let q = supabase.from("sales").select(SALE_SELECT).order("sale_date", { ascending: false }).limit(200);
+  if (businessId) q = q.eq("business_id", businessId);
+  const { data, error } = await q;
+  if (error) {
+    const plain = await supabase
+      .from("sales")
+      .select("id,business_id,customer_id,reference_no,sale_date,total,payment_method,payment_status,customer_name,notes,updated_at,created_at")
+      .order("sale_date", { ascending: false })
+      .limit(200);
+    if (plain.error) throw new Error(plain.error.message);
+    const rows = (plain.data || []) as Record<string, unknown>[];
+    const filtered = businessId ? rows.filter((r) => String(r.business_id || "") === businessId) : rows;
+    const ids = filtered.map((r) => String(r.id));
+    if (!ids.length) return filtered;
+    const items = await supabase.from("sale_items").select("sale_id,product_id,product_name,quantity,unit_price,cost_price,line_total,line_cogs").in("sale_id", ids);
+    const bySale = new Map<string, Record<string, unknown>[]>();
+    for (const item of (items.data || []) as Record<string, unknown>[]) {
+      const sid = String(item.sale_id || "");
+      const list = bySale.get(sid) || [];
+      list.push(item);
+      bySale.set(sid, list);
+    }
+    return filtered.map((row) => ({ ...row, sale_items: bySale.get(String(row.id)) || [] }));
+  }
+  return (data || []) as Record<string, unknown>[];
+}
+
 export async function placeShopOrder(args: {
   businessId: string;
   customerName: string;
@@ -488,9 +616,19 @@ async function fetchShopRows(): Promise<Record<string, unknown>[]> {
 export async function fetchMyShopOrders(userId: string): Promise<ShopOrder[]> {
   if (!userId) return [];
   const rows = await fetchShopRows();
-  return rows
+  const fromTx = rows
     .map(mapShopOrder)
     .filter((row): row is ShopOrder => row != null && row.customerId === userId);
+  let fromSales: ShopOrder[] = [];
+  try {
+    const sales = await fetchSaleRows();
+    fromSales = sales
+      .map(mapSaleOrder)
+      .filter((row): row is ShopOrder => row != null && row.customerId === userId);
+  } catch {
+    fromSales = [];
+  }
+  return mergeOrders(fromTx, fromSales);
 }
 
 export async function fetchShopInbox(businessId: string): Promise<ShopOrder[]> {
@@ -501,15 +639,38 @@ export async function fetchShopInbox(businessId: string): Promise<ShopOrder[]> {
   const mine = businessId
     ? orders.filter((row) => !row.businessId || row.businessId === businessId)
     : orders;
-  return (mine.length ? mine : orders).sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-  );
+  const fromTx = mine.length ? mine : orders;
+  let fromSales: ShopOrder[] = [];
+  try {
+    const sales = await fetchSaleRows(businessId);
+    fromSales = sales.map(mapSaleOrder).filter((row): row is ShopOrder => row != null);
+    if (businessId) fromSales = fromSales.filter((row) => !row.businessId || row.businessId === businessId);
+  } catch (err) {
+    console.warn("sales inbox", err);
+  }
+  return mergeOrders(fromTx, fromSales);
+}
+
+function mergeOrders(shopTx: ShopOrder[], sales: ShopOrder[]): ShopOrder[] {
+  const claimed = new Set(shopTx.map((o) => o.saleId).filter(Boolean) as string[]);
+  const extra = sales.filter((o) => !claimed.has(o.id) && !shopTx.some((s) => s.id === o.id));
+  return [...shopTx, ...extra].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
 export async function fetchShopOrder(orderId: string): Promise<ShopOrder | null> {
   const { data, error } = await supabase.from("transactions").select("*").eq("id", orderId).limit(1);
-  if (error || !data?.[0]) return null;
-  return mapShopOrder(data[0] as Record<string, unknown>);
+  if (!error && data?.[0]) {
+    const mapped = mapShopOrder(data[0] as Record<string, unknown>);
+    if (mapped) return mapped;
+  }
+  const sale = await supabase.from("sales").select(SALE_SELECT).eq("id", orderId).limit(1);
+  if (sale.error || !sale.data?.[0]) {
+    const plain = await supabase.from("sales").select("*").eq("id", orderId).limit(1);
+    if (plain.error || !plain.data?.[0]) return null;
+    const items = await supabase.from("sale_items").select("*").eq("sale_id", orderId);
+    return mapSaleOrder({ ...(plain.data[0] as Record<string, unknown>), sale_items: items.data || [] });
+  }
+  return mapSaleOrder(sale.data[0] as Record<string, unknown>);
 }
 
 export async function updateShopOrderStatus(orderId: string, status: OrderStatus): Promise<ShopOrder> {
@@ -519,12 +680,33 @@ export async function updateShopOrderStatus(orderId: string, status: OrderStatus
   if (!canTransition(current.status, status)) {
     throw new Error(`Cannot move this order from ${current.status} to ${status}.`);
   }
-  const { data, error } = await supabase.from("transactions").select("description").eq("id", orderId).limit(1);
-  if (error || !data?.[0]) throw new Error("Could not update the order.");
-  const description = patchOrderEnvelope(String(data[0].description || ""), { status });
-  const { error: upd } = await supabase.from("transactions").update({ description }).eq("id", orderId);
+  if (orderId.startsWith("shop-")) {
+    const { data, error } = await supabase.from("transactions").select("description").eq("id", orderId).limit(1);
+    if (error || !data?.[0]) throw new Error("Could not update the order.");
+    const description = patchOrderEnvelope(String(data[0].description || ""), { status });
+    const { error: upd } = await supabase.from("transactions").update({ description }).eq("id", orderId);
+    if (upd) throw new Error(upd.message);
+    return { ...current, status, updatedAt: new Date().toISOString(), claimed: current.claimed || status !== "placed" };
+  }
+
+  const notes = writeOrderEnvelope({
+    businessId: current.businessId,
+    name: current.name,
+    phone: current.phone,
+    payment: current.payment,
+    address: current.address,
+    userId: current.customerId,
+    status,
+    saleId: current.id,
+    updatedAt: new Date().toISOString(),
+  });
+  const paymentStatus = status === "refunded" ? "refunded" : status === "cancelled" ? "pending" : "paid";
+  const { error: upd } = await supabase
+    .from("sales")
+    .update({ notes, payment_status: paymentStatus, updated_at: new Date().toISOString() })
+    .eq("id", orderId);
   if (upd) throw new Error(upd.message);
-  return { ...current, status, updatedAt: new Date().toISOString(), claimed: current.claimed || status !== "placed" };
+  return { ...current, status, claimed: true, saleId: current.id, updatedAt: new Date().toISOString() };
 }
 
 export async function markShopOrderClaimed(orderId: string, saleId: string): Promise<void> {
@@ -544,7 +726,7 @@ export async function cancelShopOrder(orderId: string): Promise<ShopOrder> {
   if (current.status === "cancelled" || current.status === "refunded" || current.status === "delivered") {
     throw new Error("This order can no longer be cancelled.");
   }
-  if (current.status === "placed" && !current.claimed) {
+  if (current.status === "placed" && !current.claimed && current.id.startsWith("shop-")) {
     for (const item of current.items) {
       const listingId = listingIdFor(item.productId);
       const { data } = await supabase.from("products").select("stock_quantity").eq("id", listingId).limit(1);
@@ -585,6 +767,9 @@ export function subscribeShopOrders(onChange: () => void): () => void {
       .on("postgres_changes", { event: "*", schema: "public", table: "transactions" }, (payload) => {
         const row = (payload.new || payload.old) as { id?: string } | null;
         if (String(row?.id || "").startsWith("shop-")) onChange();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "sales" }, () => {
+        onChange();
       })
       .subscribe();
     return () => {

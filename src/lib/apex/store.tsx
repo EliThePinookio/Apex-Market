@@ -497,6 +497,11 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
       const order = shopOrders.find((o) => o.id === orderId);
       if (!order) throw new Error("Order not found.");
       if (order.claimed && order.status !== "placed") return;
+      if (!order.id.startsWith("shop-")) {
+        const updated = await updateShopOrderStatus(orderId, "confirmed");
+        setShopOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
+        return;
+      }
       const next = await applySaleFromOrder(order, biz, userId, snapshotRef.current);
       snapshotRef.current = next;
       setSnapshot(next);
