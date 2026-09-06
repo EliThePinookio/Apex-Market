@@ -73,25 +73,36 @@
     --blur-lg: 28px;
     --blur-header: 20px;
     --motion-stagger: 40ms;
+    --motion-instant: 70ms;
     --motion-micro: 80ms;
+    --motion-press: 90ms;
     --motion-quick: 150ms;
+    --motion-search: 180ms;
+    --motion-tab: 220ms;
     --motion-fast: 250ms;
+    --motion-settle: 280ms;
     --motion-medium: 350ms;
+    --motion-bubble: 360ms;
     --motion-slow: 400ms;
+    --motion-release: 420ms;
     --motion-emphasis: 500ms;
     --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
     --ease-in: cubic-bezier(0.4, 0, 1, 1);
     --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+    --ease-press: cubic-bezier(0.4, 0, 1, 1);
     --ease-spring: cubic-bezier(0.34, 1.45, 0.64, 1);
     --ease-spring-soft: cubic-bezier(0.22, 1.28, 0.36, 1);
-    --ease-press: cubic-bezier(0.4, 0, 1, 1);
-    --motion-press: 90ms;
-    --motion-release: 420ms;
+    --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
     --ease-viscous: cubic-bezier(0.22, 1, 0.36, 1);
     --motion-viscous: 160ms;
     --motion-scale-hover: 1.015;
-    --motion-scale-press: 0.98;
+    --motion-scale-press: 0.96;
+    --motion-scale-press-chip: 0.94;
+    --motion-scale-press-dock: 0.96;
     --motion-scale-press-tile: 0.985;
+    --motion-scale-bubble: 0.97;
+    --motion-scale-search: 0.98;
     --motion-scale-modal: 0.97;
     --text-caption: 0.6875rem;
     --text-footnote: 0.8125rem;
@@ -1621,9 +1632,9 @@ html.dark .shop-dock {
     inset 0 1px 2px color-mix(in oklab, var(--color-fg) 6%, transparent),
     var(--highlight);
   transition:
-    box-shadow var(--motion-release, 420ms) var(--ease-spring, ease),
-    background-color 180ms var(--ease-out),
-    border-color 180ms var(--ease-out);
+    box-shadow var(--motion-release) var(--ease-spring),
+    background-color var(--motion-search) var(--ease-out),
+    border-color var(--motion-search) var(--ease-out);
 }
 .shop-search:focus-within {
   background: var(--color-bg-elevated);
@@ -1657,7 +1668,7 @@ html.dark .shop-dock {
   box-shadow: var(--highlight);
 }
 .shop-search button:active {
-  transform: scale(0.94);
+  transform: scale(var(--motion-scale-search));
 }
 @media (max-width: 639px) {
   .shop-search-go {
@@ -3601,10 +3612,10 @@ a.shop-line,
 .office-chat-fab {
   transition:
     transform var(--motion-release) var(--ease-spring),
-    box-shadow 280ms var(--ease-spring-soft),
-    filter 220ms var(--ease-out),
-    background-color 180ms var(--ease-out),
-    color 140ms var(--ease-out);
+    box-shadow var(--motion-settle) var(--ease-spring-soft),
+    filter var(--motion-tab) var(--ease-out),
+    background-color var(--motion-search) var(--ease-out),
+    color var(--motion-quick) var(--ease-out);
   -webkit-tap-highlight-color: transparent;
 }
 button:not(:disabled):active,
@@ -3622,7 +3633,7 @@ a.shop-line:active,
 .office-chat-suggest button:active,
 .office-chat-composer button:active,
 .office-chat-fab:active {
-  transform: scale(0.96);
+  transform: scale(var(--motion-scale-press));
   transition-duration: var(--motion-press);
   transition-timing-function: var(--ease-press);
 }
@@ -3640,19 +3651,25 @@ a.shop-line:active,
 
 .office-chat-bubble {
   transform-origin: center bottom;
-  transition: transform var(--motion-release) var(--ease-spring), filter 180ms var(--ease-out);
+  transition: transform var(--motion-bubble) var(--ease-spring), filter var(--motion-search) var(--ease-out);
 }
 .office-chat-bubble.is-user { transform-origin: right bottom; }
 .office-chat-bubble.is-bot { transform-origin: left bottom; }
 .office-chat-bubble:active {
-  transform: scale(0.97);
+  transform: scale(var(--motion-scale-bubble));
   transition-duration: var(--motion-press);
   transition-timing-function: var(--ease-press);
 }
 
 .tag-chip:active,
 .office-chat-suggest button:active {
-  transform: scale(0.94);
+  transform: scale(var(--motion-scale-press-chip));
+}
+
+.shop-dock a:active,
+.office-dock a:active,
+.office-dock > button:active {
+  transform: scale(var(--motion-scale-press-dock));
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -3681,6 +3698,23 @@ a.shop-line:active,
 }
 
 @media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-press: 1ms;
+    --motion-release: 1ms;
+    --motion-search: 1ms;
+    --motion-tab: 1ms;
+    --motion-bubble: 1ms;
+    --motion-settle: 1ms;
+    --ease-spring: linear;
+    --ease-spring-soft: linear;
+    --ease-press: linear;
+    --motion-scale-press: 1;
+    --motion-scale-press-chip: 1;
+    --motion-scale-press-dock: 1;
+    --motion-scale-bubble: 1;
+    --motion-scale-search: 1;
+    --motion-scale-hover: 1;
+  }
   .product-thumb img { transition: none; }
   .cloth-photo { filter: blur(8px) saturate(1.05); }
   .cloth-caustic { animation: none; display: none; }
