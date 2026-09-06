@@ -166,10 +166,10 @@ export function SettingsView() {
 
       <section>
         <GroupLabel>Paystack</GroupLabel>
-        <Group footer="MoMo and card at checkout use PAYSTACK_SECRET_KEY on the server. The secret is never saved in this browser. Cash on delivery does not need Paystack.">
+        <Group footer="Set PAYSTACK_SECRET_KEY on Vercel. MoMo and card use that server key. It is never stored in this browser. Cash on delivery does not need Paystack.">
           <GroupRow>
             <span>Secret</span>
-            <span className="group-value">On the server only</span>
+            <span className="group-value">PAYSTACK_SECRET_KEY on Vercel</span>
           </GroupRow>
         </Group>
       </section>
