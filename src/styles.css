@@ -2928,7 +2928,7 @@ html.dark .office-frame {
   height: min(32rem, calc(100dvh - 11rem));
   display: flex;
   flex-direction: column;
-  background: color-mix(in oklab, #161310 14%, color-mix(in oklab, var(--gold) 6%, transparent));
+  background: color-mix(in oklab, #161310 32%, color-mix(in oklab, var(--gold) 6%, transparent));
   backdrop-filter: blur(16px) saturate(1.2);
   -webkit-backdrop-filter: blur(16px) saturate(1.2);
   border: 1px solid color-mix(in oklab, var(--gold) 36%, transparent);
@@ -3057,7 +3057,7 @@ html.dark .office-frame {
   gap: 0.45rem;
   padding: 0.7rem 0.75rem calc(0.75rem + env(safe-area-inset-bottom));
   border-top: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
-  background: color-mix(in oklab, #161310 12%, color-mix(in oklab, var(--gold) 5%, transparent));
+  background: color-mix(in oklab, #161310 36%, color-mix(in oklab, var(--gold) 6%, transparent));
   backdrop-filter: blur(16px) saturate(1.15);
   -webkit-backdrop-filter: blur(16px) saturate(1.15);
   box-shadow: inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 22%, transparent);
@@ -3067,9 +3067,7 @@ html.dark .office-frame {
   min-height: 2.6rem;
   border-radius: 999px;
   padding: 0 0.95rem;
-  background: color-mix(in oklab, #161310 22%, transparent);
-  border: 1px solid color-mix(in oklab, var(--gold) 26%, transparent);
-  color: #f3e6c8;
+  background: color-mix(in oklab, #161310 40%, transparent);
   font-size: 0.875rem;
 }
 .office-chat-composer button {
