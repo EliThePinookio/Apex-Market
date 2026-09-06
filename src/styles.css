@@ -456,6 +456,23 @@ html.dark .switch { background: #39393d; }
   justify-content: center;
   animation: fade-in var(--motion-fast) var(--ease-out);
 }
+.sheet-scrim.sheet-motion {
+  animation: none;
+  opacity: 0;
+  pointer-events: none;
+  background: color-mix(in oklab, #000 42%, transparent);
+  backdrop-filter: blur(0);
+  -webkit-backdrop-filter: blur(0);
+  transition:
+    opacity var(--sheet-duration) var(--ease-sheet),
+    backdrop-filter var(--sheet-duration) var(--ease-sheet);
+}
+.sheet-scrim.sheet-motion.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
 @media (min-width: 640px) {
   .sheet-scrim { align-items: center; padding: 1rem; }
 }
@@ -498,6 +515,25 @@ html.dark .switch { background: #39393d; }
 }
 @media (min-width: 640px) {
   .sheet-handle { display: none; }
+}
+.sheet-motion .sheet-panel {
+  animation: none;
+  transform: translateY(110%);
+  transition: transform var(--sheet-duration) var(--ease-sheet);
+}
+.sheet-motion.is-open .sheet-panel {
+  transform: translateY(0);
+}
+@media (min-width: 640px) {
+  .sheet-motion .sheet-panel { transform: translateY(16px); }
+  .sheet-motion.is-open .sheet-panel { transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet-motion,
+  .sheet-motion .sheet-panel {
+    transition-duration: 0.08s;
+    transition-timing-function: linear;
+  }
 }
 
 .hold-erase {

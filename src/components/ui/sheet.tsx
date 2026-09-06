@@ -1,6 +1,37 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode, type TransitionEvent } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
+
+const CLOSE_MS = 480;
+
+export function useSheetPresence(open: boolean) {
+  const [present, setPresent] = useState(open);
+  const [shown, setShown] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setPresent(true);
+      setShown(false);
+      const id = requestAnimationFrame(() => setShown(true));
+      return () => cancelAnimationFrame(id);
+    }
+    setShown(false);
+  }, [open]);
+
+  useEffect(() => {
+    if (open || !present) return;
+    const t = window.setTimeout(() => setPresent(false), CLOSE_MS);
+    return () => window.clearTimeout(t);
+  }, [open, present]);
+
+  const onPanelTransitionEnd = (e: TransitionEvent<HTMLElement>) => {
+    if (open) return;
+    if (e.propertyName !== "transform") return;
+    setPresent(false);
+  };
+
+  return { present, shown, onPanelTransitionEnd };
+}
 
 export function Sheet({
   open,
@@ -17,21 +48,24 @@ export function Sheet({
   children: ReactNode;
   wide?: boolean;
 }) {
+  const { present, shown, onPanelTransitionEnd } = useSheetPresence(open);
+
   useEffect(() => {
-    if (!open) return;
+    if (!present) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  }, [present, onClose]);
 
-  if (!open || typeof document === "undefined") return null;
+  if (!present || typeof document === "undefined") return null;
   return createPortal(
-    <div className="sheet-scrim" onClick={onClose} role="presentation">
+    <div className={cn("sheet-scrim sheet-motion", shown && "is-open")} onClick={onClose} role="presentation">
       <div
         className={cn("sheet-panel", wide && "sm:max-w-lg")}
         onClick={(e) => e.stopPropagation()}
+        onTransitionEnd={onPanelTransitionEnd}
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? "sheet-title" : undefined}
