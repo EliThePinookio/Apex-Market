@@ -3912,9 +3912,20 @@ a.shop-line:active,
   button:active,
   .shop-dock a:active,
   .shop-search button:active,
-  .tag-chip:active {
+  .tag-chip:active,
+  .office-chat-bubble.is-user:active,
+  .office-chat-bubble.is-bot:active,
+  .office-chat-composer button:active:not(:disabled),
+  .office-chat-fab:active {
     transform: scale(0.99);
     transition-duration: 80ms;
+  }
+  .office-chat-panel,
+  .office-chat-bubble,
+  .office-chat-composer button,
+  .office-chat-fab {
+    transition-duration: 80ms;
+    transition-timing-function: linear;
   }
   ::view-transition-old(root),
   ::view-transition-new(root) {
