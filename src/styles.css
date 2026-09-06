@@ -1626,20 +1626,20 @@ html.dark .adinkra-ground .adinkra {
   gap: 0.65rem;
   height: calc(3.5rem + env(safe-area-inset-top));
   padding: env(safe-area-inset-top) 0.75rem 0;
-  background: color-mix(in oklab, var(--shop-surface) 72%, transparent);
+  background: color-mix(in oklab, var(--shop-surface) 24%, color-mix(in oklab, var(--gold) 6%, transparent));
   border-bottom: 1px solid color-mix(in oklab, var(--gold) 34%, transparent);
   box-shadow:
-    inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 22%, transparent),
+    inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 28%, transparent),
     var(--shadow-lift);
   color: var(--shop-ink);
 }
 html.dark .shop-top {
-  background: color-mix(in oklab, var(--shop-surface) 78%, transparent);
+  background: color-mix(in oklab, var(--shop-surface) 28%, color-mix(in oklab, var(--gold) 5%, transparent));
   border-bottom: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
   color: var(--shop-ink);
 }
 html.dark .shop-dock {
-  background: color-mix(in oklab, var(--shop-surface) 78%, transparent);
+  background: color-mix(in oklab, var(--shop-surface) 28%, transparent);
   border-color: color-mix(in oklab, var(--gold) 36%, transparent);
 }
 .shop-search {
@@ -1651,7 +1651,7 @@ html.dark .shop-dock {
   height: 2.5rem;
   padding: 0 0.22rem 0 0.85rem;
   border-radius: 999px;
-  background: color-mix(in oklab, var(--shop-surface-deep) 70%, transparent);
+  background: color-mix(in oklab, var(--shop-surface-deep) 22%, color-mix(in oklab, var(--gold) 5%, transparent));
   color: var(--shop-ink);
   border: 1px solid color-mix(in oklab, var(--gold) 26%, transparent);
   box-shadow:
@@ -1666,7 +1666,7 @@ html.dark .shop-dock {
     transform var(--motion-release) var(--ease-spring);
 }
 .shop-search:focus-within {
-  background: color-mix(in oklab, var(--shop-surface) 82%, transparent);
+  background: color-mix(in oklab, var(--shop-surface) 32%, color-mix(in oklab, var(--gold) 8%, transparent));
   border-color: color-mix(in oklab, var(--gold) 62%, transparent);
   transform: scale(1.012);
   box-shadow:
@@ -1935,10 +1935,7 @@ html.dark .shop-dock {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: color-mix(in oklab, var(--shop-surface, #161310) 88%, transparent);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--shop-surface, #161310) 42%, transparent);
   overflow: hidden;
   border: 1px solid color-mix(in oklab, var(--gold, #d4af37) 28%, transparent);
   box-shadow: inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 16%, transparent), var(--shadow-lift);
@@ -2051,10 +2048,7 @@ html.dark .shop-dock {
   flex-direction: column;
   min-width: 0;
   height: 100%;
-  background: color-mix(in oklab, var(--shop-surface, #161310) 86%, transparent);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border-radius: 14px;
+  background: color-mix(in oklab, var(--shop-surface, #161310) 40%, transparent);
   overflow: hidden;
   color: var(--shop-ink, #f3e6c8);
   text-align: center;
@@ -2174,9 +2168,7 @@ html.dark .shop-dock {
   margin: 1.25rem auto 0;
   padding: 1.6rem 1.2rem 1.7rem;
   text-align: center;
-  background: color-mix(in oklab, var(--shop-surface, #161310) 88%, transparent);
-  border: 1px solid color-mix(in oklab, var(--gold, #d4af37) 28%, transparent);
-  border-radius: 20px;
+  background: color-mix(in oklab, var(--shop-surface, #161310) 46%, transparent);
   box-shadow: inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 16%, transparent), var(--shadow-lift);
   color: var(--shop-ink, #f3e6c8);
 }
@@ -3764,21 +3756,21 @@ a.shop-line:active,
 }
 
 .shop-shell > .shop-dock {
-  backdrop-filter: blur(16px) saturate(1.15);
-  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
   background:
-    linear-gradient(180deg, color-mix(in oklab, var(--gold-bright) 12%, transparent), transparent 48%),
-    color-mix(in oklab, var(--shop-surface) 78%, transparent);
-  border: 1px solid color-mix(in oklab, var(--gold) 40%, transparent);
+    linear-gradient(180deg, color-mix(in oklab, var(--gold-bright) 14%, transparent), transparent 50%),
+    color-mix(in oklab, var(--shop-surface) 22%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold) 42%, transparent);
   box-shadow:
-    inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 28%, transparent),
-    inset 0 -1px 0 color-mix(in oklab, #000 40%, transparent),
-    0 12px 32px -14px rgba(0, 0, 0, 0.55);
+    inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 36%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, #000 28%, transparent),
+    0 12px 32px -14px rgba(0, 0, 0, 0.4);
 }
 html.dark .shop-shell > .shop-dock {
   background:
-    linear-gradient(180deg, color-mix(in oklab, var(--gold-bright) 10%, transparent), transparent 48%),
-    color-mix(in oklab, var(--shop-surface-deep) 82%, transparent);
+    linear-gradient(180deg, color-mix(in oklab, var(--gold-bright) 12%, transparent), transparent 50%),
+    color-mix(in oklab, var(--shop-surface-deep) 26%, transparent);
   border-color: color-mix(in oklab, var(--gold-bright) 42%, transparent);
   box-shadow:
     inset 0 1px 0 color-mix(in oklab, #fff 70%, transparent),
@@ -3834,7 +3826,7 @@ html.dark .shop-shell > .shop-dock {
   -webkit-backdrop-filter: none;
 }
 .shop-home .tag-chip {
-  background: color-mix(in oklab, var(--shop-surface, #161310) 82%, transparent);
+  background: color-mix(in oklab, var(--shop-surface, #161310) 36%, transparent);
   color: var(--shop-ink, #f3e6c8);
   border: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
   box-shadow:
@@ -3849,7 +3841,7 @@ html.dark .shop-shell > .shop-dock {
 }
 .shop-home .mall-card,
 .shop-home .dept-tile {
-  background: color-mix(in oklab, var(--shop-surface, #161310) 88%, transparent);
+  background: color-mix(in oklab, var(--shop-surface, #161310) 42%, transparent);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   border: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
