@@ -14,12 +14,12 @@
   --color-fg-subtle: #8a7d6f;
   --color-border: color-mix(in oklab, var(--color-fg) 8%, transparent);
   --color-border-strong: color-mix(in oklab, var(--color-fg) 14%, transparent);
-  --color-accent: #c4a35a;
+  --color-accent: #d4af37;
   --color-accent-fg: #1c1612;
   --color-success: #248a3d;
   --color-warning: #c93400;
   --color-danger: #d70015;
-  --color-info: #c4a35a;
+  --color-info: #d4af37;
   --color-danger-fg: #fff7f8;
   --color-success-fg: #f3fff6;
   --color-scrim: color-mix(in oklab, #000 36%, transparent);
@@ -101,11 +101,11 @@
     --motion-viscous: 160ms;
     --motion-scale-hover: 1.015;
     --motion-scale-press: 0.96;
-    --motion-scale-press-chip: 0.94;
-    --motion-scale-press-dock: 0.96;
+    --motion-scale-press-chip: 0.96;
+    --motion-scale-press-dock: 0.97;
     --motion-scale-press-tile: 0.985;
     --motion-scale-bubble: 0.97;
-    --motion-scale-search: 0.98;
+    --motion-scale-search: 0.97;
     --motion-scale-modal: 0.97;
     --text-caption: 0.6875rem;
     --text-footnote: 0.8125rem;
@@ -113,6 +113,10 @@
     --text-title: 1.375rem;
     --text-large-title: 2.125rem;
     --highlight: inset 0 1px 0 rgba(255, 255, 255, 0.68);
+    --gold-bright: #e8c872;
+    --gold: #d4af37;
+    --gold-deep: #a67c2d;
+    --gold-grad: linear-gradient(165deg, #e8c872 0%, #d4af37 46%, #a67c2d 100%);
     --glass-fill: color-mix(in oklab, #fff 16%, transparent);
     --glass-tint: color-mix(in oklab, #fff 32%, transparent);
     --glass-stroke: color-mix(in oklab, #fff 48%, transparent);
@@ -169,9 +173,9 @@ html.dark {
   --color-fg: #f3e6c8;
   --color-fg-muted: #c9b896;
   --color-fg-subtle: #9a8a6e;
-  --color-border: color-mix(in oklab, #c9a96e 22%, transparent);
-  --color-border-strong: color-mix(in oklab, #c9a96e 38%, transparent);
-  --color-accent: #c9a96e;
+  --color-border: color-mix(in oklab, #d4af37 22%, transparent);
+  --color-border-strong: color-mix(in oklab, #d4af37 38%, transparent);
+  --color-accent: #e8c872;
   --color-accent-fg: #0b0b0b;
   --color-success: #7d9a62;
   --color-warning: #d4a017;
@@ -1628,23 +1632,28 @@ html.dark .shop-dock {
   height: 2.5rem;
   padding: 0 0.22rem 0 0.85rem;
   border-radius: 999px;
-  background: color-mix(in oklab, var(--color-bg) 72%, transparent);
+  background: color-mix(in oklab, var(--color-bg) 68%, transparent);
   color: var(--color-fg);
-  border: 1px solid color-mix(in oklab, var(--color-accent) 22%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold) 26%, transparent);
   box-shadow:
-    inset 0 1px 2px color-mix(in oklab, var(--color-fg) 6%, transparent),
-    var(--highlight);
+    inset 0 1px 0 color-mix(in oklab, #fff 70%, transparent),
+    inset 0 1.5px 3px color-mix(in oklab, var(--color-fg) 7%, transparent),
+    0 1px 0 color-mix(in oklab, #fff 35%, transparent),
+    0 8px 18px -12px color-mix(in oklab, var(--gold-deep) 28%, transparent);
   transition:
     box-shadow var(--motion-release) var(--ease-spring),
-    background-color var(--motion-search) var(--ease-out),
-    border-color var(--motion-search) var(--ease-out);
+    background-color var(--motion-search) var(--ease-soft),
+    border-color var(--motion-search) var(--ease-spring),
+    transform var(--motion-release) var(--ease-spring);
 }
 .shop-search:focus-within {
-  background: var(--color-bg-elevated);
-  border-color: color-mix(in oklab, var(--color-accent) 55%, transparent);
+  background: color-mix(in oklab, var(--color-bg-elevated) 88%, transparent);
+  border-color: color-mix(in oklab, var(--gold) 62%, transparent);
+  transform: scale(1.012);
   box-shadow:
-    var(--highlight),
-    0 0 0 3px color-mix(in oklab, var(--color-accent) 26%, transparent);
+    inset 0 1px 0 color-mix(in oklab, #fff 82%, transparent),
+    0 0 0 3px color-mix(in oklab, var(--gold-bright) 32%, transparent),
+    0 10px 22px -12px color-mix(in oklab, var(--gold-deep) 40%, transparent);
 }
 .shop-search input {
   flex: 1;
@@ -1663,12 +1672,15 @@ html.dark .shop-dock {
   min-width: 2.05rem;
   padding: 0 0.85rem;
   border-radius: 999px;
-  background: var(--color-accent);
+  background-image: var(--gold-grad);
+  background-color: var(--gold);
   color: var(--color-accent-fg);
   font-size: 0.75rem;
   font-weight: 700;
   flex-shrink: 0;
-  box-shadow: var(--highlight);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, #fff 55%, transparent),
+    0 4px 10px -4px color-mix(in oklab, var(--gold-deep) 45%, transparent);
 }
 .shop-search button:active {
   transform: scale(var(--motion-scale-search));
@@ -3744,6 +3756,55 @@ a.shop-line:active,
   ::view-transition-new(root) {
     animation: none;
   }
+}
+
+.shop-shell > .shop-dock {
+  backdrop-filter: blur(16px) saturate(1.7);
+  -webkit-backdrop-filter: blur(16px) saturate(1.7);
+  background:
+    linear-gradient(180deg, color-mix(in oklab, #fff 42%, transparent), color-mix(in oklab, var(--color-bg-elevated) 36%, transparent) 46%),
+    color-mix(in oklab, var(--color-bg) 40%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold-bright) 34%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, #fff 78%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, var(--gold-deep) 16%, transparent),
+    0 1px 0 color-mix(in oklab, #fff 28%, transparent),
+    0 10px 28px -14px color-mix(in oklab, #1c1612 38%, transparent),
+    0 22px 40px -22px color-mix(in oklab, var(--gold-deep) 30%, transparent);
+}
+html.dark .shop-shell > .shop-dock {
+  background:
+    linear-gradient(180deg, color-mix(in oklab, #e8c872 10%, transparent), color-mix(in oklab, #0b0b0b 58%, transparent)),
+    color-mix(in oklab, #0b0b0b 62%, transparent);
+  border-color: color-mix(in oklab, var(--gold) 34%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, #e8c872 26%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, #000 35%, transparent),
+    0 14px 36px -14px rgba(0, 0, 0, 0.72);
+}
+
+.shop-dock a,
+.shop-search button,
+.tag-chip {
+  transition:
+    transform var(--motion-release) var(--ease-spring),
+    background-color var(--motion-search) var(--ease-soft),
+    box-shadow var(--motion-settle) var(--ease-spring);
+}
+.shop-dock a:active {
+  transform: scale(var(--motion-scale-press-dock));
+  transition-duration: var(--motion-press);
+  transition-timing-function: var(--ease-press);
+}
+.shop-search button:active {
+  transform: scale(var(--motion-scale-search));
+  transition-duration: var(--motion-press);
+  transition-timing-function: var(--ease-press);
+}
+.tag-chip:active {
+  transform: scale(var(--motion-scale-press-chip));
+  transition-duration: var(--motion-press);
+  transition-timing-function: var(--ease-press);
 }
 
 
