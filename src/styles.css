@@ -1936,6 +1936,7 @@ html.dark .shop-dock {
   flex-direction: column;
   height: 100%;
   background: color-mix(in oklab, var(--shop-surface, #161310) 42%, transparent);
+  border-radius: var(--radius-md);
   overflow: hidden;
   border: 1px solid color-mix(in oklab, var(--gold, #d4af37) 28%, transparent);
   box-shadow: inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 16%, transparent), var(--shadow-lift);
@@ -2049,6 +2050,7 @@ html.dark .shop-dock {
   min-width: 0;
   height: 100%;
   background: color-mix(in oklab, var(--shop-surface, #161310) 40%, transparent);
+  border-radius: 14px;
   overflow: hidden;
   color: var(--shop-ink, #f3e6c8);
   text-align: center;
@@ -2080,6 +2082,8 @@ html.dark .shop-dock {
   line-height: 1.2;
   color: var(--shop-ink, #f3e6c8);
 }
+@media (min-width: 768px) {
+  .dept-label {
     font-size: 0.9375rem;
     padding: 0.75rem 0.7rem 0.85rem;
   }
