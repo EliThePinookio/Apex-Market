@@ -3020,6 +3020,12 @@ html.dark .office-frame {
   font-size: 0.8125rem;
   font-weight: 600;
   color: #f3e6c8;
+  transition: transform var(--motion-release) var(--ease-spring);
+}
+.office-chat-suggest button:active {
+  transform: scale(0.98);
+  transition-duration: var(--motion-press);
+  transition-timing-function: var(--ease-press);
 }
 .office-chat-bubble {
   max-width: 88%;
@@ -3071,6 +3077,12 @@ html.dark .office-frame {
   border: 1px solid color-mix(in oklab, var(--gold) 26%, transparent);
   color: #f3e6c8;
   font-size: 0.875rem;
+  transition: transform var(--motion-release) var(--ease-spring), border-color var(--motion-search) var(--ease-soft);
+}
+.office-chat-composer input:active:not(:disabled) {
+  transform: scale(0.98);
+  transition-duration: var(--motion-press);
+  transition-timing-function: var(--ease-press);
 }
 .office-chat-composer button {
   min-height: 2.6rem;
