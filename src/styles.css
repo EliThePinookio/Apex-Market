@@ -95,6 +95,7 @@
     --ease-spring-soft: cubic-bezier(0.22, 1.28, 0.36, 1);
     --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
     --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+    --ease-soft: cubic-bezier(0.25, 0.1, 0.25, 1);
     --ease-viscous: cubic-bezier(0.22, 1, 0.36, 1);
     --motion-viscous: 160ms;
     --motion-scale-hover: 1.015;
@@ -3615,8 +3616,8 @@ a.shop-line,
     transform var(--motion-release) var(--ease-spring),
     box-shadow var(--motion-settle) var(--ease-spring-soft),
     filter var(--motion-tab) var(--ease-out),
-    background-color var(--motion-search) var(--ease-out),
-    color var(--motion-quick) var(--ease-out);
+    background-color var(--motion-search) var(--ease-soft),
+    color var(--motion-quick) var(--ease-soft);
   -webkit-tap-highlight-color: transparent;
 }
 button:not(:disabled):active,
@@ -3710,6 +3711,7 @@ a.shop-line:active,
     --ease-spring-soft: linear;
     --ease-press: linear;
     --ease-sheet: linear;
+    --ease-soft: linear;
     --motion-scale-press: 1;
     --motion-scale-press-chip: 1;
     --motion-scale-press-dock: 1;
