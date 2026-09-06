@@ -1,13 +1,14 @@
-/** Light Telegram-like haptic ticks. No-ops where the browser won't vibrate. */
+/** Soft/light haptic ticks. No-ops where the browser won't vibrate. */
 
-type Tick = "light" | "medium" | "success";
+type Tick = "soft" | "light" | "medium" | "success";
 
 export function tick(kind: Tick = "light") {
   if (typeof window === "undefined") return;
   try {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     if (typeof navigator.vibrate !== "function") return;
-    if (kind === "light") navigator.vibrate(10);
+    if (kind === "soft") navigator.vibrate(8);
+    else if (kind === "light") navigator.vibrate(12);
     else if (kind === "medium") navigator.vibrate(16);
     else navigator.vibrate([10, 24, 14]);
   } catch {
@@ -20,17 +21,38 @@ const PRESSABLE =
 
 export function bindFeel(root: HTMLElement | Document = document) {
   let last = 0;
-  const onDown = (e: Event) => {
-    const t = e.target;
-    if (!(t instanceof Element)) return;
-    const hit = t.closest(PRESSABLE);
-    if (!hit) return;
-    if (hit instanceof HTMLElement && hit.closest("[disabled], [aria-disabled='true']")) return;
+  const gated = (kind: Tick) => {
     const now = performance.now();
     if (now - last < 40) return;
     last = now;
-    tick("light");
+    tick(kind);
+  };
+  const onDown = (e: Event) => {
+    const t = e.target;
+    if (!(t instanceof Element)) return;
+    if (t.closest(".shop-search")) {
+      gated("light");
+      return;
+    }
+    const dock = t.closest(".shop-dock a, .office-dock a, .office-dock > button");
+    if (dock) {
+      gated("soft");
+      return;
+    }
+    const hit = t.closest(PRESSABLE);
+    if (!hit) return;
+    if (hit instanceof HTMLElement && hit.closest("[disabled], [aria-disabled='true']")) return;
+    gated("light");
+  };
+  const onFocus = (e: Event) => {
+    const t = e.target;
+    if (!(t instanceof Element)) return;
+    if (t.closest(".shop-search")) gated("light");
   };
   root.addEventListener("pointerdown", onDown, { passive: true });
-  return () => root.removeEventListener("pointerdown", onDown);
+  root.addEventListener("focusin", onFocus);
+  return () => {
+    root.removeEventListener("pointerdown", onDown);
+    root.removeEventListener("focusin", onFocus);
+  };
 }

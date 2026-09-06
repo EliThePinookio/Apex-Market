@@ -8,6 +8,7 @@ import { bagCount, useBag } from "@/lib/beannel/cart";
 import { useBeannelAuth } from "@/lib/beannel/auth";
 import { useOpenOrderCount } from "@/components/shop/ShopOrders";
 import { Toaster } from "sonner";
+import { tick } from "@/lib/feel";
 
 export function ShopShell() {
   useBag();
@@ -25,6 +26,7 @@ export function ShopShell() {
 
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    tick("light");
     void navigate({ to: "/", search: { q: q.trim() || undefined, cat: undefined } });
   };
 

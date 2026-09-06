@@ -3714,24 +3714,25 @@ a.shop-line:active,
 
 @media (prefers-reduced-motion: reduce) {
   :root {
-    --motion-press: 1ms;
-    --motion-release: 1ms;
-    --motion-search: 1ms;
-    --motion-tab: 1ms;
-    --motion-bubble: 1ms;
-    --motion-settle: 1ms;
-    --sheet-duration: 1ms;
+    --motion-press: 80ms;
+    --motion-release: 80ms;
+    --motion-search: 80ms;
+    --motion-tab: 80ms;
+    --motion-bubble: 80ms;
+    --motion-settle: 80ms;
+    --sheet-duration: 0.08s;
     --ease-spring: linear;
     --ease-spring-soft: linear;
     --ease-press: linear;
     --ease-sheet: linear;
     --ease-soft: linear;
-    --motion-scale-press: 1;
-    --motion-scale-press-chip: 1;
-    --motion-scale-press-dock: 1;
-    --motion-scale-bubble: 1;
-    --motion-scale-search: 1;
+    --motion-scale-press: 0.99;
+    --motion-scale-press-chip: 0.99;
+    --motion-scale-press-dock: 0.99;
+    --motion-scale-bubble: 0.99;
+    --motion-scale-search: 0.99;
     --motion-scale-hover: 1;
+    --motion-scale-press-tile: 1;
   }
   .product-thumb img { transition: none; }
   .cloth-photo { filter: blur(8px) saturate(1.05); }
@@ -3744,13 +3745,16 @@ a.shop-line:active,
   .panel,
   .shop-main,
   .office-page,
-  .shop-body,
-  button,
-  .office-chat-bubble,
-  .tag-chip {
+  .shop-body {
     animation: none;
-    transition: none !important;
-    transform: none !important;
+    transition: none;
+  }
+  button:active,
+  .shop-dock a:active,
+  .shop-search button:active,
+  .tag-chip:active {
+    transform: scale(0.99);
+    transition-duration: 80ms;
   }
   ::view-transition-old(root),
   ::view-transition-new(root) {
