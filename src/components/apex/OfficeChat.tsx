@@ -162,7 +162,14 @@ export function OfficeChat({
               <p>Ask Beannel</p>
               <span>Reads your live stock, sales, and trends</span>
             </div>
-            <button type="button" className="office-chat-clear" onClick={() => setMessages([])}>
+            <button
+              type="button"
+              className="office-chat-clear"
+              onClick={() => {
+                tick("light");
+                setMessages([]);
+              }}
+            >
               Clear
             </button>
           </header>
