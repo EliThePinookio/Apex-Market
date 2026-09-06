@@ -1468,17 +1468,21 @@ input[type="range"]::-moz-range-thumb {
   display: flex;
   flex-direction: column;
   background: transparent;
-  color: var(--color-fg);
+  color: #f3e6c8;
   --shop-cream: #f6f1e8;
   --shop-cream-elev: #fffdf8;
-  --shop-ink: #1c1612;
-  --shop-ink-muted: #6e6256;
+  --shop-ink: #f3e6c8;
+  --shop-ink-muted: #c9b896;
+  --shop-surface: #161310;
+  --shop-surface-deep: #0f0d0b;
 }
 html.dark .shop-shell {
   --shop-cream: #f6f1e8;
   --shop-cream-elev: #fffdf8;
-  --shop-ink: #1c1612;
-  --shop-ink-muted: #6e6256;
+  --shop-ink: #f3e6c8;
+  --shop-ink-muted: #c9b896;
+  --shop-surface: #161310;
+  --shop-surface-deep: #0f0d0b;
 }
 .cloth-ground {
   position: fixed;
@@ -1595,8 +1599,8 @@ html.dark .adinkra-ground .adinkra {
 }
 .shop-top .theme-toggle {
   color: var(--shop-ink);
-  background: color-mix(in oklab, var(--shop-cream) 70%, transparent);
-  border: 1px solid color-mix(in oklab, var(--gold) 22%, transparent);
+  background: color-mix(in oklab, var(--shop-surface) 70%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
 }
 .office-icon-btn.theme-toggle,
 .shop-icon-btn.theme-toggle {
@@ -1622,21 +1626,21 @@ html.dark .adinkra-ground .adinkra {
   gap: 0.65rem;
   height: calc(3.5rem + env(safe-area-inset-top));
   padding: env(safe-area-inset-top) 0.75rem 0;
-  background: color-mix(in oklab, #ffffff 10%, color-mix(in oklab, var(--gold) 6%, transparent));
-  border-bottom: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
+  background: color-mix(in oklab, var(--shop-surface) 72%, transparent);
+  border-bottom: 1px solid color-mix(in oklab, var(--gold) 34%, transparent);
   box-shadow:
-    inset 0 1px 0 color-mix(in oklab, #fff 80%, transparent),
+    inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 22%, transparent),
     var(--shadow-lift);
   color: var(--shop-ink);
 }
 html.dark .shop-top {
-  background: color-mix(in oklab, #ffffff 8%, color-mix(in oklab, var(--gold) 5%, transparent));
+  background: color-mix(in oklab, var(--shop-surface) 78%, transparent);
   border-bottom: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
   color: var(--shop-ink);
 }
 html.dark .shop-dock {
-  background: color-mix(in oklab, #ffffff 10%, color-mix(in oklab, var(--gold) 6%, transparent));
-  border-color: color-mix(in oklab, var(--gold) 34%, transparent);
+  background: color-mix(in oklab, var(--shop-surface) 78%, transparent);
+  border-color: color-mix(in oklab, var(--gold) 36%, transparent);
 }
 .shop-search {
   flex: 1;
@@ -1647,7 +1651,7 @@ html.dark .shop-dock {
   height: 2.5rem;
   padding: 0 0.22rem 0 0.85rem;
   border-radius: 999px;
-  background: color-mix(in oklab, #ffffff 9%, color-mix(in oklab, var(--gold) 5%, transparent));
+  background: color-mix(in oklab, var(--shop-surface-deep) 70%, transparent);
   color: var(--shop-ink);
   border: 1px solid color-mix(in oklab, var(--gold) 26%, transparent);
   box-shadow:
@@ -1662,7 +1666,7 @@ html.dark .shop-dock {
     transform var(--motion-release) var(--ease-spring);
 }
 .shop-search:focus-within {
-  background: color-mix(in oklab, #ffffff 12%, color-mix(in oklab, var(--gold) 8%, transparent));
+  background: color-mix(in oklab, var(--shop-surface) 82%, transparent);
   border-color: color-mix(in oklab, var(--gold) 62%, transparent);
   transform: scale(1.012);
   box-shadow:
@@ -1931,14 +1935,14 @@ html.dark .shop-dock {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: color-mix(in oklab, var(--shop-cream-elev, #fffdf8) 82%, transparent);
+  background: color-mix(in oklab, var(--shop-surface, #161310) 88%, transparent);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   border-radius: var(--radius-md);
   overflow: hidden;
-  border: 1px solid color-mix(in oklab, var(--gold, #d4af37) 20%, transparent);
-  box-shadow: var(--highlight), var(--shadow-lift);
-  color: var(--shop-ink, #1c1612);
+  border: 1px solid color-mix(in oklab, var(--gold, #d4af37) 28%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 16%, transparent), var(--shadow-lift);
+  color: var(--shop-ink, #f3e6c8);
   min-height: 0;
   transition: transform var(--motion-fast) var(--ease-spring), box-shadow var(--motion-fast) var(--ease-spring);
 }
@@ -1976,14 +1980,14 @@ html.dark .shop-dock {
   font-size: 0.625rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-fg-subtle);
+  color: var(--shop-ink-muted, #c9b896);
   font-weight: 600;
 }
 .mall-name {
   font-size: 0.875rem;
   font-weight: 600;
   letter-spacing: -0.02em;
-  color: var(--color-fg);
+  color: var(--shop-ink, #f3e6c8);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -2024,11 +2028,11 @@ html.dark .shop-dock {
   font-size: 0.9375rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--shop-ink, var(--color-fg));
-  background: color-mix(in oklab, var(--shop-cream-elev, #fffdf8) 86%, transparent);
-  border: 1px solid color-mix(in oklab, var(--gold, #d4af37) 22%, transparent);
+  color: var(--shop-ink, #f3e6c8);
+  background: color-mix(in oklab, var(--shop-surface, #161310) 82%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold, #d4af37) 28%, transparent);
   border-radius: 999px;
-  box-shadow: var(--highlight), var(--shadow-lift);
+  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 16%, transparent), var(--shadow-lift);
 }
 .dept-grid {
   display: grid;
@@ -2047,15 +2051,15 @@ html.dark .shop-dock {
   flex-direction: column;
   min-width: 0;
   height: 100%;
-  background: color-mix(in oklab, var(--shop-cream-elev, #fffdf8) 80%, transparent);
+  background: color-mix(in oklab, var(--shop-surface, #161310) 86%, transparent);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   border-radius: 14px;
   overflow: hidden;
-  color: var(--shop-ink, #1c1612);
+  color: var(--shop-ink, #f3e6c8);
   text-align: center;
-  border: 1px solid color-mix(in oklab, var(--gold, #d4af37) 20%, transparent);
-  box-shadow: var(--highlight), var(--shadow-lift);
+  border: 1px solid color-mix(in oklab, var(--gold, #d4af37) 26%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 14%, transparent), var(--shadow-lift);
   transition: transform var(--motion-fast) var(--ease-spring), box-shadow var(--motion-fast) var(--ease-spring);
 }
 .dept-photo {
@@ -2080,10 +2084,8 @@ html.dark .shop-dock {
   font-size: 0.8125rem;
   font-weight: 650;
   line-height: 1.2;
-  color: var(--color-fg);
+  color: var(--shop-ink, #f3e6c8);
 }
-@media (min-width: 768px) {
-  .dept-label {
     font-size: 0.9375rem;
     padding: 0.75rem 0.7rem 0.85rem;
   }
@@ -2172,11 +2174,11 @@ html.dark .shop-dock {
   margin: 1.25rem auto 0;
   padding: 1.6rem 1.2rem 1.7rem;
   text-align: center;
-  background: color-mix(in oklab, var(--shop-cream-elev, #fffdf8) 86%, transparent);
-  border: 1px solid color-mix(in oklab, var(--gold, #d4af37) 22%, transparent);
+  background: color-mix(in oklab, var(--shop-surface, #161310) 88%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold, #d4af37) 28%, transparent);
   border-radius: 20px;
-  box-shadow: var(--highlight), var(--shadow-lift);
-  color: var(--shop-ink, #1c1612);
+  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 16%, transparent), var(--shadow-lift);
+  color: var(--shop-ink, #f3e6c8);
 }
 .shop-empty .display-title { text-wrap: balance; }
 .shop-wa {
@@ -3765,20 +3767,18 @@ a.shop-line:active,
   backdrop-filter: blur(16px) saturate(1.15);
   -webkit-backdrop-filter: blur(16px) saturate(1.15);
   background:
-    linear-gradient(180deg, color-mix(in oklab, #fff 12%, transparent), transparent 55%),
-    color-mix(in oklab, var(--gold) 6%, transparent);
-  border: 1px solid color-mix(in oklab, var(--gold-bright) 42%, transparent);
+    linear-gradient(180deg, color-mix(in oklab, var(--gold-bright) 12%, transparent), transparent 48%),
+    color-mix(in oklab, var(--shop-surface) 78%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold) 40%, transparent);
   box-shadow:
-    inset 0 1px 0 color-mix(in oklab, #fff 88%, transparent),
-    inset 0 -1px 0 color-mix(in oklab, var(--gold-deep) 20%, transparent),
-    0 1px 0 color-mix(in oklab, #fff 28%, transparent),
-    0 10px 28px -14px color-mix(in oklab, #1c1612 26%, transparent),
-    0 22px 40px -22px color-mix(in oklab, var(--gold-deep) 20%, transparent);
+    inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 28%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, #000 40%, transparent),
+    0 12px 32px -14px rgba(0, 0, 0, 0.55);
 }
 html.dark .shop-shell > .shop-dock {
   background:
-    linear-gradient(180deg, color-mix(in oklab, #fff 10%, transparent), transparent 55%),
-    color-mix(in oklab, var(--gold) 5%, transparent);
+    linear-gradient(180deg, color-mix(in oklab, var(--gold-bright) 10%, transparent), transparent 48%),
+    color-mix(in oklab, var(--shop-surface-deep) 82%, transparent);
   border-color: color-mix(in oklab, var(--gold-bright) 42%, transparent);
   box-shadow:
     inset 0 1px 0 color-mix(in oklab, #fff 70%, transparent),
@@ -3834,12 +3834,12 @@ html.dark .shop-shell > .shop-dock {
   -webkit-backdrop-filter: none;
 }
 .shop-home .tag-chip {
-  background: color-mix(in oklab, var(--shop-cream-elev, #fffdf8) 82%, transparent);
-  color: var(--shop-ink, #1c1612);
-  border: 1px solid color-mix(in oklab, var(--gold) 22%, transparent);
+  background: color-mix(in oklab, var(--shop-surface, #161310) 82%, transparent);
+  color: var(--shop-ink, #f3e6c8);
+  border: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
   box-shadow:
-    inset 0 1px 0 color-mix(in oklab, #fff 70%, transparent),
-    0 6px 14px -10px color-mix(in oklab, var(--gold-deep) 30%, transparent);
+    inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 18%, transparent),
+    0 6px 14px -10px color-mix(in oklab, #000 45%, transparent);
 }
 .shop-home .tag-chip[data-active="true"] {
   background-image: var(--gold-grad);
@@ -3849,14 +3849,14 @@ html.dark .shop-shell > .shop-dock {
 }
 .shop-home .mall-card,
 .shop-home .dept-tile {
-  background: color-mix(in oklab, var(--shop-cream-elev, #fffdf8) 80%, transparent);
+  background: color-mix(in oklab, var(--shop-surface, #161310) 88%, transparent);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  border: 1px solid color-mix(in oklab, var(--gold) 20%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
   box-shadow:
-    inset 0 1px 0 color-mix(in oklab, #fff 72%, transparent),
-    0 10px 22px -16px color-mix(in oklab, #1c1612 26%, transparent);
-  color: var(--shop-ink, #1c1612);
+    inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 16%, transparent),
+    0 10px 22px -16px rgba(0, 0, 0, 0.45);
+  color: var(--shop-ink, #f3e6c8);
 }
 .shop-home .mall-card:active,
 .shop-home .dept-tile:active {
@@ -3875,17 +3875,17 @@ html.dark .shop-shell > .shop-dock {
   color: #1c1612;
 }
 .shop-home .mall-section h2 {
-  background: color-mix(in oklab, var(--shop-cream-elev, #fffdf8) 86%, transparent);
-  border: 1px solid color-mix(in oklab, var(--gold) 24%, transparent);
-  color: var(--shop-ink, #1c1612);
+  background: color-mix(in oklab, var(--shop-surface, #161310) 80%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold) 30%, transparent);
+  color: var(--shop-ink, #f3e6c8);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
 .shop-home .mall-price {
-  color: var(--gold-deep, #a67c2d);
+  color: var(--gold-bright, #e8c872);
 }
 .shop-home .mall-cat {
-  color: var(--shop-ink-muted, #6e6256);
+  color: var(--shop-ink-muted, #c9b896);
 }
 
 
