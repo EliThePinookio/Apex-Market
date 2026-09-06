@@ -6,6 +6,7 @@ import { previousPeriod, computeSummary } from "@/lib/apex/summary";
 import { useApex } from "@/lib/apex/store";
 import { readOpenRouterKey } from "@/lib/beannel/keys";
 import { cn } from "@/lib/cn";
+import { tick } from "@/lib/feel";
 
 const MEMORY_KEY = "beannel_office_chat";
 const SUGGESTIONS = [
@@ -89,6 +90,7 @@ export function OfficeChat({
     setMessages(next);
     setDraft("");
     setBusy(true);
+    tick("medium");
     try {
       const ctx = buildTrustedContext({
         businessName: profile.businessName || "BEANNEL",

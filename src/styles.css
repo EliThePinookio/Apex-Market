@@ -82,8 +82,11 @@
     --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
     --ease-in: cubic-bezier(0.4, 0, 1, 1);
     --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
-    --ease-spring: cubic-bezier(0.22, 1.18, 0.36, 1);
-    --ease-spring-soft: cubic-bezier(0.175, 0.885, 0.32, 1.12);
+    --ease-spring: cubic-bezier(0.34, 1.45, 0.64, 1);
+    --ease-spring-soft: cubic-bezier(0.22, 1.28, 0.36, 1);
+    --ease-press: cubic-bezier(0.4, 0, 1, 1);
+    --motion-press: 90ms;
+    --motion-release: 420ms;
     --ease-viscous: cubic-bezier(0.22, 1, 0.36, 1);
     --motion-viscous: 160ms;
     --motion-scale-hover: 1.015;
@@ -123,6 +126,7 @@
   [role="button"]:not(:disabled) {
     cursor: pointer;
     touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
   * {
@@ -3517,12 +3521,7 @@ html.dark .glass {
 .liquid-root .mall-card:hover,
 .liquid-root .dept-tile:hover,
 .liquid-root .shop-order-card:hover,
-.liquid-root .office-kpi-card:hover,
-.liquid-root .mall-card:active,
-.liquid-root .dept-tile:active,
-.liquid-root .shop-order-card:active,
-.liquid-root .office-kpi-card:active {
-  transform: none;
+.liquid-root .office-kpi-card:hover {
   filter: none;
   animation: none;
 }
@@ -3532,13 +3531,81 @@ button:not(:disabled),
 .office-icon-btn,
 .shop-icon-btn,
 .tag-chip,
-a.shop-line {
+a.shop-line,
+.shop-dock a,
+.office-dock a,
+.office-dock > button,
+.office-nav-item,
+.mall-add,
+.mall-heart,
+.office-chat-suggest button,
+.office-chat-composer button,
+.office-chat-fab {
   transition:
-    transform 140ms var(--ease-out),
-    box-shadow 140ms var(--ease-out),
-    filter 140ms var(--ease-out),
-    background-color 140ms var(--ease-out),
-    color 120ms var(--ease-out);
+    transform var(--motion-release) var(--ease-spring),
+    box-shadow 280ms var(--ease-spring-soft),
+    filter 220ms var(--ease-out),
+    background-color 180ms var(--ease-out),
+    color 140ms var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+button:not(:disabled):active,
+[role="button"]:not(:disabled):active,
+.office-icon-btn:active,
+.shop-icon-btn:active,
+.tag-chip:active,
+a.shop-line:active,
+.shop-dock a:active,
+.office-dock a:active,
+.office-dock > button:active,
+.office-nav-item:active,
+.mall-add:active,
+.mall-heart:active,
+.office-chat-suggest button:active,
+.office-chat-composer button:active,
+.office-chat-fab:active {
+  transform: scale(0.96);
+  transition-duration: var(--motion-press);
+  transition-timing-function: var(--ease-press);
+}
+
+.mall-card:active,
+.dept-tile:active,
+.shop-order-card:active,
+.office-kpi-card:active,
+.shop-line:active {
+  filter: brightness(0.97);
+  box-shadow:
+    inset 0 2px 10px color-mix(in oklab, var(--color-fg) 10%, transparent),
+    0 6px 16px -12px color-mix(in oklab, var(--color-fg) 22%, transparent);
+}
+
+.office-chat-bubble {
+  transform-origin: center bottom;
+  transition: transform var(--motion-release) var(--ease-spring), filter 180ms var(--ease-out);
+}
+.office-chat-bubble.is-user { transform-origin: right bottom; }
+.office-chat-bubble.is-bot { transform-origin: left bottom; }
+.office-chat-bubble:active {
+  transform: scale(0.97);
+  transition-duration: var(--motion-press);
+  transition-timing-function: var(--ease-press);
+}
+
+.tag-chip:active,
+.office-chat-suggest button:active {
+  transform: scale(0.94);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mall-card:hover,
+  .dept-tile:hover,
+  .shop-order-card:hover,
+  .office-kpi-card:hover {
+    box-shadow:
+      var(--highlight),
+      0 18px 36px -18px color-mix(in oklab, var(--color-fg) 28%, transparent);
+  }
 }
 
 ::view-transition-old(root) {
@@ -3567,9 +3634,13 @@ a.shop-line {
   .panel,
   .shop-main,
   .office-page,
-  .shop-body {
+  .shop-body,
+  button,
+  .office-chat-bubble,
+  .tag-chip {
     animation: none;
-    transition: none;
+    transition: none !important;
+    transform: none !important;
   }
   ::view-transition-old(root),
   ::view-transition-new(root) {
