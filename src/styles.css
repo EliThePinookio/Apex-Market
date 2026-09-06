@@ -3068,6 +3068,8 @@ html.dark .office-frame {
   border-radius: 999px;
   padding: 0 0.95rem;
   background: color-mix(in oklab, #161310 40%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold) 26%, transparent);
+  color: #f3e6c8;
   font-size: 0.875rem;
 }
 .office-chat-composer button {
