@@ -1611,11 +1611,26 @@ html.dark .shop-dock {
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  height: 2.35rem;
-  padding: 0 0.25rem 0 0.8rem;
+  height: 2.5rem;
+  padding: 0 0.22rem 0 0.85rem;
   border-radius: 999px;
-  background: var(--color-bg-subtle);
+  background: color-mix(in oklab, var(--color-bg) 72%, transparent);
   color: var(--color-fg);
+  border: 1px solid color-mix(in oklab, var(--color-accent) 22%, transparent);
+  box-shadow:
+    inset 0 1px 2px color-mix(in oklab, var(--color-fg) 6%, transparent),
+    var(--highlight);
+  transition:
+    box-shadow var(--motion-release, 420ms) var(--ease-spring, ease),
+    background-color 180ms var(--ease-out),
+    border-color 180ms var(--ease-out);
+}
+.shop-search:focus-within {
+  background: var(--color-bg-elevated);
+  border-color: color-mix(in oklab, var(--color-accent) 55%, transparent);
+  box-shadow:
+    var(--highlight),
+    0 0 0 3px color-mix(in oklab, var(--color-accent) 26%, transparent);
 }
 .shop-search input {
   flex: 1;
@@ -1623,11 +1638,15 @@ html.dark .shop-dock {
   background: transparent;
   border: 0;
   outline: none;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   color: var(--color-fg);
 }
+.shop-search input::placeholder {
+  color: var(--color-fg-subtle);
+}
 .shop-search button {
-  height: 1.9rem;
+  height: 2.05rem;
+  min-width: 2.05rem;
   padding: 0 0.85rem;
   border-radius: 999px;
   background: var(--color-accent);
@@ -1635,6 +1654,31 @@ html.dark .shop-dock {
   font-size: 0.75rem;
   font-weight: 700;
   flex-shrink: 0;
+  box-shadow: var(--highlight);
+}
+.shop-search button:active {
+  transform: scale(0.94);
+}
+@media (max-width: 639px) {
+  .shop-search-go {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .shop-search button {
+    padding: 0;
+    width: 2.05rem;
+  }
+  .shop-search button::after {
+    content: "";
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 999px;
+    background: var(--color-accent-fg);
+    opacity: 0.85;
+  }
 }
 .shop-top-actions {
   display: flex;
@@ -2237,18 +2281,20 @@ html.dark .shop-dock {
 
 .shop-dock {
   position: fixed;
-  left: 0.75rem;
-  right: 0.75rem;
-  bottom: calc(0.55rem + env(safe-area-inset-bottom));
+  left: 0.7rem;
+  right: 0.7rem;
+  bottom: calc(0.5rem + env(safe-area-inset-bottom));
   z-index: 40;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: space-between;
-  padding: 0.3rem;
+  gap: 0.15rem;
+  padding: 0.28rem;
   border-radius: 28px;
-  background: color-mix(in oklab, var(--color-bg-elevated) 90%, transparent);
+  background: color-mix(in oklab, var(--color-bg-elevated) 88%, transparent);
   backdrop-filter: blur(var(--blur-lg)) saturate(1.85);
   -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(1.85);
+  border: 1px solid color-mix(in oklab, var(--color-accent) 26%, var(--glass-stroke));
   box-shadow: var(--highlight), var(--shadow-3);
 }
 .shop-dock a {
@@ -2258,16 +2304,28 @@ html.dark .shop-dock {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 3rem;
-  border-radius: 18px;
+  min-height: 3.15rem;
+  border-radius: 22px;
   font-size: 0.625rem;
-  gap: 0.15rem;
+  letter-spacing: 0.01em;
+  gap: 0.12rem;
   color: var(--color-fg-muted);
 }
 .shop-dock a[data-active="true"] {
-  color: var(--color-accent);
-  font-weight: 600;
-  background: color-mix(in oklab, var(--color-accent) 10%, transparent);
+  color: var(--color-fg);
+  font-weight: 700;
+  background: color-mix(in oklab, var(--color-accent) 28%, var(--color-bg-elevated));
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, #fff 70%, transparent),
+    0 8px 16px -10px color-mix(in oklab, var(--color-accent) 55%, transparent);
+}
+.shop-dock a[data-active="true"]::after {
+  content: "";
+  width: 0.7rem;
+  height: 0.18rem;
+  border-radius: 999px;
+  background: var(--color-accent);
+  margin-top: -0.05rem;
 }
 .shop-dock-dot {
   position: absolute;

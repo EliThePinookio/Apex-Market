@@ -1,6 +1,6 @@
-import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Link, Outlet, useNavigate, useRouterState, useSearch } from "@tanstack/react-router";
 import { Heart, Home, Package, Search, ShoppingBag, UserRound } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BrandMark, Wordmark } from "@/components/ui/brand-mark";
 import { ClothGround } from "@/components/ui/cloth-ground";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -13,15 +13,25 @@ export function ShopShell() {
   useBag();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const search = useSearch({ strict: false }) as { q?: string };
   const { user, profile } = useBeannelAuth();
   const count = bagCount();
   const openOrders = useOpenOrderCount();
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(search.q || "");
+
+  useEffect(() => {
+    setQ(search.q || "");
+  }, [search.q]);
 
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
     void navigate({ to: "/", search: { q: q.trim() || undefined, cat: undefined } });
   };
+
+  const homeOn = pathname === "/" || pathname.startsWith("/shop");
+  const ordersOn = pathname.startsWith("/track");
+  const cartOn = pathname === "/cart" || pathname === "/checkout";
+  const accountOn = pathname.startsWith("/account") || pathname === "/login";
 
   return (
     <div className="shop-shell">
@@ -38,10 +48,12 @@ export function ShopShell() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search products, brands and categories"
+            placeholder="Search BEANNEL"
             aria-label="Search the shop"
           />
-          <button type="submit">Search</button>
+          <button type="submit" aria-label="Search">
+            <span className="shop-search-go">Search</span>
+          </button>
         </form>
         <div className="shop-top-actions">
           <ThemeToggle className="shop-icon-btn" />
@@ -94,22 +106,22 @@ export function ShopShell() {
         </div>
       </footer>
       <nav className="shop-dock" aria-label="Shop">
-        <Link to="/" data-active={pathname === "/" || pathname.startsWith("/shop")}>
-          <Home className="size-[22px]" strokeWidth={pathname === "/" ? 2.2 : 1.7} />
+        <Link to="/" data-active={homeOn} aria-current={homeOn ? "page" : undefined}>
+          <Home className="size-[22px]" strokeWidth={homeOn ? 2.35 : 1.7} />
           Home
         </Link>
-        <Link to="/track" data-active={pathname.startsWith("/track")}>
-          <Package className="size-[22px]" strokeWidth={pathname.startsWith("/track") ? 2.2 : 1.7} />
+        <Link to="/track" data-active={ordersOn} aria-current={ordersOn ? "page" : undefined}>
+          <Package className="size-[22px]" strokeWidth={ordersOn ? 2.35 : 1.7} />
           Orders
           {openOrders > 0 && <span className="shop-dock-dot">{openOrders > 9 ? "9+" : openOrders}</span>}
         </Link>
-        <Link to="/cart" data-active={pathname === "/cart" || pathname === "/checkout"}>
-          <ShoppingBag className="size-[22px]" strokeWidth={pathname === "/cart" ? 2.2 : 1.7} />
+        <Link to="/cart" data-active={cartOn} aria-current={cartOn ? "page" : undefined}>
+          <ShoppingBag className="size-[22px]" strokeWidth={cartOn ? 2.35 : 1.7} />
           Cart
           {count > 0 && <span className="shop-dock-dot">{count > 9 ? "9+" : count}</span>}
         </Link>
-        <Link to="/account" data-active={pathname.startsWith("/account") || pathname === "/login"}>
-          <UserRound className="size-[22px]" strokeWidth={pathname.startsWith("/account") || pathname === "/login" ? 2.2 : 1.7} />
+        <Link to="/account" data-active={accountOn} aria-current={accountOn ? "page" : undefined}>
+          <UserRound className="size-[22px]" strokeWidth={accountOn ? 2.35 : 1.7} />
           Account
         </Link>
       </nav>
