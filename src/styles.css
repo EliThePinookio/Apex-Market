@@ -360,9 +360,9 @@ html.dark .cushion {
   padding: 0 0.875rem;
   font-size: 1.0625rem;
   color: var(--color-fg);
-  transition-property: border-color, box-shadow, background-color;
-  transition-duration: var(--motion-quick);
-  transition-timing-function: var(--ease-out);
+  transition-property: border-color, box-shadow, background-color, transform;
+  transition-duration: var(--motion-release);
+  transition-timing-function: var(--ease-spring);
 }
 .field:hover:not(:disabled) { border-color: var(--color-border-strong); }
 .field:focus,
@@ -370,6 +370,11 @@ html.dark .cushion {
   outline: none;
   border-color: color-mix(in oklab, var(--color-accent) 55%, var(--color-border));
   box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-accent) 16%, transparent);
+}
+.field:active:not(:disabled) {
+  transform: scale(0.98);
+  transition-duration: var(--motion-press);
+  transition-timing-function: var(--ease-press);
 }
 .field::placeholder { color: var(--color-fg-subtle); }
 
@@ -1270,6 +1275,12 @@ html.dark .auth-hero-light { display: none; }
   background-image: var(--gold-grad);
   background-color: var(--gold);
   color: #1c1612;
+}
+.auth-stage button:active:not(:disabled),
+.sheet-panel button:active:not(:disabled) {
+  transform: scale(var(--motion-scale-press));
+  transition-duration: var(--motion-press);
+  transition-timing-function: var(--ease-press);
 }
 @media (min-width: 960px) {
   .auth-stage {
