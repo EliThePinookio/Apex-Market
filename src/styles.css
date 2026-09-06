@@ -94,6 +94,7 @@
     --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
     --ease-spring-soft: cubic-bezier(0.22, 1.28, 0.36, 1);
     --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
     --ease-viscous: cubic-bezier(0.22, 1, 0.36, 1);
     --motion-viscous: 160ms;
     --motion-scale-hover: 1.015;
@@ -461,7 +462,7 @@ html.dark .switch { background: #39393d; }
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   box-shadow: var(--highlight), var(--shadow-4);
   padding: 1.25rem 1.25rem max(1.5rem, env(safe-area-inset-bottom));
-  animation: sheet-up var(--motion-quick) var(--ease-out);
+  animation: sheet-up var(--motion-quick) var(--ease-sheet);
   overscroll-behavior: contain;
 }
 @media (min-width: 640px) {
@@ -3708,6 +3709,7 @@ a.shop-line:active,
     --ease-spring: linear;
     --ease-spring-soft: linear;
     --ease-press: linear;
+    --ease-sheet: linear;
     --motion-scale-press: 1;
     --motion-scale-press-chip: 1;
     --motion-scale-press-dock: 1;
