@@ -9,6 +9,7 @@ import { useBeannelAuth } from "@/lib/beannel/auth";
 import { useOpenOrderCount } from "@/components/shop/ShopOrders";
 import { Toaster } from "sonner";
 import { tick } from "@/lib/feel";
+import { forgetBrowserPaystackSecret } from "@/lib/beannel/keys";
 
 export function ShopShell() {
   useBag();
@@ -19,6 +20,10 @@ export function ShopShell() {
   const count = bagCount();
   const openOrders = useOpenOrderCount();
   const [q, setQ] = useState(search.q || "");
+
+  useEffect(() => {
+    forgetBrowserPaystackSecret();
+  }, []);
 
   useEffect(() => {
     setQ(search.q || "");

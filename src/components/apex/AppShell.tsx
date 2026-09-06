@@ -37,6 +37,7 @@ import { QuickAction } from "@/components/apex/QuickAction";
 import { ShopShell } from "@/components/shop/ShopShell";
 import { afterLoginPath, canAccessOffice, isOfficePath, kindFromProfile } from "@/lib/beannel/account";
 import { applyDark, readDark } from "@/lib/beannel/theme";
+import { forgetBrowserPaystackSecret } from "@/lib/beannel/keys";
 import { useApex } from "@/lib/apex/store";
 import { useBeannelAuth } from "@/lib/beannel/auth";
 import type { NavId } from "@/types";
@@ -197,6 +198,7 @@ function SignedInShell() {
   const accountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    forgetBrowserPaystackSecret();
     const preferDark = readDark();
     setDark(preferDark);
     applyDark(preferDark);

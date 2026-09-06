@@ -7,7 +7,7 @@ import { Field } from "@/components/ui/field";
 import { money } from "@/lib/apex/money";
 import { bagTotal, clearBag, useBag, type BagItem } from "@/lib/beannel/cart";
 import { useBeannelAuth } from "@/lib/beannel/auth";
-import { readPaystackSecret } from "@/lib/beannel/keys";
+import { forgetBrowserPaystackSecret } from "@/lib/beannel/keys";
 import { startPaystackCheckout, verifyPaystackCheckout } from "@/lib/beannel/paystack";
 import {
   fetchShopStorefront,
@@ -75,6 +75,7 @@ export function ShopCheckout() {
   }, [user, navigate]);
 
   useEffect(() => {
+    forgetBrowserPaystackSecret();
     void fetchShopStorefront().then(setStore).catch(() => undefined);
   }, []);
 
@@ -92,7 +93,7 @@ export function ShopCheckout() {
       setStatus("Confirming Paystack…");
       try {
         const verified = await verifyPaystackCheckout({
-          data: { reference, secretKey: readPaystackSecret() },
+          data: { reference },
         });
         if (!verified.ok) throw new Error(verified.error);
         const businessId = (await fetchShopStorefront()).businessId;
@@ -154,7 +155,6 @@ export function ShopCheckout() {
             email: user.email || `${phone}@pay.beannel.app`,
             amount: total,
             callbackUrl: `${window.location.origin}/checkout`,
-            secretKey: readPaystackSecret(),
             metadata: { name, phone },
           },
         });

@@ -7,8 +7,8 @@ function usableKey(value: string | undefined | null): string | null {
   return trimmed;
 }
 
-function secretFrom(input?: string): string | null {
-  return usableKey(process.env.PAYSTACK_SECRET_KEY) || usableKey(input);
+function secretFrom(): string | null {
+  return usableKey(process.env.PAYSTACK_SECRET_KEY);
 }
 
 export const startPaystackCheckout = createServerFn({ method: "POST" })
@@ -17,14 +17,13 @@ export const startPaystackCheckout = createServerFn({ method: "POST" })
       email: string;
       amount: number;
       callbackUrl: string;
-      secretKey?: string;
       metadata?: Record<string, string>;
     }) => input,
   )
   .handler(async ({ data }) => {
-    const secret = secretFrom(data.secretKey);
+    const secret = secretFrom();
     if (!secret) {
-      return { ok: false as const, error: "Paystack is not connected yet. Use cash on delivery, or add the Paystack secret in Settings." };
+      return { ok: false as const, error: "Paystack is not connected yet. Use cash on delivery, or set PAYSTACK_SECRET_KEY on the server." };
     }
     const email = data.email.trim().toLowerCase();
     if (!email.includes("@")) return { ok: false as const, error: "A sign-in email is required for Paystack." };
@@ -77,9 +76,9 @@ export const startPaystackCheckout = createServerFn({ method: "POST" })
   });
 
 export const verifyPaystackCheckout = createServerFn({ method: "POST" })
-  .validator((input: { reference: string; secretKey?: string }) => input)
+  .validator((input: { reference: string }) => input)
   .handler(async ({ data }) => {
-    const secret = secretFrom(data.secretKey);
+    const secret = secretFrom();
     if (!secret) return { ok: false as const, error: "Paystack is not connected." };
     const reference = data.reference.trim();
     if (!reference) return { ok: false as const, error: "Missing Paystack reference." };

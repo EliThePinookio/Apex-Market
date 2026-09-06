@@ -8,7 +8,7 @@ import { Sheet } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { useApex } from "@/lib/apex/store";
 import { useBeannelAuth } from "@/lib/beannel/auth";
-import { readOpenRouterKey, readPaystackSecret, writeOpenRouterKey, writePaystackSecret } from "@/lib/beannel/keys";
+import { forgetBrowserPaystackSecret, readOpenRouterKey, writeOpenRouterKey } from "@/lib/beannel/keys";
 import { pinIssue } from "@/lib/beannel/guard";
 
 const WIPE_PHRASE = "WIPE";
@@ -19,9 +19,12 @@ export function SettingsView() {
   const { user, signOut } = useBeannelAuth();
   const [form, setForm] = useState(profile);
   const [openrouter, setOpenrouter] = useState(() => readOpenRouterKey());
-  const [paystack, setPaystack] = useState(() => readPaystackSecret());
   const [busy, setBusy] = useState(false);
   const [wipeOpen, setWipeOpen] = useState(false);
+
+  useEffect(() => {
+    forgetBrowserPaystackSecret();
+  }, []);
 
   const save = async () => {
     if (form.isPinLocked) {
@@ -35,7 +38,7 @@ export function SettingsView() {
     try {
       await saveProfile(form);
       writeOpenRouterKey(openrouter);
-      writePaystackSecret(paystack);
+      forgetBrowserPaystackSecret();
       toast.success("Settings saved");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not save");
@@ -163,17 +166,10 @@ export function SettingsView() {
 
       <section>
         <GroupLabel>Paystack</GroupLabel>
-        <Group footer="Secret key from Paystack (sk_live_… or sk_test_…). MoMo and card at checkout go through Paystack. Cash on delivery does not.">
+        <Group footer="MoMo and card at checkout use PAYSTACK_SECRET_KEY on the server. The secret is never saved in this browser. Cash on delivery does not need Paystack.">
           <GroupRow>
-            <span className="shrink-0">Secret</span>
-            <input
-              type="password"
-              value={paystack}
-              onChange={(e) => setPaystack(e.target.value)}
-              className="group-input"
-              placeholder="sk_live_…"
-              autoComplete="off"
-            />
+            <span>Secret</span>
+            <span className="group-value">On the server only</span>
           </GroupRow>
         </Group>
       </section>
