@@ -40,9 +40,36 @@ function usableKey(value: string | undefined | null): string | null {
   return trimmed;
 }
 
+export function projectNext(c: TrustedBusinessContext): {
+  low: number;
+  high: number;
+  mid: number;
+  interval: 95 | 99;
+  note: string;
+} {
+  const n = c.txCount || 0;
+  const interval: 95 | 99 = n >= 30 && Math.abs(c.salesDelta ?? 0) < 25 ? 99 : 95;
+  const vol = n < 8 ? 0.42 : n < 20 ? 0.24 : n < 30 ? 0.16 : 0.09;
+  const growth = Math.max(-0.35, Math.min(0.35, (c.salesDelta ?? 0) / 100));
+  const mid = c.revenue * (1 + growth);
+  return {
+    low: Math.max(0, mid * (1 - vol)),
+    high: mid * (1 + vol),
+    mid,
+    interval,
+    note:
+      n < 8
+        ? "Too few tickets for a tight call. Range is wide on purpose."
+        : interval === 99
+          ? "Books are thick and the pattern is stable — 99% interval."
+          : "Working 95% interval until the ticket count is thicker.",
+  };
+}
+
 export function trustedBlock(c: TrustedBusinessContext): string {
   const cur = c.currency;
   const delta = (v?: number | null) => (typeof v === "number" ? `${v >= 0 ? "+" : ""}${v.toFixed(1)}% vs prior` : "n/a");
+  const next = projectNext(c);
   return `
 TRUSTED LEDGER — source of truth. Never invent or replace these numbers.
 Business: ${c.businessName}
@@ -66,6 +93,7 @@ Top products by profit: ${c.topProducts.map((p) => `${p.name} qty ${p.qty} rev $
 Slow stock: ${c.slowProducts.map((p) => `${p.name} qty ${p.stock} trapped ${cur}${p.trapped.toFixed(2)}`).join("; ") || "none"}
 Expense mix: ${c.expenseCategories.map((e) => `${e.name} ${cur}${e.amount.toFixed(2)}`).join("; ") || "none"}
 Money moves: ${c.actions?.map((a) => `${a.title} — ${a.why} (~${cur}${a.impact.toFixed(0)})`).join("; ") || "none"}
+NEXT PERIOD PROJECTION (from this ledger only): ${cur}${next.low.toFixed(2)}–${cur}${next.high.toFixed(2)} at ${next.interval}% confidence. ${next.note}
 `.trim();
 }
 
@@ -77,6 +105,8 @@ Rules:
 - Remember what the owner already asked in this thread and stay consistent with it.
 - Answer like a conversation: short, direct, then one next move.
 - Tie every recommendation to a number from the ledger (restock, idle cash, unpaid balances, margin).
+- When you project, quote the NEXT PERIOD PROJECTION range and its 95% or 99% interval. Never give a single fake-precise future number.
+- 99% only when the ledger says the interval is 99. Otherwise 95%, or say the books are too thin.
 - Do not mention APIs, models, OpenRouter, or that you are an AI unless asked.`;
 
 type LlmMessage = { role: "system" | "user" | "assistant"; content: string };
@@ -130,7 +160,7 @@ async function chatOpenRouter(apiKey: string, messages: LlmMessage[]): Promise<s
         body: JSON.stringify({
           model,
           max_tokens: 700,
-          temperature: 0.35,
+          temperature: 0.2,
           messages,
         }),
       });
@@ -156,7 +186,7 @@ async function chatXai(apiKey: string, messages: LlmMessage[]): Promise<string |
       body: JSON.stringify({
         model: "grok-4.5",
         max_tokens: 700,
-        temperature: 0.35,
+        temperature: 0.2,
         messages,
       }),
     });
@@ -183,6 +213,12 @@ export function localAdvisorReply(prompt: string, c: TrustedBusinessContext): st
         .join("; ")}.`,
     );
     lines.push("WHY: Velocity is eating cover. A dark winner is lost sales.");
+  } else if (/project|forecast|next week|next month|confidence/.test(q)) {
+    const p = projectNext(c);
+    lines.push(
+      `WHAT: Next window sales look like ${cur}${p.low.toFixed(0)}–${cur}${p.high.toFixed(0)} (${p.interval}% interval).`,
+    );
+    lines.push(`WHY: ${p.note} Built from ${c.txCount} tickets this ${c.periodLabel.toLowerCase()}.`);
   } else if (/profit|margin|money|cash|make/.test(q)) {
     lines.push(
       `WHAT: Net profit is ${cur}${c.netProfit.toFixed(2)} on ${cur}${c.revenue.toFixed(2)} sales this ${c.periodLabel.toLowerCase()}. Gross margin ${(c.margin ?? 0).toFixed(1)}%.`,

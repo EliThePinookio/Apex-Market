@@ -1660,7 +1660,7 @@ html.dark .shop-shell {
   height: 0;
 }
 .cloth-photo {
-  filter: none;
+  filter: blur(3.5px) saturate(1.04);
 }
 .cloth-caustic {
   position: absolute;
@@ -1683,7 +1683,7 @@ html.dark .cloth-caustic {
   70% { transform: translate3d(-3%, 4%, 0) scale(1.03); }
 }
 html.dark .cloth-photo {
-  filter: brightness(0.42);
+  filter: blur(4.5px) brightness(0.4) saturate(0.88);
 }
 html.dark .cloth-veil {
   background:
