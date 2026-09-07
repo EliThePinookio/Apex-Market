@@ -343,6 +343,12 @@ function mapShopOrder(row: Record<string, unknown>): ShopOrder | null {
   if (!parsed) return null;
   const items = Array.isArray(row.items) ? (row.items as TransactionItem[]) : [];
   const claimed = Boolean(parsed.saleId) || parsed.status !== "placed";
+  const blob = `${row.id || ""} ${row.description || ""} ${row.customer_id || ""} ${parsed.userId}`;
+  const telegram =
+    parsed.userId.startsWith("tg:") ||
+    parsed.userId.startsWith("uid:tg:") ||
+    blob.toLowerCase().includes("uid:tg:") ||
+    isTelegramSaleNotes(String(row.description || ""));
   return {
     id: String(row.id),
     businessId: parsed.businessId,
@@ -358,7 +364,7 @@ function mapShopOrder(row: Record<string, unknown>): ShopOrder | null {
     claimed,
     saleId: parsed.saleId,
     updatedAt: parsed.updatedAt || String(row.date || ""),
-    source: "",
+    source: telegram ? "telegram" : "",
   };
 }
 
@@ -382,8 +388,7 @@ function isTelegramSaleNotes(notes: string): boolean {
     n.includes("source=telegram") ||
     n.includes("channel: telegram") ||
     n.includes("telegram mini app") ||
-    n.includes("@beannelbot") ||
-    notes.startsWith("SHOP|")
+    n.includes("@beannelbot")
   );
 }
 
@@ -455,7 +460,8 @@ function mapSaleOrder(row: Record<string, unknown>): ShopOrder | null {
   const id = String(row.id || "");
   if (!id || isPosLedgerSale(id)) return null;
   const notes = String(row.notes || "");
-  if (!isTelegramSaleNotes(notes)) return null;
+  const payRaw = String(row.payment_method || "");
+  if (payRaw.toLowerCase() !== "telegram" && !notes.toLowerCase().includes("source=telegram")) return null;
   const name = String(row.customer_name || "Customer");
   const contact = contactFromSaleNotes(notes, name);
   const status: OrderStatus = contact.status || salePaymentStatusToOrder(String(row.payment_status || ""));
@@ -672,26 +678,37 @@ export async function fetchShopInbox(businessId: string): Promise<ShopOrder[]> {
   return mergeOrders(fromTx, fromSales);
 }
 
-function twinKey(order: ShopOrder): string {
-  const phone = order.phone.replace(/\D/g, "");
-  const when = order.date.slice(0, 16);
-  return `${phone}|${order.amount.toFixed(2)}|${when}|${order.name.trim().toLowerCase()}`;
+function withinTwoMin(a: string, b: string): boolean {
+  const da = new Date(a).getTime();
+  const db = new Date(b).getTime();
+  if (!Number.isFinite(da) || !Number.isFinite(db)) return false;
+  return Math.abs(da - db) <= 2 * 60 * 1000;
+}
+
+function firstProductKey(order: ShopOrder): string {
+  const item = order.items[0];
+  return String(item?.productId || item?.productName || "").toLowerCase();
+}
+
+function isTwin(shop: ShopOrder, sale: ShopOrder): boolean {
+  if (shop.saleId && shop.saleId === sale.id) return true;
+  if (sale.saleId && (sale.saleId === shop.id || sale.saleId === shop.saleId)) return true;
+  if (shop.id === sale.id) return true;
+  if (Math.abs(shop.amount - sale.amount) > 0.009) return false;
+  if (!withinTwoMin(shop.date, sale.date)) return false;
+  if (shop.customerId && sale.customerId && shop.customerId === sale.customerId) return true;
+  const phoneA = shop.phone.replace(/\D/g, "");
+  const phoneB = sale.phone.replace(/\D/g, "");
+  return Boolean(phoneA && phoneB && phoneA === phoneB && firstProductKey(shop) === firstProductKey(sale));
 }
 
 function mergeOrders(shopTx: ShopOrder[], sales: ShopOrder[]): ShopOrder[] {
-  const shopIds = new Set(shopTx.map((o) => o.id));
-  const shopSaleIds = new Set(shopTx.map((o) => o.saleId).filter(Boolean) as string[]);
-  const shopKeys = new Set(shopTx.map(twinKey));
-  const preferred = shopTx.map((order) => {
-    const telegramTwin = sales.some(
-      (sale) => sale.id === order.id || (order.saleId && sale.id === order.saleId) || twinKey(sale) === twinKey(order),
-    );
-    return telegramTwin ? { ...order, source: "telegram" as const } : order;
+  const primary = shopTx.map((order) => {
+    const twin = sales.some((sale) => isTwin(order, sale));
+    return twin ? { ...order, source: "telegram" as const } : order;
   });
-  const extra = sales.filter(
-    (sale) => !shopIds.has(sale.id) && !shopSaleIds.has(sale.id) && !shopKeys.has(twinKey(sale)),
-  );
-  return [...preferred, ...extra]
+  const extra = sales.filter((sale) => !shopTx.some((order) => isTwin(order, sale)));
+  return [...primary, ...extra]
     .filter((order) => order.source === "telegram" || order.payment !== "other")
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
