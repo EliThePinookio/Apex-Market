@@ -6,6 +6,7 @@ import { ApexStoreProvider } from "@/lib/apex/store";
 import { AppShell } from "@/components/apex/AppShell";
 import { LiquidRoot } from "@/components/ui/liquid-root";
 import { FeelRoot } from "@/components/ui/feel-root";
+import { LayerRoot } from "@/components/ui/layer-root";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "BEANNEL";
@@ -55,9 +56,11 @@ function RootDocument() {
           <BeannelAuthProvider>
             <ApexStoreProvider>
               <FeelRoot>
-                <LiquidRoot>
-                  <AppShell />
-                </LiquidRoot>
+                <LayerRoot>
+                  <LiquidRoot>
+                    <AppShell />
+                  </LiquidRoot>
+                </LayerRoot>
               </FeelRoot>
             </ApexStoreProvider>
           </BeannelAuthProvider>

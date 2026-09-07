@@ -2016,6 +2016,29 @@ html.dark .shop-dock {
 @media (min-width: 768px) {
   .shop-hero-line { font-size: 1rem; }
 }
+.dept-rail {
+  display: flex;
+  gap: 0.7rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 0.85rem 0 0.35rem;
+  margin: 0 -0.15rem;
+}
+.dept-rail .dept-tile {
+  flex: 0 0 8.75rem;
+  scroll-snap-align: start;
+}
+.mall-rail {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 0.15rem 0 0.5rem;
+}
+.mall-rail .mall-card {
+  flex: 0 0 min(16rem, 78vw);
+  scroll-snap-align: start;
+}
 .shop-body {
   position: relative;
   z-index: 1;
@@ -3913,17 +3936,17 @@ a.shop-line:active,
 }
 
 ::view-transition-old(root) {
-  animation: 160ms var(--ease-out) both liquid-out;
+  animation: layer-exit var(--sheet-duration) var(--ease-sheet) both;
 }
 ::view-transition-new(root) {
-  animation: 200ms var(--ease-out) both liquid-in;
+  animation: layer-enter var(--sheet-duration) var(--ease-sheet) both;
 }
-@keyframes liquid-out {
-  to { opacity: 0; filter: blur(16px); transform: scale(0.96) translateY(8px); }
+@keyframes layer-exit {
+  to { opacity: 0; transform: translate3d(-16%, 0, 0) scale(0.98); }
 }
-@keyframes liquid-in {
-  from { opacity: 0; filter: blur(18px); transform: scale(1.03) translateY(-8px); }
-  to { opacity: 1; filter: blur(0); transform: none; }
+@keyframes layer-enter {
+  from { opacity: 0; transform: translate3d(18%, 0, 0) scale(1.02); }
+  to { opacity: 1; transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

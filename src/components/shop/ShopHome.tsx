@@ -16,6 +16,7 @@ import {
 import { useBeannelAuth } from "@/lib/beannel/auth";
 import { canAccessOffice } from "@/lib/beannel/account";
 import { useSaved } from "@/lib/beannel/wishlist";
+import { withLayer } from "@/lib/layer";
 
 type SortKey = "new" | "price" | "price-desc" | "name";
 
@@ -105,17 +106,21 @@ export function ShopHome() {
   const landing = !onFloor;
 
   const goFloor = (name: string) => {
-    void navigate({
-      to: "/shop",
-      search: { q: search.q, cat: name === "All" ? undefined : name, sort: search.sort, stock: search.stock },
-    });
+    withLayer(() =>
+      navigate({
+        to: "/shop",
+        search: { q: search.q, cat: name === "All" ? undefined : name, sort: search.sort, stock: search.stock },
+      }),
+    );
   };
 
   const setSort = (key: SortKey) => {
-    void navigate({
-      to: "/shop",
-      search: { q: search.q, cat: search.cat, sort: key === "new" ? undefined : key, stock: search.stock },
-    });
+    withLayer(() =>
+      navigate({
+        to: "/shop",
+        search: { q: search.q, cat: search.cat, sort: key === "new" ? undefined : key, stock: search.stock },
+      }),
+    );
   };
 
   return (
@@ -143,29 +148,26 @@ export function ShopHome() {
       )}
 
       <div className="shop-body">
+        {!landing && (
         <div className="tag-row tag-row-scroll no-scrollbar pb-1">
           <CategoryChip name="All" plain active={cat === "All" && onFloor} onClick={() => goFloor("All")} />
           {cats.map((name) => (
             <CategoryChip key={name} name={name} active={cat === name} onClick={() => goFloor(name)} />
           ))}
         </div>
+        )}
 
         {landing && (
-          <>
-            <div className="mall-section">
-              <h2>Shop by department</h2>
-            </div>
-            <div className="dept-grid">
-              {CATALOG.map((item) => (
-                <Link key={item.id} to="/shop" search={{ cat: item.name }} className="dept-tile">
-                  <span className="dept-photo">
-                    <img src={item.cover} alt="" loading="lazy" decoding="async" />
-                  </span>
-                  <span className="dept-label">{shortFor(item.name)}</span>
-                </Link>
-              ))}
-            </div>
-          </>
+          <div className="dept-rail no-scrollbar" aria-label="Shop by department">
+            {CATALOG.map((item) => (
+              <Link key={item.id} to="/shop" search={{ cat: item.name }} className="dept-tile">
+                <span className="dept-photo">
+                  <img src={item.cover} alt="" loading="lazy" decoding="async" />
+                </span>
+                <span className="dept-label">{shortFor(item.name)}</span>
+              </Link>
+            ))}
+          </div>
         )}
 
         {q && (
@@ -212,7 +214,7 @@ export function ShopHome() {
               <h2>Featured</h2>
               <span className="text-[12px] text-fg-subtle tabular">{groups.length} listed</span>
             </div>
-            <div className="mall-grid">
+            <div className="mall-rail no-scrollbar">
               {featured.map((g) => (
                 <ShopCard key={`f-${g.slug}`} group={g} currency={cur} saved={savedIds.has(g.variants[0]?.listingId)} />
               ))}
@@ -222,7 +224,7 @@ export function ShopHome() {
                 <div className="mall-section">
                   <h2>New arrivals</h2>
                 </div>
-                <div className="mall-grid">
+                <div className="mall-rail no-scrollbar">
                   {arrivals.map((g) => (
                     <ShopCard key={`n-${g.slug}`} group={g} currency={cur} saved={savedIds.has(g.variants[0]?.listingId)} />
                   ))}

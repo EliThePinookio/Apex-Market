@@ -9,6 +9,7 @@ import { useBeannelAuth } from "@/lib/beannel/auth";
 import { useOpenOrderCount } from "@/components/shop/ShopOrders";
 import { Toaster } from "sonner";
 import { tick } from "@/lib/feel";
+import { withLayer } from "@/lib/layer";
 import { forgetBrowserPaystackSecret } from "@/lib/beannel/keys";
 
 export function ShopShell() {
@@ -32,7 +33,7 @@ export function ShopShell() {
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
     tick("light");
-    void navigate({ to: "/shop", search: { q: q.trim() || undefined, cat: undefined } });
+    withLayer(() => void navigate({ to: "/shop", search: { q: q.trim() || undefined, cat: undefined } }));
   };
 
   const homeOn = pathname === "/" || pathname.startsWith("/shop");
