@@ -34,9 +34,10 @@ import {
   wipeBusiness,
 } from "@/lib/apex/db";
 import { computeSummary, filterTransactions } from "@/lib/apex/summary";
+import { fileWithModel } from "@/lib/apex/advisor";
 import { useBeannelAuth } from "@/lib/beannel/auth";
 import { isOfficePath, isOfficeRole, OWNER_EMAIL } from "@/lib/beannel/account";
-import { mergeCatalog } from "@/lib/beannel/catalog";
+import { fileProduct, mergeCatalog, polishTitle } from "@/lib/beannel/catalog";
 import type { OrderStatus, ShopOrder } from "@/lib/beannel/commerce";
 import { sourceIdFromListing } from "@/lib/beannel/shop-meta";
 import {
@@ -248,6 +249,24 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
       );
       snapshotRef.current = next;
       setSnapshot(next);
+      const biz = businessId;
+      void (async () => {
+        let cur = snapshotRef.current;
+        let touched = false;
+        for (const p of cur.products) {
+          const name = polishTitle(p.name);
+          const parent = fileProduct(name, p.category, p.garmentType, p.notes).parent;
+          if (parent === p.category && name === p.name) continue;
+          const patched = { ...p, name, category: parent, updatedAt: new Date().toISOString() };
+          await persistProduct(biz, patched, cur.categories).catch(() => undefined);
+          await publishListing(biz, patched).catch(() => undefined);
+          cur = saveProductOn(cur, patched);
+          touched = true;
+        }
+        if (!touched) return;
+        snapshotRef.current = cur;
+        setSnapshot(cur);
+      })();
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : "Could not load workspace.");
       snapshotRef.current = emptySnapshot();
@@ -397,7 +416,19 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
   const saveProduct = useCallback(
     async (p: Partial<Product>) => {
       const { businessId: biz } = requireSession();
-      const next = saveProductOn(snapshotRef.current, p);
+      const named = polishTitle((p.name || "").trim() || snapshotRef.current.products.find((x) => x.id === p.id)?.name || "");
+      const current = snapshotRef.current.products.find((x) => x.id === p.id);
+      const guess = fileProduct(named, p.category || current?.category, p.garmentType || current?.garmentType, p.notes || current?.notes);
+      let category = guess.parent;
+      if (guess.hits === 0 && named) {
+        try {
+          const filed = await fileWithModel({ data: { name: named } });
+          if (filed.room) category = filed.room;
+        } catch {
+          /* local gold map is enough */
+        }
+      }
+      const next = saveProductOn(snapshotRef.current, { ...p, name: named || p.name, category });
       const saved = next.products.find((x) => x.id === (p.id || next.products[0]?.id));
       if (!saved) throw new Error("Product was not saved.");
       await persistProduct(biz, saved, next.categories);

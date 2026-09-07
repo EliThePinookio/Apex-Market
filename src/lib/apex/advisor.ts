@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { rateLimit } from "@/lib/beannel/guard";
+import { parseGoldRoom } from "@/lib/beannel/catalog";
 
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 
@@ -302,3 +303,28 @@ export const askApexAdvisor = createServerFn({ method: "POST" })
       source: "ledger" as const,
     };
   });
+
+const FILE_SYSTEM = `You file fashion stock into exactly one gold room.
+Reply with only one word from this list: Apparels, Shoes, Watches, Jewellery, Accessories, Electronics.
+No punctuation. No extra text.`;
+
+export const fileWithModel = createServerFn({ method: "POST" })
+  .validator((input: { name: string }) => input)
+  .handler(async ({ data }) => {
+    const name = (data.name || "").trim().slice(0, 160);
+    if (!name) return { ok: true as const, room: null as string | null };
+    if (!rateLimit("file-room", 40, 10 * 60_000, 30_000)) {
+      return { ok: true as const, room: null as string | null };
+    }
+    const messages: LlmMessage[] = [
+      { role: "system", content: FILE_SYSTEM },
+      { role: "user", content: name },
+    ];
+    const openrouter = usableKey(process.env.OPENROUTER_API_KEY);
+    const xai = usableKey(process.env.XAI_API_KEY);
+    let text: string | null = null;
+    if (openrouter) text = await withTimeout(chatOpenRouter(openrouter, messages), 4000);
+    if (!text && xai) text = await withTimeout(chatXai(xai, messages), 4000);
+    return { ok: true as const, room: text ? parseGoldRoom(text) : null };
+  });
+

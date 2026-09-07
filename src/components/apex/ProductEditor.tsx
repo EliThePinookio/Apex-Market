@@ -7,7 +7,7 @@ import { Field } from "@/components/ui/field";
 import { NumericInput, toNumber, type NumericValue } from "@/components/ui/numeric-field";
 import { money } from "@/lib/apex/money";
 import { useApex } from "@/lib/apex/store";
-import { classifyProduct, coverFor, goldParent, isGeneratedSku, isMisplaced, nextSku } from "@/lib/beannel/catalog";
+import { classifyProduct, coverFor, fileProduct, goldParent, isGeneratedSku, isMisplaced, nextSku, polishTitle } from "@/lib/beannel/catalog";
 import { familyKey, compressImage, FASHION_SIZES, GARMENT_TYPES, parseShopMeta, type ProductStatus } from "@/lib/beannel/shop-meta";
 import { cn } from "@/lib/cn";
 import type { Product } from "@/types";
@@ -219,7 +219,7 @@ export function ProductEditor({ productId }: { productId?: string }) {
   };
 
   const sharedPayload = (extra: Partial<Product> = {}): Partial<Product> => ({
-    name: draft.name.trim(),
+    name: polishTitle(draft.name.trim()),
     notes: draft.description,
     images: draft.images,
     imageUrl: draft.images[0] || "",
@@ -232,7 +232,7 @@ export function ProductEditor({ productId }: { productId?: string }) {
     unit: draft.unit,
     status: draft.status,
     listed: draft.status === "active" && draft.listed,
-    category: draft.category,
+    category: fileProduct(draft.name, draft.category, draft.garmentType, draft.description).parent,
     garmentType: draft.garmentType,
     vendor: draft.vendor.trim() || "BEANNEL",
     tags: draft.tags,

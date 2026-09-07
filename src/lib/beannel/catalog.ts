@@ -55,12 +55,12 @@ const PARENT_OF: Record<string, string> = {
 };
 
 const CLASSIFY: Array<{ dept: string; words: string[] }> = [
-  { dept: "Jewellery", words: ["necklace", "necklaces", "earring", "earrings", "bracelet", "bangle", "pendant", "jewel", "jewellery", "jewelry", "chain", "ring"] },
+  { dept: "Jewellery", words: ["necklace", "necklaces", "earring", "earrings", "bracelet", "bangle", "pendant", "jewellery", "jewelry", "choker", "locket", "hoop", "studs", "anklet"] },
   { dept: "Watches", words: ["watch", "watches", "timepiece", "chronograph"] },
   { dept: "Electronics", words: ["earbud", "earbuds", "earphone", "headphone", "airpod", "airpods", "speaker", "charger", "gadget"] },
-  { dept: "Shoes", words: ["shoe", "shoes", "sneaker", "loafer", "boot", "sandal", "heel", "oxford", "brogue", "trainer"] },
-  { dept: "Accessories", words: ["belt", "belts", "cufflink", "cufflinks", "tie", "scarf", "wallet", "cap", "hat"] },
-  { dept: "Apparels", words: ["shirt", "shirts", "polo", "trouser", "trousers", "jean", "jeans", "chino", "dress", "blouse", "kaftan", "hoodie", "jacket", "suit", "skirt", "short", "shorts", "apparel", "cloth", "top", "tops", "gown"] },
+  { dept: "Shoes", words: ["shoe", "shoes", "sneaker", "loafer", "boot", "sandal", "heel", "oxford", "brogue", "trainer", "mule", "slides", "chelsea"] },
+  { dept: "Accessories", words: ["belt", "belts", "cufflink", "cufflinks", "tie", "scarf", "wallet", "cap", "hat", "brooch"] },
+  { dept: "Apparels", words: ["shirt", "shirts", "polo", "trouser", "trousers", "jean", "jeans", "chino", "dress", "blouse", "kaftan", "hoodie", "jacket", "suit", "skirt", "short", "shorts", "apparel", "gown", "kente", "ankara", "smock", "agbada", "dashiki", "joggers", "sweatshirt", "palazzo"] },
 ];
 
 export function goldParent(category: string): string {
@@ -85,6 +85,36 @@ export function isMisplaced(name: string, category: string, garmentType = ""): b
   return goldParent(category) !== guess.parent;
 }
 
+export function fileProduct(
+  name: string,
+  category = "",
+  garmentType = "",
+  notes = "",
+): { parent: string; hits: number } {
+  const guess = classifyProduct(`${name} ${notes}`.trim(), "", garmentType);
+  if (guess.hits > 0) return guess;
+  return { parent: goldParent(category || "Apparels"), hits: 0 };
+}
+
+export function polishTitle(name: string): string {
+  const t = name.trim().replace(/\s+/g, " ");
+  if (!t) return t;
+  if (/[A-Z]/.test(t) && /[a-z]/.test(t)) return t;
+  if (t === t.toUpperCase() && t.length < 14) return t;
+  return t.replace(/\b([a-zA-Z])/g, (m) => m.toUpperCase());
+}
+
+export function parseGoldRoom(text: string): string | null {
+  const t = text.toLowerCase();
+  for (const room of GOLD_DEPARTMENTS) {
+    if (t.includes(room.name.toLowerCase())) return room.name;
+  }
+  if (t.includes("jewel")) return "Jewellery";
+  if (t.includes("cloth") || t.includes("wear") || t.includes("fashion")) return "Apparels";
+  if (t.includes("foot")) return "Shoes";
+  return null;
+}
+
 export function prefixFor(category: string): string {
   const found = CATALOG.find((c) => c.name.toLowerCase() === category.trim().toLowerCase());
   if (found) return found.prefix;
@@ -105,8 +135,10 @@ export function coverFor(category: string): string {
 }
 
 export function shortFor(category: string): string {
+  const parent = goldParent(category);
+  const gold = GOLD_DEPARTMENTS.find((c) => c.name.toLowerCase() === parent.toLowerCase());
   const found = CATALOG.find((c) => c.name.toLowerCase() === category.trim().toLowerCase());
-  return found?.short || category;
+  return gold?.short || gold?.name || found?.short || parent;
 }
 
 export function matchesCategory(listingCategory: string, wanted: string): boolean {
