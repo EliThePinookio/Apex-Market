@@ -25,7 +25,13 @@ export const ShopCard = memo(function ShopCard({
   return (
     <article className="mall-card">
       <Link to="/shop/$productId" params={{ productId: slug }} className="mall-photo">
-        <img src={group.image} alt="" loading="lazy" decoding="async" />
+        <img
+          src={group.image}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          style={{ viewTransitionName: `piece-${slug}` }}
+        />
         {group.stock <= 0 && <span className="shop-sold">Out of stock</span>}
       </Link>
       {v && (

@@ -133,7 +133,7 @@ export function ShopProduct() {
     <div>
       <div className="shop-product">
         <div className="shop-product-photo">
-          <img src={photo || variant.image} alt="" />
+          <img src={photo || variant.image} alt="" style={{ viewTransitionName: `piece-${slug}` }} />
           {gallery.length > 1 && (
             <div className="shop-thumbs">
               {gallery.map((src) => (

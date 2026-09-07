@@ -3,7 +3,7 @@ import { MessageCircle } from "lucide-react";
 import { startTransition, useEffect, useMemo, useState } from "react";
 import { CategoryChip } from "@/components/ui/category-tile";
 import { ShopCard } from "@/components/shop/ShopCard";
-import { CATALOG, matchesCategory, shortFor } from "@/lib/beannel/catalog";
+import { CATALOG, coverFor, matchesCategory, shortFor } from "@/lib/beannel/catalog";
 import {
   fetchShopListings,
   fetchShopStorefront,
@@ -136,7 +136,13 @@ export function ShopHome() {
           </div>
         </section>
       ) : (
-        <section className="shop-hero">
+        <section className="shop-cinema" aria-label={cat === "All" ? "The floor" : cat}>
+          <img
+            src={coverFor(cat === "All" ? "Apparels" : cat)}
+            alt=""
+            className="shop-cinema-still"
+          />
+          <div className="shop-cinema-veil" />
           <div className="shop-hero-banner">
             <p className="shop-kicker">{cat === "All" ? "The floor" : cat}</p>
             <p className="shop-banner-title">{cat === "All" ? "BEANNEL" : shortFor(cat)}</p>
