@@ -4,7 +4,12 @@ import { rateLimit } from "@/lib/beannel/guard";
 export const MAX_PRODUCT_IMAGES = 5;
 export const MIN_PRODUCT_IMAGES = 3;
 
-const MODELS = ["google/gemini-2.5-flash-image", "google/gemini-3.1-flash-image"];
+const MODELS = [
+  "google/gemini-3.1-flash-image",
+  "google/gemini-2.5-flash-image",
+  "black-forest-labs/flux.2-pro",
+  "openai/gpt-image-1",
+];
 
 function usableKey(value: string | undefined | null): string | null {
   const trimmed = (value || "").trim();
