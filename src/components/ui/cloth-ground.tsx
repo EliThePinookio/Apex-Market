@@ -4,6 +4,7 @@ export function ClothGround() {
   return (
     <div className="cloth-ground" aria-hidden>
       <div className="cloth-photo" />
+      <div className="cloth-mesh" />
       <div className="adinkra-ground">
         <Adinkra name="adinkrahene" className="is-a" />
         <Adinkra name="sankofa" className="is-b" />

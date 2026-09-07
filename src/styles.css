@@ -4273,6 +4273,55 @@ html.dark .shop-kicker { color: var(--gold-bright); }
 .adinkra-ground .adinkra { opacity: 0.08; }
 html.dark .adinkra-ground .adinkra { opacity: 0.12; mix-blend-mode: screen; }
 
+.cloth-mesh {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(42% 34% at 18% 12%, color-mix(in oklab, var(--gold-bright) 16%, transparent), transparent 70%),
+    radial-gradient(38% 32% at 86% 18%, color-mix(in oklab, var(--gold) 12%, transparent), transparent 68%),
+    radial-gradient(46% 40% at 62% 88%, color-mix(in oklab, var(--gold-deep) 10%, transparent), transparent 72%);
+}
+html.dark .cloth-mesh {
+  background:
+    radial-gradient(42% 34% at 18% 12%, color-mix(in oklab, var(--gold-bright) 11%, transparent), transparent 70%),
+    radial-gradient(38% 32% at 86% 18%, color-mix(in oklab, var(--gold) 8%, transparent), transparent 68%),
+    radial-gradient(46% 40% at 62% 88%, color-mix(in oklab, var(--gold-deep) 7%, transparent), transparent 72%);
+}
+.shop-home .dept-tile,
+.shop-home .mall-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 220px 280px;
+  contain: layout paint;
+}
+@media (hover: hover) and (pointer: fine) {
+  .shop-home .dept-tile:hover,
+  .shop-home .mall-card:hover,
+  .shop-home .cat-chip:hover {
+    transform: translateY(-3px) scale(1.012);
+  }
+}
+@supports (animation-timeline: scroll()) {
+  .cloth-photo {
+    animation: cloth-drift linear both;
+    animation-timeline: scroll();
+    animation-range: 0% 50%;
+  }
+  @keyframes cloth-drift {
+    from { transform: scale(1.08) translate3d(0, 0, 0); }
+    to { transform: scale(1.08) translate3d(0, -3%, 0); }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cloth-photo { animation: none; }
+  .shop-home .dept-tile:hover,
+  .shop-home .mall-card:hover,
+  .shop-home .cat-chip:hover {
+    transform: none;
+  }
+}
+
+
 
 
 

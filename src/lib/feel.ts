@@ -7,10 +7,10 @@ export function tick(kind: Tick = "light") {
   try {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     if (typeof navigator.vibrate !== "function") return;
-    if (kind === "soft") navigator.vibrate(8);
-    else if (kind === "light") navigator.vibrate(12);
-    else if (kind === "medium") navigator.vibrate(16);
-    else navigator.vibrate([10, 24, 14]);
+    if (kind === "soft") navigator.vibrate(6);
+    else if (kind === "light") navigator.vibrate(10);
+    else if (kind === "medium") navigator.vibrate([8, 18, 10]);
+    else navigator.vibrate([10, 22, 8, 18, 12]);
   } catch {
     /* ignore */
   }
