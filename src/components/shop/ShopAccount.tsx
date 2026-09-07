@@ -33,7 +33,16 @@ export function ShopAccount() {
     };
     try {
       load();
-      return subscribeShopOrders(load);
+      let t: number | undefined;
+      const unsub = subscribeShopOrders(() => {
+        window.clearTimeout(t);
+        t = window.setTimeout(load, 400);
+      });
+      return () => {
+        live = false;
+        window.clearTimeout(t);
+        unsub();
+      };
     } catch {
       return () => {
         live = false;

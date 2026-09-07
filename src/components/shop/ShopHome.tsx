@@ -57,11 +57,14 @@ export function ShopHome() {
       }
     };
     void load();
+    let timer: number | undefined;
     const unsub = subscribeShopListings(() => {
-      void load();
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => void load(), 400);
     });
     return () => {
       live = false;
+      window.clearTimeout(timer);
       unsub();
     };
   }, []);

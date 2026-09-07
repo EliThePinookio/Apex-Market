@@ -277,21 +277,22 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
     const unsub = subscribeShopOrders(() => {
       if (silent) return;
       silent = true;
-      void fetchShopInbox(businessId)
-        .then((orders) => {
-          setShopOrders(orders);
-          const fresh = orders.filter((o) => o.status === "placed" && !o.claimed);
-          if (fresh.length) {
-            toast.message(`${fresh.length} new shop order${fresh.length === 1 ? "" : "s"}`);
-            void reload();
-          }
-        })
-        .finally(() => {
-          silent = false;
-        });
+      window.setTimeout(() => {
+        void fetchShopInbox(businessId)
+          .then((orders) => {
+            setShopOrders(orders);
+            const fresh = orders.filter((o) => o.status === "placed" && !o.claimed);
+            if (fresh.length) {
+              toast.message(`${fresh.length} new shop order${fresh.length === 1 ? "" : "s"}`);
+            }
+          })
+          .finally(() => {
+            silent = false;
+          });
+      }, 400);
     });
     return unsub;
-  }, [user, businessId, reload]);
+  }, [user, businessId]);
 
   const requireSession = () => {
     if (!user || !businessId) throw new Error("Sign in required.");

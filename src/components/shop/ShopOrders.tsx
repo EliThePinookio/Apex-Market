@@ -16,6 +16,18 @@ import { cn } from "@/lib/cn";
 
 type Tab = "open" | "done" | "all";
 
+function onShopPing(fn: () => void) {
+  let t: number | undefined;
+  const unsub = subscribeShopOrders(() => {
+    window.clearTimeout(t);
+    t = window.setTimeout(fn, 400);
+  });
+  return () => {
+    window.clearTimeout(t);
+    unsub();
+  };
+}
+
 export function ShopOrders() {
   const { user, isLoading } = useBeannelAuth();
   const navigate = useNavigate();
@@ -51,7 +63,7 @@ export function ShopOrders() {
         });
     };
     load();
-    return subscribeShopOrders(load);
+    return onShopPing(load);
   }, [user, isLoading]);
 
   const shown = useMemo(() => {
@@ -172,7 +184,7 @@ export function useOpenOrderCount() {
         .catch(() => setCount(0));
     };
     load();
-    return subscribeShopOrders(load);
+    return onShopPing(load);
   }, [user]);
 
   return count;

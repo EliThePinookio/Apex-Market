@@ -75,8 +75,8 @@
     --motion-stagger: 40ms;
     --motion-instant: 70ms;
     --motion-micro: 80ms;
-    --motion-press: 90ms;
-    --motion-quick: 150ms;
+    --motion-press: 70ms;
+    --motion-quick: 120ms;
     --motion-search: 180ms;
     --motion-tab: 220ms;
     --motion-fast: 250ms;
@@ -84,7 +84,7 @@
     --motion-medium: 350ms;
     --motion-bubble: 360ms;
     --motion-slow: 400ms;
-    --motion-release: 420ms;
+    --motion-release: 240ms;
     --motion-emphasis: 500ms;
     --sheet-duration: 0.38s;
     --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -1612,7 +1612,6 @@ html.dark .shop-shell {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  filter: blur(4px) saturate(1.04);
   transform: scale(1.08);
 }
 .adinkra-ground {
@@ -1660,7 +1659,7 @@ html.dark .shop-shell {
   height: 0;
 }
 .cloth-photo {
-  filter: blur(4px) saturate(1.04);
+  filter: none;
 }
 .cloth-caustic {
   position: absolute;
@@ -1670,7 +1669,7 @@ html.dark .shop-shell {
     radial-gradient(ellipse 36% 22% at 78% 62%, color-mix(in oklab, #fff 16%, transparent), transparent 60%),
     radial-gradient(ellipse 28% 14% at 48% 80%, color-mix(in oklab, #c9a96e 14%, transparent), transparent 58%);
   mix-blend-mode: overlay;
-  animation: caustic-drift 18s var(--ease-viscous, ease-in-out) infinite;
+  animation: none;
   pointer-events: none;
 }
 html.dark .cloth-caustic {
@@ -1683,7 +1682,7 @@ html.dark .cloth-caustic {
   70% { transform: translate3d(-3%, 4%, 0) scale(1.03); }
 }
 html.dark .cloth-photo {
-  filter: blur(8px) brightness(0.28) contrast(1.18) saturate(0.7);
+  filter: brightness(0.42);
 }
 html.dark .cloth-veil {
   background:
