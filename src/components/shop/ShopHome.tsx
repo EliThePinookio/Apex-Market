@@ -3,7 +3,7 @@ import { MessageCircle } from "lucide-react";
 import { startTransition, useEffect, useMemo, useState } from "react";
 import { CategoryChip } from "@/components/ui/category-tile";
 import { ShopCard } from "@/components/shop/ShopCard";
-import { CATALOG, matchesCategory, shortFor } from "@/lib/beannel/catalog";
+import { GOLD_DEPARTMENTS, matchesCategory, shortFor } from "@/lib/beannel/catalog";
 import {
   fetchShopListings,
   fetchShopStorefront,
@@ -72,7 +72,7 @@ export function ShopHome() {
     };
   }, []);
 
-  const cats = useMemo(() => CATALOG.map((c) => c.name), []);
+  const cats = useMemo(() => GOLD_DEPARTMENTS.map((c) => c.name), []);
 
   const shown = useMemo(() => {
     const filtered = groups.filter((g) => {
@@ -136,7 +136,7 @@ export function ShopHome() {
               <h2>Shop by department</h2>
             </div>
             <div className="dept-grid">
-              {CATALOG.map((item) => (
+              {GOLD_DEPARTMENTS.map((item) => (
                 <Link key={item.id} to="/shop" search={{ cat: item.name }} className="dept-tile">
                   <span className="dept-photo">
                     <img src={item.cover} alt="" loading="lazy" decoding="async" />

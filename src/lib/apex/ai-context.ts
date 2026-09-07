@@ -1,6 +1,7 @@
 import type { Customer, FinancialSummary, Product, Transaction } from "@/types";
 import type { TrustedBusinessContext } from "@/lib/apex/advisor";
 import { buildMoneyDesk } from "@/lib/apex/money-desk";
+import { classifyProduct, isMisplaced } from "@/lib/beannel/catalog";
 
 export function buildTrustedContext(params: {
   businessName: string;
@@ -97,5 +98,13 @@ export function buildTrustedContext(params: {
     subhead: desk.subhead,
     trend: desk.series.length > 2 ? `${desk.series[desk.series.length - 1].sales >= desk.series[0].sales ? "up" : "down"} over the window` : "flat",
     actions: desk.actions.map((a) => ({ title: a.title, why: a.why, impact: a.impact })),
+    misplaced: products
+      .filter((p) => isMisplaced(p.name, p.category, p.garmentType))
+      .slice(0, 10)
+      .map((p) => ({
+        name: p.name,
+        listed: p.category,
+        gold: classifyProduct(p.name, p.category, p.garmentType).parent,
+      })),
   };
 }

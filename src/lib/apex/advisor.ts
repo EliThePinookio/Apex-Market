@@ -31,6 +31,7 @@ export type TrustedBusinessContext = {
   subhead?: string;
   trend?: string;
   actions?: Array<{ title: string; why: string; impact: number }>;
+  misplaced?: Array<{ name: string; listed: string; gold: string }>;
 };
 
 function usableKey(value: string | undefined | null): string | null {
@@ -93,6 +94,7 @@ Top products by profit: ${c.topProducts.map((p) => `${p.name} qty ${p.qty} rev $
 Slow stock: ${c.slowProducts.map((p) => `${p.name} qty ${p.stock} trapped ${cur}${p.trapped.toFixed(2)}`).join("; ") || "none"}
 Expense mix: ${c.expenseCategories.map((e) => `${e.name} ${cur}${e.amount.toFixed(2)}`).join("; ") || "none"}
 Money moves: ${c.actions?.map((a) => `${a.title} — ${a.why} (~${cur}${a.impact.toFixed(0)})`).join("; ") || "none"}
+Misplaced stock (gold map): ${c.misplaced?.map((m) => `${m.name} listed as ${m.listed}, belongs in ${m.gold}`).join("; ") || "none"}
 NEXT PERIOD PROJECTION (from this ledger only): ${cur}${next.low.toFixed(2)}–${cur}${next.high.toFixed(2)} at ${next.interval}% confidence. ${next.note}
 `.trim();
 }
@@ -106,6 +108,7 @@ Rules:
 - Answer like a conversation: short, direct, then one next move.
 - Tie every recommendation to a number from the ledger (restock, idle cash, unpaid balances, margin).
 - When you project, quote the NEXT PERIOD PROJECTION range and its 95% or 99% interval. Never give a single fake-precise future number.
+- When a piece is in the wrong gold department, say so and name the gold room it belongs in.
 - 99% only when the ledger says the interval is 99. Otherwise 95%, or say the books are too thin.
 - Do not mention APIs, models, OpenRouter, or that you are an AI unless asked.`;
 
@@ -213,6 +216,14 @@ export function localAdvisorReply(prompt: string, c: TrustedBusinessContext): st
         .join("; ")}.`,
     );
     lines.push("WHY: Velocity is eating cover. A dark winner is lost sales.");
+  } else if (/misplace|wrong cat|categor/.test(q) && c.misplaced?.length) {
+    lines.push(
+      `WHAT: ${c.misplaced
+        .slice(0, 4)
+        .map((m) => `${m.name} is in ${m.listed}, gold map says ${m.gold}`)
+        .join("; ")}.`,
+    );
+    lines.push("WHY: Shoppers look in the gold rooms. A necklace in Apparels is a lost sale.");
   } else if (/project|forecast|next week|next month|confidence/.test(q)) {
     const p = projectNext(c);
     lines.push(

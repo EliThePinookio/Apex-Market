@@ -13,7 +13,7 @@ const MEMORY_KEY = "beannel_office_chat";
 const SUGGESTIONS = [
   "What should I restock?",
   "Where is cash sitting still?",
-  "How is profit this week?",
+  "Which pieces are in the wrong room?",
 ];
 
 type Bubble = { role: "user" | "assistant"; text: string };

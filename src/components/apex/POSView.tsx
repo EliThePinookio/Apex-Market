@@ -11,12 +11,12 @@ import { Sheet } from "@/components/ui/sheet";
 import { printReceipt } from "@/lib/apex/export";
 import { money } from "@/lib/apex/money";
 import { useApex } from "@/lib/apex/store";
-import { colorFor, coverFor } from "@/lib/beannel/catalog";
+import { colorFor, coverFor, GOLD_DEPARTMENTS, matchesCategory } from "@/lib/beannel/catalog";
 import { cn } from "@/lib/cn";
 import type { PaymentMethod, Transaction, TransactionItem } from "@/types";
 
 export function POSView() {
-  const { products, categories, profile, customers, recordSale } = useApex();
+  const { products, profile, customers, recordSale } = useApex();
   const search = useSearch({ strict: false }) as { sku?: string };
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
@@ -52,7 +52,7 @@ export function POSView() {
         p.name.toLowerCase().includes(q) ||
         p.sku.toLowerCase().includes(q) ||
         (p.barcode && p.barcode.includes(query.trim()));
-      const matchC = cat === "All" || p.category === cat;
+      const matchC = cat === "All" || matchesCategory(p.category, cat);
       return matchQ && matchC;
     });
   }, [products, query, cat]);
@@ -155,7 +155,7 @@ export function POSView() {
         />
         <div className="tag-row tag-row-scroll no-scrollbar pb-1">
           <CategoryChip name="All" plain active={cat === "All"} onClick={() => setCat("All")} />
-          {categories.map((c) => (
+          {GOLD_DEPARTMENTS.map((c) => (
             <CategoryChip key={c.id} name={c.name} active={cat === c.name} onClick={() => setCat(c.name)} />
           ))}
         </div>

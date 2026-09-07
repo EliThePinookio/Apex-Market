@@ -9,7 +9,7 @@ import { SearchField } from "@/components/ui/search-field";
 import { exportInventoryCsv } from "@/lib/apex/export";
 import { money } from "@/lib/apex/money";
 import { useApex } from "@/lib/apex/store";
-import { coverFor } from "@/lib/beannel/catalog";
+import { coverFor, GOLD_DEPARTMENTS, isMisplaced, matchesCategory, classifyProduct } from "@/lib/beannel/catalog";
 import { familyKey } from "@/lib/beannel/shop-meta";
 import { cn } from "@/lib/cn";
 import type { Product } from "@/types";
@@ -35,13 +35,13 @@ function statusOf(p: Product): NonNullable<Product["status"]> {
 }
 
 export function InventoryView() {
-  const { products, categories, profile } = useApex();
+  const { products, profile } = useApex();
   const search = useSearch({ strict: false }) as { cat?: string };
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [cat, setCat] = useState(search?.cat || "All");
   const [status, setStatus] = useState<StatusFilter>("all");
-  const [stockFilter, setStockFilter] = useState<"all" | "low" | "out">("all");
+  const [stockFilter, setStockFilter] = useState<"all" | "low" | "out" | "misplaced">("all");
 
   useEffect(() => {
     if (search?.cat) setCat(search.cat);
@@ -80,10 +80,11 @@ export function InventoryView() {
     return families.filter((f) => {
       const hay = `${f.name} ${f.vendor} ${f.variants.map((v) => v.sku).join(" ")}`.toLowerCase();
       if (q && !hay.includes(q.toLowerCase())) return false;
-      if (cat !== "All" && f.category !== cat) return false;
+      if (cat !== "All" && !matchesCategory(f.category, cat)) return false;
       if (status !== "all" && (f.status || "active") !== status) return false;
       if (stockFilter === "low") return f.variants.some((p) => p.stockQuantity > 0 && p.stockQuantity <= p.minStockThreshold);
       if (stockFilter === "out") return f.stock <= 0;
+      if (stockFilter === "misplaced") return isMisplaced(f.name, f.category, f.garmentType);
       return true;
     });
   }, [families, q, cat, status, stockFilter]);
@@ -131,7 +132,7 @@ export function InventoryView() {
         <div className="product-index-tools">
           <SearchField value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search products" className="flex-1" />
           <div className="tag-row">
-            {(["all", "low", "out"] as const).map((f) => (
+            {(["all", "low", "out", "misplaced"] as const).map((f) => (
               <button key={f} type="button" data-active={stockFilter === f} onClick={() => setStockFilter(f)} className="tag-chip capitalize">
                 {f === "all" ? "Stock" : f}
               </button>
@@ -149,7 +150,7 @@ export function InventoryView() {
               void navigate({ to: "/inventory", search: {} });
             }}
           />
-          {categories.map((c) => (
+          {GOLD_DEPARTMENTS.map((c) => (
             <CategoryChip
               key={c.id}
               name={c.name}
@@ -191,6 +192,8 @@ export function InventoryView() {
                 {list.map((f) => {
                   const low = f.variants.some((p) => p.stockQuantity > 0 && p.stockQuantity <= p.minStockThreshold);
                   const out = f.stock <= 0;
+                  const wrong = isMisplaced(f.name, f.category, f.garmentType);
+                  const gold = wrong ? classifyProduct(f.name, f.category, f.garmentType).parent : "";
                   return (
                     <tr key={f.key} onClick={() => open(f)}>
                       <td>
@@ -203,6 +206,7 @@ export function InventoryView() {
                                 ? `${f.variants.length} variants`
                                 : f.variants[0]?.sku}
                               {f.category ? ` · ${f.category}` : ""}
+                              {wrong ? ` · belongs in ${gold}` : ""}
                             </p>
                           </div>
                         </div>

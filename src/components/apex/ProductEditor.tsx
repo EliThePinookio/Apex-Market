@@ -7,7 +7,7 @@ import { Field } from "@/components/ui/field";
 import { NumericInput, toNumber, type NumericValue } from "@/components/ui/numeric-field";
 import { money } from "@/lib/apex/money";
 import { useApex } from "@/lib/apex/store";
-import { coverFor, isGeneratedSku, nextSku } from "@/lib/beannel/catalog";
+import { classifyProduct, coverFor, goldParent, isGeneratedSku, isMisplaced, nextSku } from "@/lib/beannel/catalog";
 import { familyKey, compressImage, FASHION_SIZES, GARMENT_TYPES, parseShopMeta, type ProductStatus } from "@/lib/beannel/shop-meta";
 import { cn } from "@/lib/cn";
 import type { Product } from "@/types";
@@ -642,6 +642,18 @@ export function ProductEditor({ productId }: { productId?: string }) {
                   </option>
                 ))}
               </select>
+              {isMisplaced(draft.name, draft.category, draft.garmentType) && (
+                <p className="text-[12px] text-fg-muted mt-1.5">
+                  Gold map reads this as {classifyProduct(draft.name, draft.category, draft.garmentType).parent}, not {goldParent(draft.category)}.{" "}
+                  <button
+                    type="button"
+                    className="underline"
+                    onClick={() => setCategory(classifyProduct(draft.name, draft.category, draft.garmentType).parent)}
+                  >
+                    Move it
+                  </button>
+                </p>
+              )}
             </Field>
             <div>
               <p className="text-[13px] font-medium text-fg-muted mb-1.5">Type</p>

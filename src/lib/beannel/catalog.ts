@@ -24,6 +24,67 @@ export const CATALOG: CatalogCategory[] = [
   { id: "cat-necklaces", name: "Necklaces", prefix: "NK", color: "#D4AF37", cover: "/brand/cats/necklaces.jpg" },
 ];
 
+/** Shop-facing gold map. Children still exist in stock; they fold into these six. */
+export const GOLD_DEPARTMENTS: CatalogCategory[] = [
+  CATALOG[0],
+  CATALOG[6],
+  CATALOG[5],
+  CATALOG[10],
+  { ...CATALOG[8], name: "Accessories", short: "Accessories" },
+  CATALOG[9],
+];
+
+const PARENT_OF: Record<string, string> = {
+  apparels: "Apparels",
+  trousers: "Apparels",
+  tops: "Apparels",
+  "men's shirts": "Apparels",
+  shirts: "Apparels",
+  women: "Apparels",
+  shoes: "Shoes",
+  footwear: "Shoes",
+  watches: "Watches",
+  jewellery: "Jewellery",
+  jewelry: "Jewellery",
+  necklaces: "Jewellery",
+  necklace: "Jewellery",
+  "clothing accessories": "Accessories",
+  accessories: "Accessories",
+  belts: "Accessories",
+  electronics: "Electronics",
+};
+
+const CLASSIFY: Array<{ dept: string; words: string[] }> = [
+  { dept: "Jewellery", words: ["necklace", "necklaces", "earring", "earrings", "bracelet", "bangle", "pendant", "jewel", "jewellery", "jewelry", "chain", "ring"] },
+  { dept: "Watches", words: ["watch", "watches", "timepiece", "chronograph"] },
+  { dept: "Electronics", words: ["earbud", "earbuds", "earphone", "headphone", "airpod", "airpods", "speaker", "charger", "gadget"] },
+  { dept: "Shoes", words: ["shoe", "shoes", "sneaker", "loafer", "boot", "sandal", "heel", "oxford", "brogue", "trainer"] },
+  { dept: "Accessories", words: ["belt", "belts", "cufflink", "cufflinks", "tie", "scarf", "wallet", "cap", "hat"] },
+  { dept: "Apparels", words: ["shirt", "shirts", "polo", "trouser", "trousers", "jean", "jeans", "chino", "dress", "blouse", "kaftan", "hoodie", "jacket", "suit", "skirt", "short", "shorts", "apparel", "cloth", "top", "tops", "gown"] },
+];
+
+export function goldParent(category: string): string {
+  const key = category.trim().toLowerCase();
+  if (!key) return "Apparels";
+  return PARENT_OF[key] || CATALOG.find((c) => c.name.toLowerCase() === key || (c.short || "").toLowerCase() === key)?.name || category;
+}
+
+export function classifyProduct(name: string, category = "", garmentType = ""): { parent: string; hits: number } {
+  const blob = `${name} ${category} ${garmentType}`.toLowerCase();
+  let best = { parent: goldParent(category), hits: 0 };
+  for (const row of CLASSIFY) {
+    const hits = row.words.reduce((n, w) => n + (new RegExp(`\\b${w}\\b`, "i").test(blob) ? 1 : 0), 0);
+    if (hits > best.hits) best = { parent: row.dept, hits };
+  }
+  return best;
+}
+
+export function isMisplaced(name: string, category: string, garmentType = ""): boolean {
+  const guess = classifyProduct(name, category, garmentType);
+  if (guess.hits === 0) return false;
+  return goldParent(category) !== guess.parent;
+}
+
 export function prefixFor(category: string): string {
   const found = CATALOG.find((c) => c.name.toLowerCase() === category.trim().toLowerCase());
   if (found) return found.prefix;
@@ -37,8 +98,10 @@ export function colorFor(category: string): string {
 }
 
 export function coverFor(category: string): string {
+  const parent = goldParent(category);
+  const gold = GOLD_DEPARTMENTS.find((c) => c.name.toLowerCase() === parent.toLowerCase());
   const found = CATALOG.find((c) => c.name.toLowerCase() === category.trim().toLowerCase());
-  return found?.cover || "/brand/lifestyle.jpg";
+  return gold?.cover || found?.cover || "/brand/lifestyle.jpg";
 }
 
 export function shortFor(category: string): string {
@@ -47,14 +110,9 @@ export function shortFor(category: string): string {
 }
 
 export function matchesCategory(listingCategory: string, wanted: string): boolean {
-  const a = listingCategory.trim().toLowerCase();
   const b = wanted.trim().toLowerCase();
   if (!b || b === "all") return true;
-  if (a === b) return true;
-  const fromA = CATALOG.find((c) => c.name.toLowerCase() === a || (c.short || "").toLowerCase() === a);
-  const fromB = CATALOG.find((c) => c.name.toLowerCase() === b || (c.short || "").toLowerCase() === b);
-  if (fromA && fromB) return fromA.id === fromB.id;
-  return a.includes(b) || b.includes(a);
+  return goldParent(listingCategory).toLowerCase() === goldParent(wanted).toLowerCase();
 }
 
 export function isGeneratedSku(sku: string, category: string): boolean {
@@ -79,6 +137,11 @@ export function mergeCatalog(existing: Category[]): Category[] {
     const found = byName.get(cat.name.toLowerCase());
     return found || { id: cat.id, name: cat.name, color: cat.color };
   });
+  for (const cat of GOLD_DEPARTMENTS) {
+    if (!merged.some((m) => m.name.toLowerCase() === cat.name.toLowerCase())) {
+      merged.push({ id: cat.id, name: cat.name, color: cat.color });
+    }
+  }
   for (const c of existing) {
     if (!CATALOG.some((x) => x.name.toLowerCase() === c.name.toLowerCase())) merged.push(c);
   }
