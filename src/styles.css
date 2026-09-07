@@ -6,12 +6,12 @@
   --font-display: var(--font-brand);
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
-  --color-bg: #f6f1e8;
-  --color-bg-elevated: #fffdf8;
-  --color-bg-subtle: #ebe3d4;
-  --color-fg: #1c1612;
-  --color-fg-muted: #6e6256;
-  --color-fg-subtle: #8a7d6f;
+  --color-bg: #e4d5bf;
+  --color-bg-elevated: #efe2ce;
+  --color-bg-subtle: #d4c3ab;
+  --color-fg: #16100c;
+  --color-fg-muted: #3f332b;
+  --color-fg-subtle: #5a4a3e;
   --color-border: color-mix(in oklab, var(--color-fg) 8%, transparent);
   --color-border-strong: color-mix(in oklab, var(--color-fg) 14%, transparent);
   --color-accent: #d4af37;
@@ -117,9 +117,9 @@
     --gold: #d4af37;
     --gold-deep: #a67c2d;
     --gold-grad: linear-gradient(165deg, #e8c872 0%, #d4af37 46%, #a67c2d 100%);
-    --glass-fill: color-mix(in oklab, #fff 16%, transparent);
-    --glass-tint: color-mix(in oklab, #fff 32%, transparent);
-    --glass-stroke: color-mix(in oklab, #fff 48%, transparent);
+    --glass-fill: color-mix(in oklab, #cbb79a 14%, transparent);
+    --glass-tint: color-mix(in oklab, #d4af37 10%, transparent);
+    --glass-stroke: color-mix(in oklab, #a67c2d 32%, transparent);
     --blur-liquid: 14px;
     color-scheme: light;
   }
@@ -1583,12 +1583,12 @@ input[type="range"]::-moz-range-thumb {
   flex-direction: column;
   background: transparent;
   color: var(--shop-ink);
-  --shop-cream: #f6f1e8;
-  --shop-cream-elev: #fffdf8;
-  --shop-ink: #1c1612;
-  --shop-ink-muted: #6e6256;
-  --shop-surface: #fffdf8;
-  --shop-surface-deep: #f6f1e8;
+  --shop-cream: #e8d9c4;
+  --shop-cream-elev: #f0e4d0;
+  --shop-ink: #16100c;
+  --shop-ink-muted: #3f332b;
+  --shop-surface: #efe2ce;
+  --shop-surface-deep: #dccbb4;
 }
 html.dark .shop-shell {
   --shop-cream: #f6f1e8;
@@ -4091,6 +4091,10 @@ html.dark .shop-shell > .shop-dock {
     inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 18%, transparent),
     0 6px 14px -10px color-mix(in oklab, #000 45%, transparent);
 }
+html:not(.dark) .shop-home .tag-chip {
+  background: color-mix(in oklab, var(--shop-surface) 90%, transparent);
+  color: #16100c;
+}
 .shop-home .tag-chip[data-active="true"] {
   background-image: var(--gold-grad);
   background-color: var(--gold);
@@ -4111,26 +4115,28 @@ html.dark .shop-shell > .shop-dock {
   font-size: clamp(2rem, 8vw, 2.6rem);
   line-height: 0.92;
   letter-spacing: -0.03em;
-  color: var(--shop-ink);
+  color: #16100c;
 }
+html.dark .shop-intro-hero .shop-banner-title { color: var(--shop-ink); }
 .shop-intro-hero .shop-hero-line {
   margin-top: 0.45rem;
   font-family: Inter, "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   font-size: 0.95rem;
-  color: var(--shop-ink-muted);
+  color: #3f332b;
   -webkit-line-clamp: 2;
 }
+html.dark .shop-intro-hero .shop-hero-line { color: var(--shop-ink-muted); }
 .shop-home .mall-card {
   padding: 0;
   border-radius: 18px;
   overflow: hidden;
-  background: color-mix(in oklab, var(--shop-surface) 12%, transparent);
+  background: color-mix(in oklab, var(--shop-surface) 88%, transparent);
   backdrop-filter: blur(16px) saturate(1.12);
   -webkit-backdrop-filter: blur(16px) saturate(1.12);
-  border: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold) 34%, transparent);
   box-shadow:
-    inset 0 1px 0 color-mix(in oklab, #fff 18%, transparent),
-    0 14px 32px -16px rgba(0, 0, 0, 0.42);
+    inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 22%, transparent),
+    0 14px 32px -16px rgba(22, 16, 12, 0.28);
   color: var(--shop-ink);
 }
 .shop-home .mall-photo {
@@ -4160,13 +4166,13 @@ html.dark .shop-home .mall-price { color: var(--gold-bright); }
   flex-direction: column;
   overflow: hidden;
   border-radius: 18px;
-  background: color-mix(in oklab, var(--shop-surface) 18%, transparent);
+  background: color-mix(in oklab, var(--shop-surface) 86%, transparent);
   backdrop-filter: blur(16px) saturate(1.12);
   -webkit-backdrop-filter: blur(16px) saturate(1.12);
-  border: 1px solid color-mix(in oklab, var(--gold) 30%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold) 34%, transparent);
   box-shadow:
-    inset 0 1px 0 color-mix(in oklab, #fff 16%, transparent),
-    0 16px 34px -16px rgba(0, 0, 0, 0.45);
+    inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 20%, transparent),
+    0 16px 34px -16px rgba(22, 16, 12, 0.3);
   color: var(--shop-ink);
   text-align: center;
 }
@@ -4192,7 +4198,7 @@ html.dark .shop-home .mall-price { color: var(--gold-bright); }
   font-size: 0.9rem;
   letter-spacing: 0.01em;
   color: var(--shop-ink);
-  background: color-mix(in oklab, var(--shop-surface-deep) 92%, transparent);
+  background: color-mix(in oklab, var(--shop-surface-deep) 94%, #16100c 6%);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -4211,16 +4217,16 @@ html.dark .shop-home .mall-price { color: var(--gold-bright); }
   border-radius: 999px;
 }
 .shop-home .mall-section h2 {
-  background: color-mix(in oklab, var(--shop-surface) 90%, transparent);
+  background: color-mix(in oklab, var(--shop-surface) 92%, transparent);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold) 32%, transparent);
   color: var(--shop-ink);
 }
 .shop-search,
 .shop-dock,
 .shop-top {
-  background: color-mix(in oklab, var(--shop-surface) 82%, transparent);
+  background: color-mix(in oklab, var(--shop-surface) 90%, transparent);
   backdrop-filter: blur(16px) saturate(1.15);
   -webkit-backdrop-filter: blur(16px) saturate(1.15);
   color: var(--shop-ink);
@@ -4231,7 +4237,7 @@ html.dark .shop-top {
   background: color-mix(in oklab, #161310 82%, transparent);
 }
 .cloth-veil {
-  background: color-mix(in oklab, var(--shop-cream) 68%, transparent);
+  background: color-mix(in oklab, #c4b194 62%, transparent);
 }
 html.dark .cloth-veil {
   background: color-mix(in oklab, #0b0b0b 74%, transparent);
@@ -4241,15 +4247,15 @@ html.dark .shop-kicker { color: var(--gold-bright); }
 .shop-intro-hero {
   background: linear-gradient(
     180deg,
-    color-mix(in oklab, var(--shop-surface) 88%, transparent) 0%,
-    color-mix(in oklab, var(--shop-surface) 42%, transparent) 72%,
+    color-mix(in oklab, var(--shop-surface) 78%, transparent) 0%,
+    color-mix(in oklab, var(--shop-surface) 28%, transparent) 72%,
     transparent 100%
   );
 }
 .shop-home .cat-chip {
-  background: color-mix(in oklab, var(--shop-surface) 90%, transparent);
+  background: color-mix(in oklab, var(--shop-surface) 92%, transparent);
   color: var(--shop-ink);
-  border: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold) 34%, transparent);
 }
 .shop-home .cat-chip[data-active="true"] {
   background-image: var(--gold-grad);
