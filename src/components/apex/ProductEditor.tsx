@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ChevronLeft, ImagePlus, Trash2, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
@@ -9,6 +9,8 @@ import { money } from "@/lib/apex/money";
 import { useApex } from "@/lib/apex/store";
 import { classifyProduct, coverFor, fileAudience, fileProduct, goldParent, isGeneratedSku, isMisplaced, nextSku, polishTitle } from "@/lib/beannel/catalog";
 import { familyKey, compressImage, FASHION_SIZES, GARMENT_TYPES, parseShopMeta, type ProductStatus } from "@/lib/beannel/shop-meta";
+import { readOpenRouterKey } from "@/lib/beannel/keys";
+import { finishProductPhotos, MAX_PRODUCT_IMAGES } from "@/lib/beannel/studio";
 import { cn } from "@/lib/cn";
 import type { Product } from "@/types";
 
@@ -136,6 +138,8 @@ export function ProductEditor({ productId }: { productId?: string }) {
   const [tagInput, setTagInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
+  const [studioBusy, setStudioBusy] = useState(false);
+  const studioKey = useRef("");
 
   useEffect(() => {
     if (hydrated || !existing) return;
@@ -143,6 +147,7 @@ export function ProductEditor({ productId }: { productId?: string }) {
     setDraft(next);
     setBaseline(serialize(next));
     setHydrated(true);
+    if (next.images[0]) studioKey.current = `done|${next.images[0].slice(0, 64)}`;
   }, [existing, family, hydrated]);
 
   const dirty = serialize(draft) !== baseline;
@@ -175,15 +180,62 @@ export function ProductEditor({ productId }: { productId?: string }) {
   const addFiles = async (files: FileList | null) => {
     if (!files?.length) return;
     const next = [...draft.images];
-    for (const file of Array.from(files).slice(0, 8 - next.length)) {
+    for (const file of Array.from(files).slice(0, MAX_PRODUCT_IMAGES - next.length)) {
       try {
         next.push(await compressImage(file));
       } catch {
         toast.error("Could not read that photo");
       }
     }
-    set({ images: next });
+    set({ images: next.slice(0, MAX_PRODUCT_IMAGES) });
   };
+
+  useEffect(() => {
+    const name = draft.name.trim();
+    const source = draft.images[0] || "";
+    const have = draft.images.length;
+    if (!hydrated || !name || !source) return;
+    if (have >= 3 && studioKey.current.startsWith("done|")) return;
+    const fingerprint = source.slice(0, 64);
+    if (studioKey.current === `done|${fingerprint}` || studioKey.current === `run|${fingerprint}`) return;
+    studioKey.current = `run|${fingerprint}`;
+    const size = draft.variants.find((v) => v.size)?.size || "";
+    setStudioBusy(true);
+    void finishProductPhotos({
+      data: {
+        name,
+        size,
+        category: draft.category,
+        audience: draft.audience,
+        source,
+        have,
+        openrouterKey: readOpenRouterKey(),
+      },
+    })
+      .then((res) => {
+        if (!res.ok) {
+          studioKey.current = "";
+          if (res.reason === "key") toast.error("Add your OpenRouter key in Settings so the studio can finish photos.");
+          return;
+        }
+        setDraft((d) => {
+          const images = [...d.images];
+          if (res.cover) images[0] = res.cover;
+          for (const shot of res.extras) {
+            if (images.length >= MAX_PRODUCT_IMAGES) break;
+            if (!images.includes(shot)) images.push(shot);
+          }
+          studioKey.current = `done|${(images[0] || fingerprint).slice(0, 64)}`;
+          return { ...d, images: images.slice(0, MAX_PRODUCT_IMAGES) };
+        });
+        if (res.cover || res.extras.length) toast.success("The studio finished the photos.");
+      })
+      .catch(() => {
+        studioKey.current = "";
+        toast.error("The studio could not finish those photos.");
+      })
+      .finally(() => setStudioBusy(false));
+  }, [draft.name, draft.images, draft.category, draft.audience, draft.variants, hydrated]);
 
   const setCategory = (name: string) => {
     const keepSku = draft.sku && !isGeneratedSku(draft.sku, draft.category);
@@ -445,7 +497,7 @@ export function ProductEditor({ productId }: { productId?: string }) {
               <label className="product-drop">
                 <ImagePlus className="size-6" />
                 <span>Add files</span>
-                <span>Accepts images. First photo is the shop cover.</span>
+                <span>One photo is enough. The studio finishes up to five. At least three.</span>
                 <input
                   type="file"
                   accept="image/*"
@@ -466,13 +518,17 @@ export function ProductEditor({ productId }: { productId?: string }) {
                     <button
                       type="button"
                       aria-label="Remove"
-                      onClick={() => set({ images: draft.images.filter((_, n) => n !== i) })}
+                      onClick={() => {
+                        const images = draft.images.filter((_, n) => n !== i);
+                        if (!images.length) studioKey.current = "";
+                        set({ images });
+                      }}
                     >
                       <X className="size-3.5" />
                     </button>
                   </figure>
                 ))}
-                {draft.images.length < 8 && (
+                {draft.images.length < MAX_PRODUCT_IMAGES && (
                   <label className="product-thumb is-add">
                     <ImagePlus className="size-5" />
                     <input
@@ -489,6 +545,7 @@ export function ProductEditor({ productId }: { productId?: string }) {
                 )}
               </div>
             )}
+            {studioBusy ? <p className="text-[12px] text-fg-muted mt-2">The studio is finishing the photos…</p> : null}
           </section>
 
           <section className="office-card product-card">
