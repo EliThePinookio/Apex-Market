@@ -1582,13 +1582,13 @@ input[type="range"]::-moz-range-thumb {
   display: flex;
   flex-direction: column;
   background: transparent;
-  color: #f3e6c8;
+  color: var(--shop-ink);
   --shop-cream: #f6f1e8;
   --shop-cream-elev: #fffdf8;
-  --shop-ink: #f3e6c8;
-  --shop-ink-muted: #c9b896;
-  --shop-surface: #161310;
-  --shop-surface-deep: #0f0d0b;
+  --shop-ink: #1c1612;
+  --shop-ink-muted: #6e6256;
+  --shop-surface: #fffdf8;
+  --shop-surface-deep: #f6f1e8;
 }
 html.dark .shop-shell {
   --shop-cream: #f6f1e8;
@@ -1597,6 +1597,7 @@ html.dark .shop-shell {
   --shop-ink-muted: #c9b896;
   --shop-surface: #161310;
   --shop-surface-deep: #0f0d0b;
+  color: var(--shop-ink);
 }
 .cloth-ground {
   position: fixed;
@@ -1933,7 +1934,6 @@ html.dark .shop-dock {
   object-fit: cover;
   transform: scale(1.04);
   animation: cinema-ken 22s var(--ease-soft) infinite alternate;
-  view-transition-name: beannel-hero;
 }
 .shop-cinema-veil {
   position: absolute;
@@ -3938,35 +3938,10 @@ a.shop-line:active,
 }
 
 ::view-transition {
-  background: #161310;
+  background: transparent;
 }
-::view-transition-old(root) {
-  animation: luxury-veil-out 0.48s cubic-bezier(0.32, 0.72, 0, 1) both;
-  z-index: 1;
-}
+::view-transition-old(root),
 ::view-transition-new(root) {
-  animation: luxury-wipe-in 0.52s cubic-bezier(0.22, 1, 0.36, 1) both;
-  z-index: 2;
-}
-@keyframes luxury-veil-out {
-  to { opacity: 0; }
-}
-@keyframes luxury-wipe-in {
-  from { clip-path: inset(0 0 0 100%); }
-  to { clip-path: inset(0 0 0 0); }
-}
-::view-transition-group(beannel-hero) {
-  animation-duration: 0.52s;
-  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-}
-::view-transition-old(beannel-hero),
-::view-transition-new(beannel-hero) {
-  animation: none;
-  mix-blend-mode: normal;
-  height: 100%;
-  object-fit: cover;
-}
-html:active-view-transition .shop-cinema-still {
   animation: none;
 }
 
@@ -4115,98 +4090,109 @@ html.dark .shop-shell > .shop-dock {
   color: #1c1612;
   border-color: color-mix(in oklab, var(--gold-deep) 40%, transparent);
 }
-.shop-home .mall-card,
-.shop-home .dept-tile {
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border: none;
-  box-shadow: none;
-  color: var(--shop-ink, #f3e6c8);
+.shop-intro-hero {
+  position: relative;
+  z-index: 1;
+  padding: 1.35rem 1.15rem 0.35rem;
+  max-width: 72rem;
+  margin: 0 auto;
+}
+.shop-intro-hero .shop-banner-title {
+  font-family: var(--font-brand);
+  font-style: italic;
+  font-weight: 600;
+  font-size: clamp(2rem, 8vw, 2.6rem);
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+  color: var(--shop-ink);
+}
+.shop-intro-hero .shop-hero-line {
+  margin-top: 0.45rem;
+  font-family: Inter, "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.95rem;
+  color: var(--shop-ink-muted);
+  -webkit-line-clamp: 2;
 }
 .shop-home .mall-card {
-  padding: 0.55rem 0.55rem 0.9rem;
-  border-radius: 2rem;
-  background: color-mix(in oklab, #161310 16%, transparent);
-  backdrop-filter: blur(16px) saturate(1.18);
-  -webkit-backdrop-filter: blur(16px) saturate(1.18);
-  border: 1px solid color-mix(in oklab, var(--gold) 34%, transparent);
+  padding: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--shop-surface) 12%, transparent);
+  backdrop-filter: blur(16px) saturate(1.12);
+  -webkit-backdrop-filter: blur(16px) saturate(1.12);
+  border: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
   box-shadow:
-    inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 28%, transparent),
-    0 16px 36px -18px rgba(0, 0, 0, 0.5);
+    inset 0 1px 0 color-mix(in oklab, #fff 18%, transparent),
+    0 14px 32px -16px rgba(0, 0, 0, 0.42);
+  color: var(--shop-ink);
 }
 .shop-home .mall-photo {
-  border-radius: 50%;
+  border-radius: 0;
   aspect-ratio: 1;
-  overflow: hidden;
-  box-shadow:
-    0 0 0 1px color-mix(in oklab, var(--gold) 40%, transparent),
-    0 14px 28px -14px rgba(0, 0, 0, 0.48);
+  box-shadow: none;
 }
 .shop-home .mall-name {
   font-family: var(--font-brand);
   font-style: italic;
   font-weight: 600;
-  font-size: 1.02rem;
-  letter-spacing: -0.03em;
-  color: #f6ead2;
-}
-.shop-home .mall-cat {
-  font-family: Inter, "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  font-style: normal;
-  letter-spacing: 0.14em;
-  color: var(--gold-bright);
+  color: var(--shop-ink);
 }
 .shop-home .mall-price {
   font-family: Cinzel, var(--font-brand), serif;
-  font-weight: 600;
-  color: var(--gold-bright, #e8c872);
+  color: var(--gold-deep);
 }
-.shop-home .mall-sizes {
-  font-family: Inter, "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  font-weight: 600;
-  color: color-mix(in oklab, #f3e6c8 72%, transparent);
+html.dark .shop-home .mall-price { color: var(--gold-bright); }
+.shop-home .dept-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.35rem;
 }
 .shop-home .dept-tile {
-  overflow: visible;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 18px;
+  background: color-mix(in oklab, var(--shop-surface) 18%, transparent);
+  backdrop-filter: blur(16px) saturate(1.12);
+  -webkit-backdrop-filter: blur(16px) saturate(1.12);
+  border: 1px solid color-mix(in oklab, var(--gold) 30%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, #fff 16%, transparent),
+    0 16px 34px -16px rgba(0, 0, 0, 0.45);
+  color: var(--shop-ink);
   text-align: center;
 }
 .shop-home .dept-photo {
-  width: 6.5rem;
-  height: 6.5rem;
-  margin: 0.15rem auto 0;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 1.5px solid color-mix(in oklab, var(--gold) 48%, transparent);
-  box-shadow:
-    inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 35%, transparent),
-    0 0 0 6px color-mix(in oklab, var(--gold) 10%, transparent),
-    0 16px 32px -14px rgba(0, 0, 0, 0.55);
-  background: color-mix(in oklab, #161310 22%, transparent);
-  backdrop-filter: blur(12px) saturate(1.15);
-  -webkit-backdrop-filter: blur(12px) saturate(1.15);
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  margin: 0;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  background: var(--shop-surface-deep);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 .shop-home .dept-label {
-  font-family: var(--font-brand);
-  font-style: italic;
-  font-weight: 600;
-  font-size: 0.95rem;
-  letter-spacing: -0.02em;
-  color: #f6ead2;
-  padding: 0.7rem 0.2rem 0.15rem;
-  white-space: normal;
+  display: block;
+  padding: 0.7rem 0.6rem 0.8rem;
+  font-family: Inter, "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  font-style: normal;
+  font-weight: 650;
+  font-size: 0.9rem;
+  letter-spacing: 0.01em;
+  color: var(--shop-ink);
+  background: color-mix(in oklab, var(--shop-surface-deep) 55%, transparent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .shop-home .mall-card:active,
 .shop-home .dept-tile:active {
-  transform: scale(0.96);
-  filter: none;
-}
-.shop-home .dept-tile:active .dept-photo,
-.shop-home .mall-card:active .mall-photo {
-  box-shadow:
-    inset 0 2px 10px color-mix(in oklab, #1c1612 22%, transparent),
-    0 8px 18px -12px color-mix(in oklab, var(--gold-deep) 40%, transparent);
+  transform: scale(0.98);
 }
 .shop-home .tag-chip:active {
   transform: scale(0.98);
@@ -4216,39 +4202,31 @@ html.dark .shop-shell > .shop-dock {
   background-color: var(--gold);
   color: #1c1612;
   border-radius: 999px;
-  font-family: Inter, "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  font-weight: 700;
-}
-@media (hover: hover) and (pointer: fine) {
-  .shop-home .dept-tile:hover {
-    transform: translateY(-5px);
-    box-shadow: none;
-  }
-  .shop-home .dept-tile:hover .dept-photo {
-    box-shadow:
-      inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 45%, transparent),
-      0 0 0 7px color-mix(in oklab, var(--gold) 16%, transparent),
-      0 20px 36px -12px rgba(0, 0, 0, 0.55);
-  }
-  .shop-home .mall-card:hover {
-    transform: translateY(-5px);
-    box-shadow:
-      inset 0 1px 0 color-mix(in oklab, var(--gold-bright) 32%, transparent),
-      0 22px 40px -16px rgba(0, 0, 0, 0.52);
-  }
 }
 .shop-home .mall-section h2 {
-  background: color-mix(in oklab, var(--shop-surface, #161310) 80%, transparent);
-  border: 1px solid color-mix(in oklab, var(--gold) 30%, transparent);
-  color: var(--shop-ink, #f3e6c8);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  background: color-mix(in oklab, var(--shop-surface) 14%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
+  color: var(--shop-ink);
 }
-.shop-home .mall-price {
-  color: var(--gold-bright, #e8c872);
+.shop-search,
+.shop-dock,
+.shop-top {
+  background: color-mix(in oklab, #fff 10%, transparent);
+  backdrop-filter: blur(16px) saturate(1.15);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
 }
-.shop-home .mall-cat {
-  color: var(--shop-ink-muted, #c9b896);
+html.dark .shop-search,
+html.dark .shop-dock,
+html.dark .shop-top {
+  background: color-mix(in oklab, #161310 14%, transparent);
+}
+.cloth-veil {
+  background: color-mix(in oklab, var(--shop-cream) 18%, transparent);
+}
+html.dark .cloth-veil {
+  background: color-mix(in oklab, #0f0d0b 42%, transparent);
 }
 
 

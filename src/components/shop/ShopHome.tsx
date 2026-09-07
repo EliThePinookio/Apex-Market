@@ -3,7 +3,7 @@ import { MessageCircle } from "lucide-react";
 import { startTransition, useEffect, useMemo, useState } from "react";
 import { CategoryChip } from "@/components/ui/category-tile";
 import { ShopCard } from "@/components/shop/ShopCard";
-import { CATALOG, coverFor, matchesCategory, shortFor } from "@/lib/beannel/catalog";
+import { CATALOG, matchesCategory, shortFor } from "@/lib/beannel/catalog";
 import {
   fetchShopListings,
   fetchShopStorefront,
@@ -16,7 +16,6 @@ import {
 import { useBeannelAuth } from "@/lib/beannel/auth";
 import { canAccessOffice } from "@/lib/beannel/account";
 import { useSaved } from "@/lib/beannel/wishlist";
-import { withLayer } from "@/lib/layer";
 
 type SortKey = "new" | "price" | "price-desc" | "name";
 
@@ -37,6 +36,8 @@ export function ShopHome() {
   const sort = (search.sort as SortKey) || "new";
   const inStockOnly = search.stock === "in";
   const staff = canAccessOffice(profile);
+  const onFloor = pathname.startsWith("/shop") || Boolean(q) || cat !== "All";
+  const landing = !onFloor;
 
   useEffect(() => {
     let live = true;
@@ -91,89 +92,60 @@ export function ShopHome() {
     return copy;
   }, [groups, cat, q, sort, inStockOnly]);
 
-  const featured = useMemo(
-    () => [...groups].filter((g) => g.stock > 0).sort((a, b) => b.stock - a.stock).slice(0, 8),
-    [groups],
-  );
-  const arrivals = useMemo(
-    () => [...groups].sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || "")).slice(0, 8),
-    [groups],
-  );
-
   const cur = store?.currency || "GH₵";
   const wa = store?.whatsapp || "";
-  const onFloor = pathname.startsWith("/shop") || Boolean(q) || cat !== "All";
-  const landing = !onFloor;
 
   const goFloor = (name: string) => {
-    withLayer(() =>
-      navigate({
-        to: "/shop",
-        search: { q: search.q, cat: name === "All" ? undefined : name, sort: search.sort, stock: search.stock },
-      }),
-    );
+    void navigate({
+      to: "/shop",
+      search: { q: search.q, cat: name === "All" ? undefined : name, sort: search.sort, stock: search.stock },
+    });
   };
 
   const setSort = (key: SortKey) => {
-    withLayer(() =>
-      navigate({
-        to: "/shop",
-        search: { q: search.q, cat: search.cat, sort: key === "new" ? undefined : key, stock: search.stock },
-      }),
-    );
+    void navigate({
+      to: "/shop",
+      search: { q: search.q, cat: search.cat, sort: key === "new" ? undefined : key, stock: search.stock },
+    });
   };
 
   return (
     <div className={landing ? "shop-home is-landing" : "shop-home is-floor"}>
-      {landing ? (
-        <section className="shop-cinema" aria-label="BEANNEL">
-          <img src="/brand/lifestyle.jpg" alt="" className="shop-cinema-still" />
-          <div className="shop-cinema-veil" />
-          <div className="shop-hero-banner">
-            <p className="shop-kicker">Accra · Official store</p>
-            <p className="shop-banner-title">BEANNEL</p>
-            <p className="shop-hero-line">{store?.tagline || "Clothes, jewellery, watches — cloth from Ghana."}</p>
-          </div>
-        </section>
-      ) : (
-        <section className="shop-cinema" aria-label={cat === "All" ? "The floor" : cat}>
-          <img
-            src={coverFor(cat === "All" ? "Apparels" : cat)}
-            alt=""
-            className="shop-cinema-still"
-          />
-          <div className="shop-cinema-veil" />
-          <div className="shop-hero-banner">
-            <p className="shop-kicker">{cat === "All" ? "The floor" : cat}</p>
-            <p className="shop-banner-title">{cat === "All" ? "BEANNEL" : shortFor(cat)}</p>
-            <p className="shop-hero-line">
-              {q ? `Results for “${search.q}”` : "Prices, sizes, and the pieces on the floor."}
-            </p>
-          </div>
-        </section>
-      )}
+      <section className="shop-intro-hero" aria-label="BEANNEL">
+        <p className="shop-kicker">Accra · Official store</p>
+        <p className="shop-banner-title">BEANNEL</p>
+        <p className="shop-hero-line">{store?.tagline || "Clothes · Jewelry · Watches · Fashion"}</p>
+      </section>
 
       <div className="shop-body">
-        {!landing && (
         <div className="tag-row tag-row-scroll no-scrollbar pb-1">
-          <CategoryChip name="All" plain active={cat === "All" && onFloor} onClick={() => goFloor("All")} />
+          <CategoryChip
+            name="All"
+            plain
+            active={landing || cat === "All"}
+            onClick={() => void navigate({ to: landing ? "/" : "/shop" })}
+          />
           {cats.map((name) => (
             <CategoryChip key={name} name={name} active={cat === name} onClick={() => goFloor(name)} />
           ))}
         </div>
-        )}
 
         {landing && (
-          <div className="dept-rail no-scrollbar" aria-label="Shop by department">
-            {CATALOG.map((item) => (
-              <Link key={item.id} to="/shop" search={{ cat: item.name }} className="dept-tile">
-                <span className="dept-photo">
-                  <img src={item.cover} alt="" loading="lazy" decoding="async" />
-                </span>
-                <span className="dept-label">{shortFor(item.name)}</span>
-              </Link>
-            ))}
-          </div>
+          <>
+            <div className="mall-section">
+              <h2>Shop by department</h2>
+            </div>
+            <div className="dept-grid">
+              {CATALOG.map((item) => (
+                <Link key={item.id} to="/shop" search={{ cat: item.name }} className="dept-tile">
+                  <span className="dept-photo">
+                    <img src={item.cover} alt="" loading="lazy" decoding="async" />
+                  </span>
+                  <span className="dept-label">{shortFor(item.name)}</span>
+                </Link>
+              ))}
+            </div>
+          </>
         )}
 
         {q && (
@@ -214,35 +186,9 @@ export function ShopHome() {
           </div>
         )}
 
-        {landing && featured.length > 0 && (
-          <>
-            <div className="mall-section">
-              <h2>Featured</h2>
-              <span className="text-[12px] text-fg-subtle tabular">{groups.length} listed</span>
-            </div>
-            <div className="mall-rail no-scrollbar">
-              {featured.map((g) => (
-                <ShopCard key={`f-${g.slug}`} group={g} currency={cur} saved={savedIds.has(g.variants[0]?.listingId)} />
-              ))}
-            </div>
-            {arrivals.length > 0 && (
-              <>
-                <div className="mall-section">
-                  <h2>New arrivals</h2>
-                </div>
-                <div className="mall-rail no-scrollbar">
-                  {arrivals.map((g) => (
-                    <ShopCard key={`n-${g.slug}`} group={g} currency={cur} saved={savedIds.has(g.variants[0]?.listingId)} />
-                  ))}
-                </div>
-              </>
-            )}
-          </>
-        )}
-
         {!landing && (
           <div className="mall-section">
-            <h2>{cat === "All" ? "Results" : cat}</h2>
+            <h2>{cat === "All" ? "The floor" : cat}</h2>
             {shown.length > 0 && (
               <span className="text-[12px] text-fg-subtle tabular">
                 {shown.length} item{shown.length === 1 ? "" : "s"}
@@ -252,38 +198,47 @@ export function ShopHome() {
         )}
 
         {!ready ? (
-          <div className="mall-grid">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="mall-card shop-card-skel" />
-            ))}
-          </div>
+          landing ? null : (
+            <div className="mall-grid">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="mall-card shop-card-skel" />
+              ))}
+            </div>
+          )
         ) : failed ? (
           <div className="shop-empty">
             <p className="display-title text-[1.75rem]">Could not load the shop</p>
             <p className="text-[15px] text-fg-muted mt-2 max-w-sm mx-auto">{error || "Check your connection and try again."}</p>
           </div>
+        ) : landing ? (
+          groups.length === 0 ? (
+            <div className="shop-empty">
+              <p className="display-title text-[1.75rem]">New stock lands here</p>
+              <p className="text-[15px] text-fg-muted mt-2 max-w-sm mx-auto">
+                {staff
+                  ? "Open Stock, add a piece with a selling price, and mark it On the shop. It publishes here for customers."
+                  : "Tap a department. Pieces appear the moment the store lists them."}
+              </p>
+              {staff ? (
+                <Link to="/inventory" className="shop-wa">
+                  Open stock
+                </Link>
+              ) : wa ? (
+                <a className="shop-wa" href={whatsappHref(wa, "Hello BEANNEL, I am browsing the shop.")}>
+                  <MessageCircle className="size-4" />
+                  Chat on WhatsApp
+                </a>
+              ) : null}
+            </div>
+          ) : null
         ) : shown.length === 0 ? (
           <div className="shop-empty">
-            <p className="display-title text-[1.75rem]">{q ? "No matching pieces" : cat !== "All" ? `No ${cat} listed yet` : "New stock lands here"}</p>
+            <p className="display-title text-[1.75rem]">{q ? "No matching pieces" : `No ${cat} listed yet`}</p>
             <p className="text-[15px] text-fg-muted mt-2 max-w-sm mx-auto">
-              {q
-                ? "Try another name or department."
-                : staff
-                  ? "Open Stock, add a piece with a selling price, and mark it On the shop. It publishes here for customers."
-                  : "Browse departments now. Items appear the moment the store lists them."}
+              {q ? "Try another name or department." : "Browse another department, or check back when new stock lands."}
             </p>
-            {staff ? (
-              <Link to="/inventory" className="shop-wa">
-                Open stock
-              </Link>
-            ) : wa ? (
-              <a className="shop-wa" href={whatsappHref(wa, "Hello BEANNEL, I am browsing the shop.")}>
-                <MessageCircle className="size-4" />
-                Chat on WhatsApp
-              </a>
-            ) : null}
           </div>
-        ) : landing && featured.length > 0 ? null : (
+        ) : (
           <div className="mall-grid">
             {shown.map((g) => (
               <ShopCard key={g.slug} group={g} currency={cur} saved={savedIds.has(g.variants[0]?.listingId)} />
