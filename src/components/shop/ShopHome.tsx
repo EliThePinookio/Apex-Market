@@ -3,7 +3,7 @@ import { MessageCircle } from "lucide-react";
 import { startTransition, useEffect, useMemo, useState } from "react";
 import { CategoryChip } from "@/components/ui/category-tile";
 import { ShopCard } from "@/components/shop/ShopCard";
-import { GOLD_DEPARTMENTS, matchesCategory, shortFor } from "@/lib/beannel/catalog";
+import { GOLD_AUDIENCE, GOLD_DEPARTMENTS, matchesAudience, matchesCategory, shortFor } from "@/lib/beannel/catalog";
 import {
   fetchShopListings,
   fetchShopStorefront,
@@ -20,7 +20,7 @@ import { useSaved } from "@/lib/beannel/wishlist";
 type SortKey = "new" | "price" | "price-desc" | "name";
 
 export function ShopHome() {
-  const search = useSearch({ strict: false }) as { q?: string; cat?: string; sort?: string; stock?: string };
+  const search = useSearch({ strict: false }) as { q?: string; cat?: string; who?: string; sort?: string; stock?: string };
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const { profile } = useBeannelAuth();
@@ -32,11 +32,12 @@ export function ShopHome() {
   const [failed, setFailed] = useState(false);
   const [ready, setReady] = useState(false);
   const cat = search.cat || "All";
+  const who = (search.who || "all").toLowerCase();
   const q = (search.q || "").trim().toLowerCase();
   const sort = (search.sort as SortKey) || "new";
   const inStockOnly = search.stock === "in";
   const staff = canAccessOffice(profile);
-  const onFloor = pathname.startsWith("/shop") || Boolean(q) || cat !== "All";
+  const onFloor = pathname.startsWith("/shop") || Boolean(q) || cat !== "All" || who !== "all";
   const landing = !onFloor;
 
   useEffect(() => {
@@ -77,6 +78,7 @@ export function ShopHome() {
   const shown = useMemo(() => {
     const filtered = groups.filter((g) => {
       if (cat !== "All" && !matchesCategory(g.category, cat)) return false;
+      if (who !== "all" && !matchesAudience(g.audience, who)) return false;
       if (inStockOnly && g.stock <= 0) return false;
       if (!q) return true;
       const hay = `${g.name} ${g.category} ${g.garmentType} ${g.variants.map((v) => v.sku).join(" ")}`.toLowerCase();
@@ -90,7 +92,7 @@ export function ShopHome() {
       return (b.updatedAt || "").localeCompare(a.updatedAt || "");
     });
     return copy;
-  }, [groups, cat, q, sort, inStockOnly]);
+  }, [groups, cat, who, q, sort, inStockOnly]);
 
   const cur = store?.currency || "GH₵";
   const wa = store?.whatsapp || "";
@@ -98,14 +100,14 @@ export function ShopHome() {
   const goFloor = (name: string) => {
     void navigate({
       to: "/shop",
-      search: { q: search.q, cat: name === "All" ? undefined : name, sort: search.sort, stock: search.stock },
+      search: { q: search.q, cat: name === "All" ? undefined : name, who: search.who, sort: search.sort, stock: search.stock },
     });
   };
 
   const setSort = (key: SortKey) => {
     void navigate({
       to: "/shop",
-      search: { q: search.q, cat: search.cat, sort: key === "new" ? undefined : key, stock: search.stock },
+      search: { q: search.q, cat: search.cat, who: search.who, sort: key === "new" ? undefined : key, stock: search.stock },
     });
   };
 
@@ -122,9 +124,22 @@ export function ShopHome() {
           <CategoryChip
             name="All"
             plain
-            active={landing || cat === "All"}
+            active={landing || (cat === "All" && who === "all")}
             onClick={() => void navigate({ to: landing ? "/" : "/shop" })}
           />
+          {GOLD_AUDIENCE.map((item) => (
+            <CategoryChip
+              key={item.id}
+              name={item.name}
+              active={who === item.audience}
+              onClick={() =>
+                void navigate({
+                  to: "/shop",
+                  search: { q: search.q, cat: search.cat, who: item.audience, sort: search.sort, stock: search.stock },
+                })
+              }
+            />
+          ))}
           {cats.map((name) => (
             <CategoryChip key={name} name={name} active={cat === name} onClick={() => goFloor(name)} />
           ))}
@@ -132,6 +147,19 @@ export function ShopHome() {
 
         {landing && (
           <>
+            <div className="mall-section">
+              <h2>Shop by who</h2>
+            </div>
+            <div className="who-grid">
+              {GOLD_AUDIENCE.map((item) => (
+                <Link key={item.id} to="/shop" search={{ who: item.audience }} className="dept-tile">
+                  <span className="dept-photo">
+                    <img src={item.cover} alt="" loading="lazy" decoding="async" />
+                  </span>
+                  <span className="dept-label">{item.name}</span>
+                </Link>
+              ))}
+            </div>
             <div className="mall-section">
               <h2>Shop by department</h2>
             </div>
@@ -176,7 +204,7 @@ export function ShopHome() {
                 onClick={() =>
                   void navigate({
                     to: "/shop",
-                    search: { q: search.q, cat: search.cat, sort: search.sort, stock: inStockOnly ? undefined : "in" },
+                    search: { q: search.q, cat: search.cat, who: search.who, sort: search.sort, stock: inStockOnly ? undefined : "in" },
                   })
                 }
               >

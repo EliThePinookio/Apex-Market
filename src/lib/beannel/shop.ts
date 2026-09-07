@@ -38,6 +38,7 @@ export interface ShopListing {
   unit: string;
   size: string;
   garmentType: string;
+  audience?: string;
   image: string;
   listed: boolean;
   compareAt?: number;
@@ -53,6 +54,7 @@ export interface ShopGroup {
   name: string;
   category: string;
   garmentType: string;
+  audience?: string;
   image: string;
   priceFrom: number;
   stock: number;
@@ -92,6 +94,7 @@ export function groupListings(listings: ShopListing[]): ShopGroup[] {
         name: item.name,
         category: item.category,
         garmentType: item.garmentType,
+        audience: item.audience || "unisex",
         image: item.image,
         priceFrom: item.price,
         stock: item.stock,
@@ -136,6 +139,7 @@ function mapListing(row: Record<string, unknown>): ShopListing | null {
     unit: String(row.unit || "pcs"),
     size: meta.size || "",
     garmentType: meta.garmentType || "",
+    audience: meta.audience || "unisex",
     image: listingImage({ ...meta, imageUrl: images[0] || meta.imageUrl }, category),
     listed: true,
     compareAt: meta.compareAt,
@@ -167,6 +171,7 @@ export function listingsFromProducts(products: Product[]): ShopListing[] {
         unit: p.unit,
         size: p.size || meta.size || "",
         garmentType: p.garmentType || meta.garmentType || "",
+        audience: p.audience || meta.audience || "unisex",
         image: listingImage({ ...meta, imageUrl: p.imageUrl || images[0] || meta.imageUrl }, p.category),
         listed: true,
         compareAt: p.compareAt || meta.compareAt,
@@ -241,6 +246,7 @@ export async function publishListing(businessId: string, product: Product): Prom
   const packed = writeShopMeta(notes, {
     size: product.size || meta.size,
     garmentType: product.garmentType || meta.garmentType,
+    audience: product.audience || meta.audience,
     imageUrl,
     images: images.length ? images : imageUrl ? [imageUrl] : undefined,
     listed: true,

@@ -37,7 +37,7 @@ import { computeSummary, filterTransactions } from "@/lib/apex/summary";
 import { fileWithModel } from "@/lib/apex/advisor";
 import { useBeannelAuth } from "@/lib/beannel/auth";
 import { isOfficePath, isOfficeRole, OWNER_EMAIL } from "@/lib/beannel/account";
-import { fileProduct, mergeCatalog, polishTitle } from "@/lib/beannel/catalog";
+import { fileAudience, fileProduct, mergeCatalog, polishTitle } from "@/lib/beannel/catalog";
 import type { OrderStatus, ShopOrder } from "@/lib/beannel/commerce";
 import { sourceIdFromListing } from "@/lib/beannel/shop-meta";
 import {
@@ -256,8 +256,9 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
         for (const p of cur.products) {
           const name = polishTitle(p.name);
           const parent = fileProduct(name, p.category, p.garmentType, p.notes).parent;
-          if (parent === p.category && name === p.name) continue;
-          const patched = { ...p, name, category: parent, updatedAt: new Date().toISOString() };
+          const audience = fileAudience(name, parent, p.garmentType, p.notes, p.audience);
+          if (parent === p.category && name === p.name && audience === (p.audience || "unisex")) continue;
+          const patched = { ...p, name, category: parent, audience, updatedAt: new Date().toISOString() };
           await persistProduct(biz, patched, cur.categories).catch(() => undefined);
           await publishListing(biz, patched).catch(() => undefined);
           cur = saveProductOn(cur, patched);
@@ -420,15 +421,28 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
       const current = snapshotRef.current.products.find((x) => x.id === p.id);
       const guess = fileProduct(named, p.category || current?.category, p.garmentType || current?.garmentType, p.notes || current?.notes);
       let category = guess.parent;
+      let modelAudience: Product["audience"] | undefined;
       if (guess.hits === 0 && named) {
         try {
           const filed = await fileWithModel({ data: { name: named } });
           if (filed.room) category = filed.room;
+          if (filed.audience === "men" || filed.audience === "women" || filed.audience === "unisex") {
+            modelAudience = filed.audience;
+          }
         } catch {
           /* local gold map is enough */
         }
       }
-      const next = saveProductOn(snapshotRef.current, { ...p, name: named || p.name, category });
+      const audience =
+        modelAudience ||
+        fileAudience(
+          named,
+          category,
+          p.garmentType || current?.garmentType,
+          p.notes || current?.notes,
+          p.audience || current?.audience,
+        );
+      const next = saveProductOn(snapshotRef.current, { ...p, name: named || p.name, category, audience });
       const saved = next.products.find((x) => x.id === (p.id || next.products[0]?.id));
       if (!saved) throw new Error("Product was not saved.");
       await persistProduct(biz, saved, next.categories);

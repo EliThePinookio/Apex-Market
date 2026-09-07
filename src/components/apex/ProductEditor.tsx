@@ -7,7 +7,7 @@ import { Field } from "@/components/ui/field";
 import { NumericInput, toNumber, type NumericValue } from "@/components/ui/numeric-field";
 import { money } from "@/lib/apex/money";
 import { useApex } from "@/lib/apex/store";
-import { classifyProduct, coverFor, fileProduct, goldParent, isGeneratedSku, isMisplaced, nextSku, polishTitle } from "@/lib/beannel/catalog";
+import { classifyProduct, coverFor, fileAudience, fileProduct, goldParent, isGeneratedSku, isMisplaced, nextSku, polishTitle } from "@/lib/beannel/catalog";
 import { familyKey, compressImage, FASHION_SIZES, GARMENT_TYPES, parseShopMeta, type ProductStatus } from "@/lib/beannel/shop-meta";
 import { cn } from "@/lib/cn";
 import type { Product } from "@/types";
@@ -40,6 +40,7 @@ type Draft = {
   listed: boolean;
   category: string;
   garmentType: string;
+  audience: "men" | "women" | "unisex";
   vendor: string;
   tags: string[];
   variants: VariantDraft[];
@@ -78,6 +79,7 @@ function fromProduct(p: Product, family: Product[]): Draft {
     listed: p.listed !== false,
     category: p.category || "Apparels",
     garmentType: p.garmentType || "",
+    audience: p.audience || "unisex",
     vendor: p.vendor || "BEANNEL",
     tags: p.tags || [],
     variants,
@@ -103,6 +105,7 @@ function emptyDraft(category: string, sku: string): Draft {
     listed: true,
     category,
     garmentType: "",
+    audience: "unisex",
     vendor: "BEANNEL",
     tags: [],
     variants: [],
@@ -234,6 +237,7 @@ export function ProductEditor({ productId }: { productId?: string }) {
     listed: draft.status === "active" && draft.listed,
     category: fileProduct(draft.name, draft.category, draft.garmentType, draft.description).parent,
     garmentType: draft.garmentType,
+    audience: fileAudience(draft.name, draft.category, draft.garmentType, draft.description, draft.audience),
     vendor: draft.vendor.trim() || "BEANNEL",
     tags: draft.tags,
     ...extra,
@@ -655,6 +659,28 @@ export function ProductEditor({ productId }: { productId?: string }) {
                 </p>
               )}
             </Field>
+            <div>
+              <p className="text-[13px] font-medium text-fg-muted mb-1.5">Who</p>
+              <div className="tag-row">
+                {(
+                  [
+                    ["men", "Men"],
+                    ["women", "Women"],
+                    ["unisex", "Everyone"],
+                  ] as const
+                ).map(([id, label]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className="tag-chip"
+                    data-active={draft.audience === id}
+                    onClick={() => set({ audience: id })}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div>
               <p className="text-[13px] font-medium text-fg-muted mb-1.5">Type</p>
               <div className="tag-row">

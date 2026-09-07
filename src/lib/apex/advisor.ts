@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { rateLimit } from "@/lib/beannel/guard";
-import { parseGoldRoom } from "@/lib/beannel/catalog";
+import { parseAudience, parseGoldRoom } from "@/lib/beannel/catalog";
 
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 
@@ -304,17 +304,18 @@ export const askApexAdvisor = createServerFn({ method: "POST" })
     };
   });
 
-const FILE_SYSTEM = `You file fashion stock into exactly one gold room.
-Reply with only one word from this list: Apparels, Shoes, Watches, Jewellery, Accessories, Electronics.
-No punctuation. No extra text.`;
+const FILE_SYSTEM = `You file fashion stock.
+Line 1: exactly one gold room: Apparels, Shoes, Watches, Jewellery, Accessories, Electronics
+Line 2: exactly one sex: Men, Women, or Unisex
+No other text.`;
 
 export const fileWithModel = createServerFn({ method: "POST" })
   .validator((input: { name: string }) => input)
   .handler(async ({ data }) => {
     const name = (data.name || "").trim().slice(0, 160);
-    if (!name) return { ok: true as const, room: null as string | null };
+    if (!name) return { ok: true as const, room: null as string | null, audience: null as string | null };
     if (!rateLimit("file-room", 40, 10 * 60_000, 30_000)) {
-      return { ok: true as const, room: null as string | null };
+      return { ok: true as const, room: null as string | null, audience: null as string | null };
     }
     const messages: LlmMessage[] = [
       { role: "system", content: FILE_SYSTEM },
@@ -325,6 +326,10 @@ export const fileWithModel = createServerFn({ method: "POST" })
     let text: string | null = null;
     if (openrouter) text = await withTimeout(chatOpenRouter(openrouter, messages), 4000);
     if (!text && xai) text = await withTimeout(chatXai(xai, messages), 4000);
-    return { ok: true as const, room: text ? parseGoldRoom(text) : null };
+    return {
+      ok: true as const,
+      room: text ? parseGoldRoom(text) : null,
+      audience: text ? parseAudience(text) : null,
+    };
   });
 

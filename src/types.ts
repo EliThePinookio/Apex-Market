@@ -34,6 +34,7 @@ export interface Product {
   updatedAt: string;
   size?: string;
   garmentType?: string;
+  audience?: "men" | "women" | "unisex";
   imageUrl?: string;
   listed?: boolean;
   status?: "active" | "draft" | "archived";

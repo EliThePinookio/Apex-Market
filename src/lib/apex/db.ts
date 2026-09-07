@@ -205,6 +205,7 @@ export function saveProductOn(
   const unpacked = parseShopMeta(productData.notes);
   const size = (productData.size ?? unpacked.meta.size ?? "").trim();
   const garmentType = (productData.garmentType ?? unpacked.meta.garmentType ?? "").trim();
+  const audience = (productData.audience ?? unpacked.meta.audience ?? "unisex") as Product["audience"];
   const images = [...(productData.images ?? unpacked.meta.images ?? [])].filter(Boolean);
   const imageUrl = (productData.imageUrl ?? unpacked.meta.imageUrl ?? images[0] ?? "").trim();
   if (imageUrl && !images.includes(imageUrl)) images.unshift(imageUrl);
@@ -233,6 +234,7 @@ export function saveProductOn(
     notes: writeShopMeta(description, {
       size,
       garmentType,
+      audience,
       imageUrl,
       images,
       listed,
@@ -247,6 +249,7 @@ export function saveProductOn(
     updatedAt: now,
     size,
     garmentType,
+    audience,
     imageUrl,
     images,
     listed,

@@ -104,6 +104,52 @@ export function polishTitle(name: string): string {
   return t.replace(/\b([a-zA-Z])/g, (m) => m.toUpperCase());
 }
 
+export type Audience = "men" | "women" | "unisex";
+
+export const GOLD_AUDIENCE: Array<{ id: string; name: "Men" | "Women"; audience: Audience; cover: string }> = [
+  { id: "who-men", name: "Men", audience: "men", cover: "/brand/cats/mens-shirts.jpg" },
+  { id: "who-women", name: "Women", audience: "women", cover: "/brand/cats/women.jpg" },
+];
+
+const MEN_WORDS = ["men", "mens", "men's", "male", "him", "gents", "gentleman", "polo", "chino", "oxford", "brogue", "agbada", "smock", "dashiki"];
+const WOMEN_WORDS = ["women", "womens", "women's", "female", "ladies", "lady", "her", "girl", "gown", "dress", "blouse", "heel", "heels", "palazzo", "skirt", "crop"];
+
+function countWords(blob: string, words: string[]): number {
+  return words.reduce((n, w) => n + (new RegExp(`\\b${w.replace("'", "'?")}\\b`, "i").test(blob) ? 1 : 0), 0);
+}
+
+export function classifyAudience(name: string, category = "", garmentType = "", notes = ""): { audience: Audience; hits: number } {
+  const blob = `${name} ${category} ${garmentType} ${notes}`.toLowerCase();
+  const men = countWords(blob, MEN_WORDS);
+  const women = countWords(blob, WOMEN_WORDS);
+  if (men > women && men > 0) return { audience: "men", hits: men };
+  if (women > men && women > 0) return { audience: "women", hits: women };
+  return { audience: "unisex", hits: 0 };
+}
+
+export function fileAudience(name: string, category = "", garmentType = "", notes = "", current?: string): Audience {
+  const guess = classifyAudience(name, category, garmentType, notes);
+  if (guess.hits > 0) return guess.audience;
+  if (current === "men" || current === "women" || current === "unisex") return current;
+  return "unisex";
+}
+
+export function matchesAudience(listing: string | undefined, wanted: string | undefined): boolean {
+  const w = (wanted || "").trim().toLowerCase();
+  if (!w || w === "all") return true;
+  const a = (listing || "unisex").trim().toLowerCase();
+  if (a === "unisex") return w === "men" || w === "women" || w === "unisex";
+  return a === w;
+}
+
+export function parseAudience(text: string): Audience | null {
+  const t = text.toLowerCase();
+  if (/\bwomen\b|\bfemale\b|\bladies\b/.test(t)) return "women";
+  if (/\bmen\b|\bmale\b|\bgents\b/.test(t)) return "men";
+  if (/\bunisex\b|\beveryone\b/.test(t)) return "unisex";
+  return null;
+}
+
 export function parseGoldRoom(text: string): string | null {
   const t = text.toLowerCase();
   for (const room of GOLD_DEPARTMENTS) {

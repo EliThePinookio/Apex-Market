@@ -3,9 +3,12 @@ export const GARMENT_TYPES = ["Casual", "Formal", "Traditional", "Sport", "Loung
 
 export type ProductStatus = "active" | "draft" | "archived";
 
+export type Audience = "men" | "women" | "unisex";
+
 export interface ShopMeta {
   size?: string;
   garmentType?: string;
+  audience?: Audience;
   imageUrl?: string;
   images?: string[];
   listed?: boolean;
@@ -42,6 +45,7 @@ export function writeShopMeta(notes: string, meta: ShopMeta): string {
   };
   if (meta.size) payload.size = meta.size;
   if (meta.garmentType) payload.garmentType = meta.garmentType;
+  if (meta.audience) payload.audience = meta.audience;
   if (meta.imageUrl) payload.imageUrl = meta.imageUrl;
   if (meta.images && meta.images.length) payload.images = meta.images.slice(0, 8);
   if (meta.vendor) payload.vendor = meta.vendor;
