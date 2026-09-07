@@ -1985,7 +1985,7 @@ html.dark .shop-dock {
   font-size: clamp(1.5rem, 5vw, 2.35rem);
   line-height: 0.95;
   letter-spacing: -0.03em;
-  color: #f6f1e8;
+  color: var(--shop-ink);
 }
 .shop-hero-banner .shop-hero-line { color: color-mix(in oklab, #f6f1e8 88%, transparent); }
 .shop-intro {
@@ -2008,7 +2008,7 @@ html.dark .shop-dock {
   margin-top: 0.45rem;
   font-size: 0.8125rem;
   line-height: 1.35;
-  color: color-mix(in oklab, #f6f1e8 88%, transparent);
+  color: var(--shop-ink-muted);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -4067,7 +4067,7 @@ html.dark .shop-shell > .shop-dock {
 .shop-kicker {
   font-family: Inter, "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   font-style: normal;
-  color: var(--gold-bright);
+  color: var(--gold-deep);
 }
 .shop-home .mall-section h2 {
   background: color-mix(in oklab, var(--shop-cream-elev, #fffdf8) 86%, transparent);
@@ -4185,7 +4185,7 @@ html.dark .shop-home .mall-price { color: var(--gold-bright); }
   font-size: 0.9rem;
   letter-spacing: 0.01em;
   color: var(--shop-ink);
-  background: color-mix(in oklab, var(--shop-surface-deep) 55%, transparent);
+  background: color-mix(in oklab, var(--shop-surface-deep) 92%, transparent);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -4204,7 +4204,7 @@ html.dark .shop-home .mall-price { color: var(--gold-bright); }
   border-radius: 999px;
 }
 .shop-home .mall-section h2 {
-  background: color-mix(in oklab, var(--shop-surface) 14%, transparent);
+  background: color-mix(in oklab, var(--shop-surface) 90%, transparent);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
@@ -4213,21 +4213,66 @@ html.dark .shop-home .mall-price { color: var(--gold-bright); }
 .shop-search,
 .shop-dock,
 .shop-top {
-  background: color-mix(in oklab, #fff 10%, transparent);
+  background: color-mix(in oklab, var(--shop-surface) 82%, transparent);
   backdrop-filter: blur(16px) saturate(1.15);
   -webkit-backdrop-filter: blur(16px) saturate(1.15);
+  color: var(--shop-ink);
 }
 html.dark .shop-search,
 html.dark .shop-dock,
 html.dark .shop-top {
-  background: color-mix(in oklab, #161310 14%, transparent);
+  background: color-mix(in oklab, #161310 82%, transparent);
 }
 .cloth-veil {
-  background: color-mix(in oklab, var(--shop-cream) 18%, transparent);
+  background: color-mix(in oklab, var(--shop-cream) 68%, transparent);
 }
 html.dark .cloth-veil {
-  background: color-mix(in oklab, #0f0d0b 42%, transparent);
+  background: color-mix(in oklab, #0b0b0b 74%, transparent);
 }
+
+html.dark .shop-kicker { color: var(--gold-bright); }
+.shop-intro-hero {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--shop-surface) 88%, transparent) 0%,
+    color-mix(in oklab, var(--shop-surface) 42%, transparent) 72%,
+    transparent 100%
+  );
+}
+.shop-home .cat-chip {
+  background: color-mix(in oklab, var(--shop-surface) 90%, transparent);
+  color: var(--shop-ink);
+  border: 1px solid color-mix(in oklab, var(--gold) 28%, transparent);
+}
+.shop-home .cat-chip[data-active="true"] {
+  background-image: var(--gold-grad);
+  background-color: var(--gold);
+  color: #1c1612;
+  border-color: color-mix(in oklab, var(--gold-deep) 40%, transparent);
+}
+.shop-empty {
+  background: color-mix(in oklab, var(--shop-surface) 92%, transparent);
+  color: var(--shop-ink);
+  border: 1px solid color-mix(in oklab, var(--gold) 24%, transparent);
+}
+.shop-home .mall-body {
+  background: color-mix(in oklab, var(--shop-surface) 94%, transparent);
+  color: var(--shop-ink);
+}
+.shop-home .mall-name,
+.shop-home .mall-cat,
+.shop-home .mall-sizes {
+  color: var(--shop-ink);
+}
+.shop-home .mall-cat,
+.shop-home .mall-sizes {
+  color: var(--shop-ink-muted);
+}
+.shop-dock a { color: var(--shop-ink-muted); }
+.shop-dock a[data-active="true"] { color: #1c1612; }
+.adinkra-ground .adinkra { opacity: 0.08; }
+html.dark .adinkra-ground .adinkra { opacity: 0.12; mix-blend-mode: screen; }
+
 
 
 
