@@ -32,7 +32,7 @@ export function ShopShell() {
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
     tick("light");
-    void navigate({ to: "/", search: { q: q.trim() || undefined, cat: undefined } });
+    void navigate({ to: "/shop", search: { q: q.trim() || undefined, cat: undefined } });
   };
 
   const homeOn = pathname === "/" || pathname.startsWith("/shop");

@@ -70,6 +70,11 @@ export const ShopCard = memo(function ShopCard({
             </>
           )}
         </p>
+        {group.variants.some((x) => x.size) && (
+          <p className="mall-sizes">
+            {Array.from(new Set(group.variants.map((x) => x.size).filter(Boolean))).join(" · ")}
+          </p>
+        )}
         <button
           type="button"
           className="mall-add"

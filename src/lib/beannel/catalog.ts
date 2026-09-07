@@ -46,6 +46,17 @@ export function shortFor(category: string): string {
   return found?.short || category;
 }
 
+export function matchesCategory(listingCategory: string, wanted: string): boolean {
+  const a = listingCategory.trim().toLowerCase();
+  const b = wanted.trim().toLowerCase();
+  if (!b || b === "all") return true;
+  if (a === b) return true;
+  const fromA = CATALOG.find((c) => c.name.toLowerCase() === a || (c.short || "").toLowerCase() === a);
+  const fromB = CATALOG.find((c) => c.name.toLowerCase() === b || (c.short || "").toLowerCase() === b);
+  if (fromA && fromB) return fromA.id === fromB.id;
+  return a.includes(b) || b.includes(a);
+}
+
 export function isGeneratedSku(sku: string, category: string): boolean {
   const prefix = prefixFor(category);
   return new RegExp(`^${prefix}\\d{3}$`, "i").test(sku.trim());

@@ -1,9 +1,9 @@
-import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState, useSearch } from "@tanstack/react-router";
 import { MessageCircle } from "lucide-react";
 import { startTransition, useEffect, useMemo, useState } from "react";
 import { CategoryChip } from "@/components/ui/category-tile";
 import { ShopCard } from "@/components/shop/ShopCard";
-import { CATALOG, shortFor } from "@/lib/beannel/catalog";
+import { CATALOG, matchesCategory, shortFor } from "@/lib/beannel/catalog";
 import {
   fetchShopListings,
   fetchShopStorefront,
@@ -21,6 +21,7 @@ type SortKey = "new" | "price" | "price-desc" | "name";
 
 export function ShopHome() {
   const search = useSearch({ strict: false }) as { q?: string; cat?: string; sort?: string; stock?: string };
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const { profile } = useBeannelAuth();
   const saved = useSaved();
@@ -73,7 +74,7 @@ export function ShopHome() {
 
   const shown = useMemo(() => {
     const filtered = groups.filter((g) => {
-      if (cat !== "All" && g.category !== cat) return false;
+      if (cat !== "All" && !matchesCategory(g.category, cat)) return false;
       if (inStockOnly && g.stock <= 0) return false;
       if (!q) return true;
       const hay = `${g.name} ${g.category} ${g.garmentType} ${g.variants.map((v) => v.sku).join(" ")}`.toLowerCase();
@@ -100,37 +101,52 @@ export function ShopHome() {
 
   const cur = store?.currency || "GH₵";
   const wa = store?.whatsapp || "";
-  const landing = cat === "All" && !q;
+  const onFloor = pathname.startsWith("/shop") || Boolean(q) || cat !== "All";
+  const landing = !onFloor;
 
-  const setCat = (name: string) => {
+  const goFloor = (name: string) => {
     void navigate({
-      to: "/",
+      to: "/shop",
       search: { q: search.q, cat: name === "All" ? undefined : name, sort: search.sort, stock: search.stock },
     });
   };
 
   const setSort = (key: SortKey) => {
     void navigate({
-      to: "/",
+      to: "/shop",
       search: { q: search.q, cat: search.cat, sort: key === "new" ? undefined : key, stock: search.stock },
     });
   };
 
   return (
-    <div className="shop-home">
-      <section className="shop-hero">
-        <div className="shop-hero-banner">
-          <p className="shop-kicker">Accra · Official store</p>
-          <p className="shop-banner-title">BEANNEL</p>
-          <p className="shop-hero-line">{store?.tagline || "Clothes, jewellery, watches — cloth from Ghana."}</p>
-        </div>
-      </section>
+    <div className={landing ? "shop-home is-landing" : "shop-home is-floor"}>
+      {landing ? (
+        <section className="shop-cinema" aria-label="BEANNEL">
+          <img src="/brand/lifestyle.jpg" alt="" className="shop-cinema-still" />
+          <div className="shop-cinema-veil" />
+          <div className="shop-hero-banner">
+            <p className="shop-kicker">Accra · Official store</p>
+            <p className="shop-banner-title">BEANNEL</p>
+            <p className="shop-hero-line">{store?.tagline || "Clothes, jewellery, watches — cloth from Ghana."}</p>
+          </div>
+        </section>
+      ) : (
+        <section className="shop-hero">
+          <div className="shop-hero-banner">
+            <p className="shop-kicker">{cat === "All" ? "The floor" : cat}</p>
+            <p className="shop-banner-title">{cat === "All" ? "BEANNEL" : shortFor(cat)}</p>
+            <p className="shop-hero-line">
+              {q ? `Results for “${search.q}”` : "Prices, sizes, and the pieces on the floor."}
+            </p>
+          </div>
+        </section>
+      )}
 
       <div className="shop-body">
         <div className="tag-row tag-row-scroll no-scrollbar pb-1">
-          <CategoryChip name="All" plain active={cat === "All"} onClick={() => setCat("All")} />
+          <CategoryChip name="All" plain active={cat === "All" && onFloor} onClick={() => goFloor("All")} />
           {cats.map((name) => (
-            <CategoryChip key={name} name={name} active={cat === name} onClick={() => setCat(name)} />
+            <CategoryChip key={name} name={name} active={cat === name} onClick={() => goFloor(name)} />
           ))}
         </div>
 
@@ -141,12 +157,12 @@ export function ShopHome() {
             </div>
             <div className="dept-grid">
               {CATALOG.map((item) => (
-                <button key={item.id} type="button" className="dept-tile" onClick={() => setCat(item.name)}>
+                <Link key={item.id} to="/shop" search={{ cat: item.name }} className="dept-tile">
                   <span className="dept-photo">
                     <img src={item.cover} alt="" loading="lazy" decoding="async" />
                   </span>
                   <span className="dept-label">{shortFor(item.name)}</span>
-                </button>
+                </Link>
               ))}
             </div>
           </>
@@ -179,7 +195,7 @@ export function ShopHome() {
                 data-active={inStockOnly}
                 onClick={() =>
                   void navigate({
-                    to: "/",
+                    to: "/shop",
                     search: { q: search.q, cat: search.cat, sort: search.sort, stock: inStockOnly ? undefined : "in" },
                   })
                 }
