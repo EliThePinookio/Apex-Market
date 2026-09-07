@@ -107,8 +107,8 @@ export function polishTitle(name: string): string {
 export type Audience = "men" | "women" | "unisex";
 
 export const GOLD_AUDIENCE: Array<{ id: string; name: "Men" | "Women"; audience: Audience; cover: string }> = [
-  { id: "who-men", name: "Men", audience: "men", cover: "/brand/cats/mens-shirts.jpg" },
   { id: "who-women", name: "Women", audience: "women", cover: "/brand/cats/women.jpg" },
+  { id: "who-men", name: "Men", audience: "men", cover: "/brand/cats/mens-shirts.jpg" },
 ];
 
 const MEN_WORDS = ["men", "mens", "men's", "male", "him", "gents", "gentleman", "polo", "chino", "oxford", "brogue", "agbada", "smock", "dashiki"];

@@ -626,7 +626,7 @@ async function placeShopOrderLegacy(args: {
     description,
     payment_method: args.payment,
     customer_name: args.customerName,
-    customer_id: args.userId,
+    customer_id: null,
     reference_no: args.userId ? `SHOP-${args.userId}` : "SHOP",
     items: lines,
     created_at: now,

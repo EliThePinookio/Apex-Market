@@ -131,6 +131,7 @@ export function ShopHome() {
             <CategoryChip
               key={item.id}
               name={item.name}
+              plain
               active={who === item.audience}
               onClick={() =>
                 void navigate({

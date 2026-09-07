@@ -304,32 +304,47 @@ export const askApexAdvisor = createServerFn({ method: "POST" })
     };
   });
 
-const FILE_SYSTEM = `You file fashion stock.
-Line 1: exactly one gold room: Apparels, Shoes, Watches, Jewellery, Accessories, Electronics
-Line 2: exactly one sex: Men, Women, or Unisex
-No other text.`;
-
 export const fileWithModel = createServerFn({ method: "POST" })
-  .validator((input: { name: string }) => input)
+  .validator((input: { name?: string; items?: Array<{ id: string; name: string }>; openrouterKey?: string }) => input)
   .handler(async ({ data }) => {
-    const name = (data.name || "").trim().slice(0, 160);
-    if (!name) return { ok: true as const, room: null as string | null, audience: null as string | null };
+    const items = (data.items && data.items.length ? data.items : data.name ? [{ id: "one", name: data.name }] : [])
+      .map((row) => ({ id: String(row.id || ""), name: String(row.name || "").trim().slice(0, 120) }))
+      .filter((row) => row.name)
+      .slice(0, 24);
+    if (!items.length) return { ok: true as const, room: null as string | null, audience: null as string | null, filed: [] as Array<{ id: string; room: string | null; audience: string | null }> };
     if (!rateLimit("file-room", 40, 10 * 60_000, 30_000)) {
-      return { ok: true as const, room: null as string | null, audience: null as string | null };
+      return { ok: true as const, room: null as string | null, audience: null as string | null, filed: [] as Array<{ id: string; room: string | null; audience: string | null }> };
     }
+    const list = items.map((row, i) => `${i + 1}. ${row.name}`).join("\n");
     const messages: LlmMessage[] = [
-      { role: "system", content: FILE_SYSTEM },
-      { role: "user", content: name },
+      {
+        role: "system",
+        content: `You file fashion stock for BEANNEL.
+For each numbered item, reply one line: index|Room|Sex
+Rooms: Apparels, Shoes, Watches, Jewellery, Accessories, Electronics
+Sex: Men, Women, Unisex
+No other text.`,
+      },
+      { role: "user", content: list },
     ];
-    const openrouter = usableKey(process.env.OPENROUTER_API_KEY);
+    const openrouter = usableKey(process.env.OPENROUTER_API_KEY) || usableKey(data.openrouterKey);
     const xai = usableKey(process.env.XAI_API_KEY);
     let text: string | null = null;
-    if (openrouter) text = await withTimeout(chatOpenRouter(openrouter, messages), 4000);
-    if (!text && xai) text = await withTimeout(chatXai(xai, messages), 4000);
+    if (openrouter) text = await withTimeout(chatOpenRouter(openrouter, messages), 8000);
+    if (!text && xai) text = await withTimeout(chatXai(xai, messages), 8000);
+    const filed = items.map((row, i) => {
+      const line = (text || "")
+        .split("\n")
+        .map((l) => l.trim())
+        .find((l) => l.startsWith(`${i + 1}|`) || l.startsWith(`${i + 1}.`) || l.startsWith(`${i + 1} `));
+      const blob = line || text || "";
+      return { id: row.id, room: parseGoldRoom(blob), audience: parseAudience(blob) };
+    });
     return {
       ok: true as const,
-      room: text ? parseGoldRoom(text) : null,
-      audience: text ? parseAudience(text) : null,
+      room: filed[0]?.room || null,
+      audience: filed[0]?.audience || null,
+      filed,
     };
   });
 

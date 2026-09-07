@@ -38,6 +38,7 @@ import { fileWithModel } from "@/lib/apex/advisor";
 import { useBeannelAuth } from "@/lib/beannel/auth";
 import { isOfficePath, isOfficeRole, OWNER_EMAIL } from "@/lib/beannel/account";
 import { fileAudience, fileProduct, mergeCatalog, polishTitle } from "@/lib/beannel/catalog";
+import { readOpenRouterKey } from "@/lib/beannel/keys";
 import type { OrderStatus, ShopOrder } from "@/lib/beannel/commerce";
 import { sourceIdFromListing } from "@/lib/beannel/shop-meta";
 import {
@@ -264,9 +265,41 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
           cur = saveProductOn(cur, patched);
           touched = true;
         }
-        if (!touched) return;
-        snapshotRef.current = cur;
-        setSnapshot(cur);
+        if (!touched) {
+          /* still let the second brain look */
+        } else {
+          snapshotRef.current = cur;
+          setSnapshot(cur);
+        }
+        try {
+          const brain = await fileWithModel({
+            data: {
+              items: cur.products.slice(0, 24).map((p) => ({ id: p.id, name: p.name })),
+              openrouterKey: readOpenRouterKey(),
+            },
+          });
+          let nextSnap = cur;
+          let brainTouched = false;
+          for (const row of brain.filed || []) {
+            const p = nextSnap.products.find((x) => x.id === row.id);
+            if (!p) continue;
+            const category = row.room || p.category;
+            const audience =
+              row.audience === "men" || row.audience === "women" || row.audience === "unisex" ? row.audience : p.audience;
+            if (category === p.category && audience === p.audience) continue;
+            const patched = { ...p, category, audience, updatedAt: new Date().toISOString() };
+            await persistProduct(biz, patched, nextSnap.categories).catch(() => undefined);
+            await publishListing(biz, patched).catch(() => undefined);
+            nextSnap = saveProductOn(nextSnap, patched);
+            brainTouched = true;
+          }
+          if (brainTouched) {
+            snapshotRef.current = nextSnap;
+            setSnapshot(nextSnap);
+          }
+        } catch {
+          /* local map already filed what it could */
+        }
       })();
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : "Could not load workspace.");
@@ -422,10 +455,10 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
       const guess = fileProduct(named, p.category || current?.category, p.garmentType || current?.garmentType, p.notes || current?.notes);
       let category = guess.parent;
       let modelAudience: Product["audience"] | undefined;
-      if (guess.hits === 0 && named) {
+      if (named) {
         try {
-          const filed = await fileWithModel({ data: { name: named } });
-          if (filed.room) category = filed.room;
+          const filed = await fileWithModel({ data: { name: named, openrouterKey: readOpenRouterKey() } });
+          if (guess.hits === 0 && filed.room) category = filed.room;
           if (filed.audience === "men" || filed.audience === "women" || filed.audience === "unisex") {
             modelAudience = filed.audience;
           }
