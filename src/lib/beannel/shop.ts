@@ -358,6 +358,7 @@ function mapShopOrder(row: Record<string, unknown>): ShopOrder | null {
     claimed,
     saleId: parsed.saleId,
     updatedAt: parsed.updatedAt || String(row.date || ""),
+    source: "",
   };
 }
 
@@ -372,6 +373,26 @@ function asPayment(raw: string): PaymentMethod {
 
 function isPosLedgerSale(id: string): boolean {
   return id.startsWith("tx-");
+}
+
+/** Mini App historically wrote Telegram checkouts to `sales` (not shop- transactions). */
+function isTelegramSaleNotes(notes: string): boolean {
+  const n = notes.toLowerCase();
+  return (
+    n.includes("source=telegram") ||
+    n.includes("channel: telegram") ||
+    n.includes("telegram mini app") ||
+    n.includes("@beannelbot") ||
+    notes.startsWith("SHOP|")
+  );
+}
+
+function salePaymentStatusToOrder(status: string): OrderStatus {
+  const s = (status || "").toLowerCase();
+  if (s === "paid" || s === "completed" || s === "success") return "confirmed";
+  if (s === "refunded") return "refunded";
+  if (s === "cancelled" || s === "canceled") return "cancelled";
+  return "placed";
 }
 
 function contactFromSaleNotes(notes: string, fallbackName: string): {
@@ -401,13 +422,12 @@ function contactFromSaleNotes(notes: string, fallbackName: string): {
   } catch {
     /* plain text */
   }
-  const lower = notes.toLowerCase();
   const phoneMatch = notes.match(/\+?\d[\d\s()-]{8,}\d/);
   const addrMatch = notes.match(/(?:deliver(?:y| to)?|address)\s*[:\-]\s*(.+)/i);
   return {
     name: fallbackName,
     phone: phoneMatch ? phoneMatch[0].replace(/[^\d+]/g, "") : "",
-    address: addrMatch ? addrMatch[1].trim() : /telegram|mini app/.test(lower) ? notes.slice(0, 180) : "",
+    address: addrMatch ? addrMatch[1].trim() : "",
     userId: "",
   };
 }
@@ -434,11 +454,11 @@ function mapSaleItems(raw: unknown): TransactionItem[] {
 function mapSaleOrder(row: Record<string, unknown>): ShopOrder | null {
   const id = String(row.id || "");
   if (!id || isPosLedgerSale(id)) return null;
+  const notes = String(row.notes || "");
+  if (!isTelegramSaleNotes(notes)) return null;
   const name = String(row.customer_name || "Customer");
-  const contact = contactFromSaleNotes(String(row.notes || ""), name);
-  const payStatus = String(row.payment_status || "");
-  let status: OrderStatus = contact.status || "placed";
-  if (!contact.status && payStatus === "refunded") status = "refunded";
+  const contact = contactFromSaleNotes(notes, name);
+  const status: OrderStatus = contact.status || salePaymentStatusToOrder(String(row.payment_status || ""));
   return {
     id,
     businessId: String(row.business_id || ""),
@@ -454,6 +474,7 @@ function mapSaleOrder(row: Record<string, unknown>): ShopOrder | null {
     claimed: status !== "placed",
     saleId: id,
     updatedAt: String(row.updated_at || row.sale_date || row.created_at || ""),
+    source: "telegram",
   };
 }
 
@@ -651,10 +672,28 @@ export async function fetchShopInbox(businessId: string): Promise<ShopOrder[]> {
   return mergeOrders(fromTx, fromSales);
 }
 
+function twinKey(order: ShopOrder): string {
+  const phone = order.phone.replace(/\D/g, "");
+  const when = order.date.slice(0, 16);
+  return `${phone}|${order.amount.toFixed(2)}|${when}|${order.name.trim().toLowerCase()}`;
+}
+
 function mergeOrders(shopTx: ShopOrder[], sales: ShopOrder[]): ShopOrder[] {
-  const claimed = new Set(shopTx.map((o) => o.saleId).filter(Boolean) as string[]);
-  const extra = sales.filter((o) => !claimed.has(o.id) && !shopTx.some((s) => s.id === o.id));
-  return [...shopTx, ...extra].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const shopIds = new Set(shopTx.map((o) => o.id));
+  const shopSaleIds = new Set(shopTx.map((o) => o.saleId).filter(Boolean) as string[]);
+  const shopKeys = new Set(shopTx.map(twinKey));
+  const preferred = shopTx.map((order) => {
+    const telegramTwin = sales.some(
+      (sale) => sale.id === order.id || (order.saleId && sale.id === order.saleId) || twinKey(sale) === twinKey(order),
+    );
+    return telegramTwin ? { ...order, source: "telegram" as const } : order;
+  });
+  const extra = sales.filter(
+    (sale) => !shopIds.has(sale.id) && !shopSaleIds.has(sale.id) && !shopKeys.has(twinKey(sale)),
+  );
+  return [...preferred, ...extra]
+    .filter((order) => order.source === "telegram" || order.payment !== "other")
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
 export async function fetchShopOrder(orderId: string): Promise<ShopOrder | null> {

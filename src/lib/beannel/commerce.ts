@@ -68,6 +68,8 @@ export interface ShopOrder {
   claimed: boolean;
   saleId?: string;
   updatedAt: string;
+  /** telegram = Mini App. Blank = Apex shop. WhatsApp is parked and omitted. */
+  source?: "" | "telegram";
 }
 
 export interface OrderEnvelope {

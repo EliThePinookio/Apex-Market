@@ -113,7 +113,9 @@ export function OrdersView() {
                 <td>
                   <p className="font-medium">#{order.id.slice(-6).toUpperCase()}</p>
                   <p className="office-muted">
-                    Shop · {order.items.map((i) => `${i.productName} × ${i.quantity}`).join(", ") || "Ticket"}
+                    {order.source === "telegram" ? "Source: Telegram" : ""}
+                    {order.source === "telegram" && order.items.length ? " · " : ""}
+                    {order.items.map((i) => `${i.productName} × ${i.quantity}`).join(", ") || (order.source === "telegram" ? "" : "Ticket")}
                   </p>
                 </td>
                 <td className="office-muted">{new Date(order.date).toLocaleString()}</td>
