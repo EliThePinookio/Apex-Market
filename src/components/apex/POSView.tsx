@@ -144,8 +144,8 @@ export function POSView() {
   };
 
   return (
-    <div className="h-full min-h-0 flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_320px]">
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 space-y-4">
+    <div className="pos-stage">
+      <div className="pos-floor">
         <SearchField
           inputRef={inputRef}
           value={query}
@@ -213,12 +213,16 @@ export function POSView() {
         )}
       </div>
 
-      <aside className="shrink-0 max-h-[42%] lg:max-h-none lg:m-3 lg:ml-0 lg:rounded-[24px] border-t lg:border-0 cushion p-4 flex flex-col min-h-0">
-        <h2 className="text-[15px] font-semibold tracking-tight mb-3">Ticket</h2>
-        <div className="flex-1 space-y-3 overflow-y-auto">
-          {items.length === 0 && (
-            <p className="text-[15px] text-fg-muted py-10 text-center">Scan or tap to add.</p>
+      <aside className={cn("pos-ticket", items.length === 0 && "is-empty")}>
+        <div className="pos-ticket-head">
+          <h2>Ticket</h2>
+          {items.length === 0 ? (
+            <p className="pos-ticket-hint">Tap a piece to add</p>
+          ) : (
+            <p className="pos-ticket-count">{items.reduce((s, i) => s + i.quantity, 0)}</p>
           )}
+        </div>
+        <div className="pos-ticket-lines">
           {items.map((item) => (
             <div key={item.productId} className="flex items-center gap-3">
               <div className="flex-1 min-w-0">
@@ -239,12 +243,14 @@ export function POSView() {
             </div>
           ))}
         </div>
-        <div className="pt-5 space-y-3">
-          <div className="flex justify-between text-[15px]">
-            <span className="text-fg-muted">Subtotal</span>
-            <span className="tabular">{money(subtotal, profile.currencySymbol)}</span>
-          </div>
-          <div className="flex justify-between text-[1.375rem] font-semibold tracking-tight">
+        <div className="pos-ticket-foot">
+          {items.length > 0 && (
+            <div className="flex justify-between text-[13px]">
+              <span className="text-fg-muted">Subtotal</span>
+              <span className="tabular">{money(subtotal, profile.currencySymbol)}</span>
+            </div>
+          )}
+          <div className="flex justify-between text-[1.125rem] font-semibold tracking-tight">
             <span>Total</span>
             <span className="tabular">{money(total, profile.currencySymbol)}</span>
           </div>
