@@ -64,6 +64,12 @@
     --space-5: 24px;
     --space-6: 32px;
     --space-7: 48px;
+    --grid-gap: clamp(0.55rem, 1.7vw, 1rem);
+    --grid-min-card: 9rem;
+    --grid-min-dept: 8.35rem;
+    --grid-min-who: 9.6rem;
+    --grid-min-kpi: 8.85rem;
+    --grid-min-pulse: 8.4rem;
     --z-header: 30;
     --z-dock: 40;
     --z-sheet: 50;
@@ -1385,14 +1391,8 @@ input[type="range"]::-moz-range-thumb {
 
 .pulse-row {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
-}
-@media (min-width: 640px) {
-  .pulse-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-@media (min-width: 1024px) {
-  .pulse-row { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--grid-min-pulse)), 1fr));
+  gap: var(--grid-gap, 0.5rem);
 }
 .pulse-cell {
   background: var(--color-bg-elevated);
@@ -2109,6 +2109,8 @@ html.dark .shop-dock {
   padding: 1rem 1rem 2.5rem;
   background: transparent;
   color: var(--color-fg);
+  container-type: inline-size;
+  container-name: shop;
 }
 @media (max-width: 1023px) {
   .shop-body { padding: 0.85rem 0.85rem 1.25rem; }
@@ -2154,15 +2156,10 @@ html.dark .shop-dock {
 }
 .mall-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--grid-min-card)), 1fr));
+  gap: var(--grid-gap, 0.7rem);
   margin-top: 1rem;
-}
-@media (min-width: 768px) {
-  .mall-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.9rem; }
-}
-@media (min-width: 1100px) {
-  .mall-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+  align-items: stretch;
 }
 .mall-card {
   position: relative;
@@ -2200,14 +2197,11 @@ html.dark .shop-dock {
   transition: transform var(--motion-medium) var(--ease-out);
 }
 .mall-body {
-  padding: 0.6rem 0.7rem 0.75rem;
+  padding: clamp(0.55rem, 1.8vw, 0.9rem) clamp(0.6rem, 1.9vw, 0.9rem) clamp(0.65rem, 2vw, 0.95rem);
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
   min-height: 0;
-}
-@media (min-width: 768px) {
-  .mall-body { padding: 0.75rem 0.85rem 0.9rem; }
 }
 .mall-cat {
   font-size: 0.625rem;
@@ -2217,7 +2211,7 @@ html.dark .shop-dock {
   font-weight: 600;
 }
 .mall-name {
-  font-size: 0.875rem;
+  font-size: clamp(0.8rem, 2.5vw, 0.95rem);
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--shop-ink, #f3e6c8);
@@ -2276,8 +2270,8 @@ html.dark .shop-dock {
 }
 .who-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--grid-min-who)), 1fr));
+  gap: var(--grid-gap, 0.75rem);
   margin-top: 0.5rem;
 }
 .who-grid .dept-photo { aspect-ratio: 4 / 5; }
@@ -2288,15 +2282,9 @@ html.dark .shop-dock {
 }
 .dept-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--grid-min-dept)), 1fr));
+  gap: var(--grid-gap, 0.7rem);
   margin-top: 0.5rem;
-}
-@media (min-width: 640px) {
-  .dept-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.85rem; }
-}
-@media (min-width: 1024px) {
-  .dept-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
 }
 .dept-tile {
   display: flex;
@@ -3041,6 +3029,8 @@ html.dark .office-frame {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  container-type: inline-size;
+  container-name: office;
 }
 .office-frame .panel,
 .office-frame .cushion,
@@ -3447,11 +3437,8 @@ html.dark .office-dock {
 
 .office-kpi {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-}
-@media (min-width: 900px) {
-  .office-kpi { grid-template-columns: repeat(4, 1fr); }
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--grid-min-kpi)), 1fr));
+  gap: var(--grid-gap, 0.75rem);
 }
 .office-kpi-card {
   background: color-mix(in oklab, var(--color-bg-elevated) 58%, transparent);
@@ -4330,8 +4317,8 @@ html.dark .shop-intro-hero .shop-hero-line { color: var(--shop-ink-muted); }
 html.dark .shop-home .mall-price { color: var(--gold-bright); }
 .shop-home .dept-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--grid-min-dept)), 1fr));
+  gap: var(--grid-gap, 0.75rem);
   margin-top: 0.35rem;
 }
 .shop-home .dept-tile {
