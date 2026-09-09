@@ -215,22 +215,10 @@ export const LiquidGlass = forwardRef<HTMLElement, LiquidGlassProps & Record<str
     pointer.current.active = true;
     pointer.current.pressed = true;
     updatePointer(event);
-    if (!isHost) {
-      try {
-        rootRef.current?.setPointerCapture(event.pointerId);
-      } catch {
-        /* optional */
-      }
-    }
   };
 
-  const handlePointerUp = (event: ReactPointerEvent<HTMLElement>) => {
+  const handlePointerUp = () => {
     pointer.current.pressed = false;
-    try {
-      rootRef.current?.releasePointerCapture(event.pointerId);
-    } catch {
-      /* ignore */
-    }
     startAnimation();
   };
 
@@ -276,7 +264,7 @@ export const LiquidGlass = forwardRef<HTMLElement, LiquidGlassProps & Record<str
       onPointerUp: handlePointerUp,
       onPointerLeave: handlePointerLeave,
       onPointerCancel: handlePointerLeave,
-      onClick,
+      ...(onClick ? { onClick } : {}),
     },
     createElement("span", { className: "liquid-glass__surface", "aria-hidden": true }),
     createElement("span", { className: "liquid-glass__specular", "aria-hidden": true }),

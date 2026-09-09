@@ -339,6 +339,7 @@ export function ApexStoreProvider({ children }: { children: ReactNode }) {
               toast.message(`${fresh.length} new shop order${fresh.length === 1 ? "" : "s"}`);
             }
           })
+          .catch(() => undefined)
           .finally(() => {
             silent = false;
           });

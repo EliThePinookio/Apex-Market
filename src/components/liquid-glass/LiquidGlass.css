@@ -107,14 +107,50 @@
 .liquid-glass__content {
   position: relative;
   z-index: 3;
-  display: contents;
-}
-
-.liquid-glass--pane .liquid-glass__content {
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
+  min-width: 0;
+  min-height: 0;
+  pointer-events: auto;
+}
+
+.liquid-glass--pane .liquid-glass__content,
+.liquid-glass--host .liquid-glass__content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.liquid-glass.shop-dock > .liquid-glass__content,
+.liquid-glass.office-dock > .liquid-glass__content {
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: space-evenly;
+  gap: inherit;
+}
+
+.liquid-glass.shop-search > .liquid-glass__content,
+.liquid-glass.office-chat-composer > .liquid-glass__content {
+  flex-direction: row;
+  align-items: center;
+}
+.liquid-glass.pos-ticket > .liquid-glass__content,
+.liquid-glass.sheet-panel > .liquid-glass__content {
+  flex: 1;
+  min-height: 0;
+}
+
+.liquid-glass.cat-chip > .liquid-glass__content,
+.liquid-glass.tag-chip > .liquid-glass__content,
+.liquid-glass.theme-toggle > .liquid-glass__content,
+.liquid-glass.office-icon-btn > .liquid-glass__content,
+.liquid-glass.shop-icon-btn > .liquid-glass__content {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {

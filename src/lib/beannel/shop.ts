@@ -190,7 +190,10 @@ export async function fetchShopListings(): Promise<ShopListing[]> {
     .select("id,name,sku,category,sell_price,stock_quantity,unit,barcode,notes,updated_at")
     .like("id", "list-%")
     .order("updated_at", { ascending: false });
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.warn("shop listings", error.message);
+    return [];
+  }
   return (data || [])
     .map((row) => mapListing(row as Record<string, unknown>))
     .filter((row): row is ShopListing => row != null && row.price > 0);
@@ -642,7 +645,10 @@ async function fetchShopRows(): Promise<Record<string, unknown>[]> {
     .like("id", "shop-%")
     .order("date", { ascending: false })
     .limit(200);
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.warn("shop orders", error.message);
+    return [];
+  }
   return (data || []) as Record<string, unknown>[];
 }
 

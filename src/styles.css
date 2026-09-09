@@ -2206,9 +2206,8 @@ html.dark .shop-dock {
 }
 .mall-card {
   position: relative;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  grid-template-areas: "photo" "body";
+  display: flex;
+  flex-direction: column;
   height: 100%;
   background: color-mix(in oklab, var(--shop-surface, #161310) 42%, transparent);
   border-radius: var(--radius-md);
@@ -2336,8 +2335,8 @@ html.dark .shop-dock {
   margin-top: 0.5rem;
 }
 .dept-tile {
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   height: 100%;
   background: color-mix(in oklab, var(--shop-surface, #161310) 40%, transparent);
@@ -4420,8 +4419,8 @@ html.dark .shop-home .mall-price { color: var(--gold-bright); }
   margin-top: 0.35rem;
 }
 .shop-home .dept-tile {
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   border-radius: 18px;
   background: color-mix(in oklab, var(--shop-surface) 86%, transparent);
@@ -4539,7 +4538,21 @@ html.dark .shop-kicker { color: var(--gold-bright); }
 .shop-home .mall-sizes {
   color: var(--shop-ink-muted);
 }
-.shop-dock a { color: var(--shop-ink-muted); }
+.shop-dock a {
+  color: var(--shop-ink-muted);
+}
+.shop-dock a,
+.office-dock a,
+.office-dock > button {
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
+}
+.mall-add,
+.mall-heart {
+  pointer-events: auto;
+  z-index: 4;
+}
 .shop-dock a[data-active="true"] { color: #1c1612; }
 .adinkra-ground .adinkra { opacity: 0.08; }
 html.dark .adinkra-ground .adinkra { opacity: 0.12; mix-blend-mode: screen; }

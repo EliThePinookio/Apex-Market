@@ -244,15 +244,22 @@ export function BeannelAuthProvider({ children }: { children: ReactNode }) {
         }
       },
       signInWithGoogle: async () => {
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: {
-            redirectTo: `${window.location.origin}/login`,
-            queryParams: { prompt: "select_account" },
-          },
-        });
-        if (error) return { success: false, error: error.message };
-        return { success: true };
+        try {
+          const { error } = await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: {
+              redirectTo: `${window.location.origin}/login`,
+              queryParams: { prompt: "select_account" },
+            },
+          });
+          if (error) return { success: false, error: error.message };
+          return { success: true };
+        } catch (err) {
+          return {
+            success: false,
+            error: err instanceof Error ? err.message : "Google sign-in failed.",
+          };
+        }
       },
       signUp: async (email, password, fullName, _businessName, _kind = "customer") => {
         const issue = passwordIssue(password);

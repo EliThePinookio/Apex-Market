@@ -124,9 +124,14 @@ export function AuthScreen() {
     setError(null);
     tick("medium");
     setGoogleBusy(true);
-    const res = await signInWithGoogle();
-    if (!res.success) {
-      setError(res.error || "Google sign-in failed.");
+    try {
+      const res = await signInWithGoogle();
+      if (!res.success) {
+        setError(res.error || "Google sign-in failed.");
+        setGoogleBusy(false);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google sign-in failed.");
       setGoogleBusy(false);
     }
   };
