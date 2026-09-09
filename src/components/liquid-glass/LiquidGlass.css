@@ -138,6 +138,11 @@ html.dark .liquid-glass--pane {
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
+.liquid-glass.shop-dock,
+.liquid-glass.office-dock {
+  overflow: hidden;
+  max-width: min(36rem, 100%);
+}
 .liquid-glass.mall-card:active,
 .liquid-glass.dept-tile:active,
 .liquid-glass.shop-order-card:active,
