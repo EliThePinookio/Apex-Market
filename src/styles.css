@@ -1636,8 +1636,14 @@ input[type="range"]::-moz-range-thumb {
   min-height: 100svh;
   height: 100dvh;
   max-height: 100dvh;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "top"
+    "stage"
+    "foot"
+    "nav";
   background: transparent;
   color: var(--shop-ink);
   --shop-cream: #e8d9c4;
@@ -1785,6 +1791,22 @@ html.dark .adinkra-ground .adinkra {
   min-height: 2.35rem;
   box-shadow: none;
 }
+.shop-shell > .cloth-ground {
+  grid-area: 1 / 1 / -1 / -1;
+  z-index: 0;
+}
+.shop-top {
+  grid-area: top;
+}
+.shop-main {
+  grid-area: stage;
+}
+.shop-foot {
+  grid-area: foot;
+}
+.shop-dock {
+  grid-area: nav;
+}
 .shop-top,
 .shop-main,
 .shop-foot,
@@ -1796,9 +1818,10 @@ html.dark .adinkra-ground .adinkra {
   position: sticky;
   top: 0;
   z-index: 20;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.65rem;
+  column-gap: 0.65rem;
   height: calc(3.5rem + env(safe-area-inset-top));
   padding: env(safe-area-inset-top) 0.75rem 0;
   background: color-mix(in oklab, #fff 10%, color-mix(in oklab, var(--gold) 5%, transparent));
@@ -2183,8 +2206,9 @@ html.dark .shop-dock {
 }
 .mall-card {
   position: relative;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas: "photo" "body";
   height: 100%;
   background: color-mix(in oklab, var(--shop-surface, #161310) 42%, transparent);
   border-radius: var(--radius-md);
@@ -2205,6 +2229,7 @@ html.dark .shop-dock {
 .mall-photo {
   position: relative;
   display: block;
+  grid-area: photo;
   aspect-ratio: 1;
   background: var(--color-bg-subtle);
   overflow: hidden;
@@ -2217,6 +2242,7 @@ html.dark .shop-dock {
   transition: transform var(--motion-medium) var(--ease-out);
 }
 .mall-body {
+  grid-area: body;
   flex: 1 1 auto;
   padding: clamp(0.55rem, 1.8vw, 0.9rem) clamp(0.6rem, 1.9vw, 0.9rem) clamp(0.65rem, 2vw, 0.95rem);
   display: flex;
@@ -2310,8 +2336,8 @@ html.dark .shop-dock {
   margin-top: 0.5rem;
 }
 .dept-tile {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
   min-width: 0;
   height: 100%;
   background: color-mix(in oklab, var(--shop-surface, #161310) 40%, transparent);
@@ -2463,12 +2489,18 @@ html.dark .shop-dock {
 }
 .shop-product {
   display: grid;
+  grid-template-areas: "photo" "copy";
   gap: 0;
 }
 @media (min-width: 860px) {
-  .shop-product { grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); min-height: calc(100dvh - 3.5rem); }
+  .shop-product {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    grid-template-areas: "photo copy";
+    min-height: calc(100dvh - 3.5rem);
+  }
 }
 .shop-product-photo {
+  grid-area: photo;
   min-height: 18rem;
   background: var(--color-bg-subtle);
 }
@@ -2482,6 +2514,7 @@ html.dark .shop-dock {
   .shop-product-photo img { max-height: none; height: 100%; }
 }
 .shop-product-copy {
+  grid-area: copy;
   padding: 1.25rem 1.15rem 2.5rem;
   background: color-mix(in oklab, var(--color-bg-elevated) 92%, transparent);
   backdrop-filter: blur(18px) saturate(1.35);
@@ -2509,15 +2542,18 @@ html.dark .shop-dock {
 }
 .shop-stepper span { min-width: 1.5rem; text-align: center; font-weight: 600; }
 .shop-line {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.85rem;
+  column-gap: 0.85rem;
   padding: 0.75rem;
   background: var(--color-bg-elevated);
   border-radius: var(--radius-lg);
   box-shadow: var(--highlight), var(--shadow-lift);
   text-align: left;
+}
+.shop-line:not(:has(img)) {
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 .shop-line img {
   width: 4.25rem;
@@ -2561,6 +2597,7 @@ html.dark .shop-dock {
   top: 0.55rem;
   right: 0.55rem;
   z-index: 3;
+  grid-area: photo;
   width: 2.25rem;
   height: 2.25rem;
   display: grid;
@@ -2853,10 +2890,18 @@ html.dark .shop-dock {
   --nav-body: calc(var(--nav-bar) + var(--nav-gutter-y) + env(safe-area-inset-bottom, 0px));
   position: relative;
   isolation: isolate;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "top"
+    "body"
+    "nav";
   background: transparent;
   color: var(--color-fg);
+}
+.office-frame > .cloth-ground {
+  grid-area: 1 / 1 / -1 / -1;
+  z-index: 0;
 }
 html.dark .office-frame {
   --office-top: #0b0b0b;
@@ -2864,12 +2909,13 @@ html.dark .office-frame {
   --office-sidebar: color-mix(in oklab, #161310 70%, transparent);
 }
 .office-topbar {
-  display: flex;
+  grid-area: top;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.75rem;
+  column-gap: 0.75rem;
   height: 3.5rem;
   padding: 0 0.85rem;
-  flex-shrink: 0;
   overflow: hidden;
   background: var(--office-top);
   color: var(--office-top-fg);
@@ -2930,8 +2976,11 @@ html.dark .office-frame {
   opacity: 0.7;
 }
 @media (min-width: 768px) {
-  .office-search { display: flex; }
-  .office-topbar { padding: 0 1rem 0 0.75rem; }
+  .office-search { display: flex; justify-self: center; }
+  .office-topbar {
+    padding: 0 1rem 0 0.75rem;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
 }
 .office-top-actions {
   display: flex;
@@ -2974,17 +3023,17 @@ html.dark .office-frame {
   text-align: center;
 }
 .office-body {
+  grid-area: body;
   position: relative;
   z-index: 1;
-  display: flex;
-  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   min-height: 0;
   min-width: 0;
 }
 .office-nav {
   display: none;
   width: 15.5rem;
-  flex-shrink: 0;
   flex-direction: column;
   background: var(--office-sidebar);
   border-right: 1px solid var(--color-border);
@@ -2993,6 +3042,7 @@ html.dark .office-frame {
 }
 @media (min-width: 768px) {
   .office-nav { display: flex; }
+  .office-body { grid-template-columns: 15.5rem minmax(0, 1fr); }
 }
 .office-nav-scroll {
   flex: 1;
@@ -3083,6 +3133,7 @@ html.dark .office-frame {
   letter-spacing: -0.03em;
 }
 .office-dock {
+  grid-area: nav;
   position: relative;
   z-index: 40;
   left: auto;
@@ -4369,8 +4420,8 @@ html.dark .shop-home .mall-price { color: var(--gold-bright); }
   margin-top: 0.35rem;
 }
 .shop-home .dept-tile {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
   overflow: hidden;
   border-radius: 18px;
   background: color-mix(in oklab, var(--shop-surface) 86%, transparent);
