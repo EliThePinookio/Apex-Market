@@ -1,5 +1,6 @@
 import { coverFor, shortFor } from "@/lib/beannel/catalog";
 import { cn } from "@/lib/cn";
+import { LiquidGlass } from "@/components/liquid-glass";
 
 export function CategoryTile({
   name,
@@ -15,7 +16,7 @@ export function CategoryTile({
   className?: string;
 }) {
   return (
-    <button type="button" onClick={onClick} className={cn("cat-tile", className)} title={name}>
+    <LiquidGlass as="button" type="button" onClick={onClick} className={cn("cat-tile", className)} title={name} host>
       <img src={coverFor(name)} alt="" />
       <span className="cat-tile-scrim" />
       <span className="cat-tile-body">
@@ -23,7 +24,7 @@ export function CategoryTile({
         {kicker ? <span className="cat-tile-kicker">{kicker}</span> : null}
         {detail ? <span className="cat-tile-detail">{detail}</span> : null}
       </span>
-    </button>
+    </LiquidGlass>
   );
 }
 
@@ -40,9 +41,9 @@ export function CategoryChip({
 }) {
   const label = plain ? name : shortFor(name);
   return (
-    <button type="button" className="cat-chip" data-active={active} onClick={onClick} title={name}>
+    <LiquidGlass as="button" type="button" className="cat-chip" data-active={active} onClick={onClick} title={name} host>
       {!plain && <img src={coverFor(name)} alt="" />}
       <span className="cat-chip-label">{label}</span>
-    </button>
+    </LiquidGlass>
   );
 }

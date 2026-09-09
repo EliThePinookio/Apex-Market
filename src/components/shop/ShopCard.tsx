@@ -8,6 +8,7 @@ import { slugProduct } from "@/lib/beannel/shop-meta";
 import type { ShopGroup } from "@/lib/beannel/shop";
 import { toggleSaved } from "@/lib/beannel/wishlist";
 import { cn } from "@/lib/cn";
+import { LiquidGlass } from "@/components/liquid-glass";
 
 export const ShopCard = memo(function ShopCard({
   group,
@@ -23,7 +24,7 @@ export const ShopCard = memo(function ShopCard({
   const slug = group.slug || slugProduct(group.name, group.category);
 
   return (
-    <article className="mall-card">
+    <LiquidGlass as="article" className="mall-card" host>
       <Link to="/shop/$productId" params={{ productId: slug }} className="mall-photo">
         <img
           src={group.image}
@@ -108,6 +109,6 @@ export const ShopCard = memo(function ShopCard({
           Add to cart
         </button>
       </div>
-    </article>
+    </LiquidGlass>
   );
 });

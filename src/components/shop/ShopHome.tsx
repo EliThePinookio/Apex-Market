@@ -16,6 +16,7 @@ import {
 import { useBeannelAuth } from "@/lib/beannel/auth";
 import { canAccessOffice } from "@/lib/beannel/account";
 import { useSaved } from "@/lib/beannel/wishlist";
+import { LiquidGlass } from "@/components/liquid-glass";
 
 type SortKey = "new" | "price" | "price-desc" | "name";
 
@@ -153,12 +154,12 @@ export function ShopHome() {
             </div>
             <div className="who-grid">
               {GOLD_AUDIENCE.map((item) => (
-                <Link key={item.id} to="/shop" search={{ who: item.audience }} className="dept-tile">
+                <LiquidGlass key={item.id} as={Link} to="/shop" search={{ who: item.audience }} className="dept-tile" host>
                   <span className="dept-photo">
                     <img src={item.cover} alt="" loading="lazy" decoding="async" />
                   </span>
                   <span className="dept-label">{item.name}</span>
-                </Link>
+                </LiquidGlass>
               ))}
             </div>
             <div className="mall-section">
@@ -166,12 +167,12 @@ export function ShopHome() {
             </div>
             <div className="dept-grid">
               {GOLD_DEPARTMENTS.map((item) => (
-                <Link key={item.id} to="/shop" search={{ cat: item.name }} className="dept-tile">
+                <LiquidGlass key={item.id} as={Link} to="/shop" search={{ cat: item.name }} className="dept-tile" host>
                   <span className="dept-photo">
                     <img src={item.cover} alt="" loading="lazy" decoding="async" />
                   </span>
                   <span className="dept-label">{shortFor(item.name)}</span>
-                </Link>
+                </LiquidGlass>
               ))}
             </div>
           </>
@@ -194,14 +195,16 @@ export function ShopHome() {
                   ["name", "Name"],
                 ] as const
               ).map(([id, label]) => (
-                <button key={id} type="button" className="tag-chip" data-active={sort === id} onClick={() => setSort(id)}>
+                <LiquidGlass key={id} as="button" type="button" className="tag-chip" data-active={sort === id} onClick={() => setSort(id)} host>
                   {label}
-                </button>
+                </LiquidGlass>
               ))}
-              <button
+              <LiquidGlass
+                as="button"
                 type="button"
                 className="tag-chip"
                 data-active={inStockOnly}
+                host
                 onClick={() =>
                   void navigate({
                     to: "/shop",
@@ -210,7 +213,7 @@ export function ShopHome() {
                 }
               >
                 In stock
-              </button>
+              </LiquidGlass>
             </div>
           </div>
         )}
