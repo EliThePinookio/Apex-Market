@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode, type TransitionEvent } from "react
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
 import { tick } from "@/lib/feel";
+import { LiquidGlass } from "@/components/ui/liquid-glass";
 
 const CLOSE_MS = 480;
 
@@ -64,9 +65,10 @@ export function Sheet({
   if (!present || typeof document === "undefined") return null;
   return createPortal(
     <div className={cn("sheet-scrim sheet-motion", shown && "is-open")} onClick={onClose} role="presentation">
-      <div
+      <LiquidGlass
         className={cn("sheet-panel", wide && "sm:max-w-lg")}
-        onClick={(e) => e.stopPropagation()}
+        strength="primary"
+        onClick={(e: { stopPropagation: () => void }) => e.stopPropagation()}
         onTransitionEnd={onPanelTransitionEnd}
         role="dialog"
         aria-modal="true"
@@ -82,7 +84,7 @@ export function Sheet({
           </div>
         )}
         {children}
-      </div>
+      </LiquidGlass>
     </div>,
     document.body,
   );

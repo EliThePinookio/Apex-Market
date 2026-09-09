@@ -3,6 +3,7 @@ import { Heart, Home, Package, Search, ShoppingBag, UserRound } from "lucide-rea
 import { useEffect, useState } from "react";
 import { BrandMark, Wordmark } from "@/components/ui/brand-mark";
 import { ClothGround } from "@/components/ui/cloth-ground";
+import { LiquidGlass } from "@/components/ui/liquid-glass";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { bagCount, useBag } from "@/lib/beannel/cart";
 import { useBeannelAuth } from "@/lib/beannel/auth";
@@ -50,7 +51,7 @@ export function ShopShell() {
             <Wordmark size="sm" />
           </span>
         </Link>
-        <form onSubmit={submitSearch} className="shop-search">
+        <LiquidGlass as="form" className="shop-search" strength="secondary" onSubmit={submitSearch}>
           <Search className="size-4 text-fg-subtle shrink-0" />
           <input
             value={q}
@@ -61,7 +62,7 @@ export function ShopShell() {
           <button type="submit" aria-label="Search">
             <span className="shop-search-go">Search</span>
           </button>
-        </form>
+        </LiquidGlass>
         <div className="shop-top-actions">
           <ThemeToggle className="shop-icon-btn" />
           <Link to="/track" className="shop-icon-btn shop-desktop-only" aria-label="Orders">
@@ -112,7 +113,7 @@ export function ShopShell() {
           )}
         </div>
       </footer>
-      <nav className="shop-dock" aria-label="Shop">
+      <LiquidGlass as="nav" className="shop-dock" strength="primary" aria-label="Shop">
         <Link to="/" data-active={homeOn} aria-current={homeOn ? "page" : undefined}>
           <Home className="size-[22px]" strokeWidth={homeOn ? 2.35 : 1.7} />
           Home
@@ -131,7 +132,7 @@ export function ShopShell() {
           <UserRound className="size-[22px]" strokeWidth={accountOn ? 2.35 : 1.7} />
           Account
         </Link>
-      </nav>
+      </LiquidGlass>
       <Toaster position="top-center" toastOptions={{ className: "font-sans !rounded-[16px]" }} />
     </div>
   );

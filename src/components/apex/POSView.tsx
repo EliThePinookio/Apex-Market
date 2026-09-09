@@ -13,6 +13,7 @@ import { money } from "@/lib/apex/money";
 import { useApex } from "@/lib/apex/store";
 import { colorFor, coverFor, GOLD_DEPARTMENTS, matchesCategory } from "@/lib/beannel/catalog";
 import { cn } from "@/lib/cn";
+import { LiquidGlass } from "@/components/ui/liquid-glass";
 import type { PaymentMethod, Transaction, TransactionItem } from "@/types";
 
 export function POSView() {
@@ -213,7 +214,7 @@ export function POSView() {
         )}
       </div>
 
-      <aside className={cn("pos-ticket", items.length === 0 && "is-empty")}>
+      <LiquidGlass as="aside" className={cn("pos-ticket", items.length === 0 && "is-empty")} strength="secondary">
         <div className="pos-ticket-head">
           <h2>Ticket</h2>
           {items.length === 0 ? (
@@ -263,7 +264,7 @@ export function POSView() {
             </Button>
           </div>
         </div>
-      </aside>
+      </LiquidGlass>
 
       <Sheet open={checkout} onClose={() => setCheckout(false)} title="Take payment">
         <div className="space-y-4">

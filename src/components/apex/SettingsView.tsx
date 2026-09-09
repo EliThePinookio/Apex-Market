@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Group, GroupLabel, GroupRow } from "@/components/ui/group";
 import { PageHeader } from "@/components/ui/page-header";
+import { LiquidGlassDemo } from "@/components/ui/liquid-glass-demo";
 import { Sheet } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { useApex } from "@/lib/apex/store";
@@ -194,6 +195,11 @@ export function SettingsView() {
       <Button onClick={() => void save()} disabled={busy} className="w-full" size="lg">
         Save settings
       </Button>
+
+      <section>
+        <GroupLabel>Liquid glass</GroupLabel>
+        <LiquidGlassDemo />
+      </section>
 
       <section>
         <GroupLabel>Data</GroupLabel>

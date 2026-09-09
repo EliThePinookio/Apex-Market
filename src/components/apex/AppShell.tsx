@@ -27,6 +27,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Toaster, toast } from "sonner";
 import { BrandMark, Wordmark } from "@/components/ui/brand-mark";
 import { ClothGround } from "@/components/ui/cloth-ground";
+import { LiquidGlass } from "@/components/ui/liquid-glass";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -442,7 +443,7 @@ function SignedInShell() {
         </main>
       </div>
 
-      <nav className="office-dock" aria-label="Admin">
+      <LiquidGlass as="nav" className="office-dock" strength="primary" aria-label="Admin">
         {dock.map((item) => {
           const Icon = item.icon;
           const isActive = active === item.id;
@@ -461,11 +462,11 @@ function SignedInShell() {
           <MoreHorizontal className="size-5" />
           More
         </button>
-      </nav>
+      </LiquidGlass>
 
       {moreOpen && (
         <div className="sheet-scrim md:hidden" onClick={() => setMoreOpen(false)}>
-          <div className="sheet-panel" onClick={(e) => e.stopPropagation()}>
+          <LiquidGlass className="sheet-panel" strength="primary" onClick={(e: { stopPropagation: () => void }) => e.stopPropagation()}>
             <div className="sheet-handle" />
             <p className="text-[1.25rem] font-semibold tracking-tight mb-3">More</p>
             <div className="group-list" data-indent="icon">
@@ -507,7 +508,7 @@ function SignedInShell() {
             >
               <Plus className="size-4" /> Add
             </Button>
-          </div>
+          </LiquidGlass>
         </div>
       )}
 

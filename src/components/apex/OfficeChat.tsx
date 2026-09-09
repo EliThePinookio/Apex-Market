@@ -7,6 +7,7 @@ import { useApex } from "@/lib/apex/store";
 import { readOpenRouterKey } from "@/lib/beannel/keys";
 import { cn } from "@/lib/cn";
 import { tick } from "@/lib/feel";
+import { LiquidGlass } from "@/components/ui/liquid-glass";
 import { useSheetPresence } from "@/components/ui/sheet";
 
 const MEMORY_KEY = "beannel_office_chat";
@@ -193,9 +194,11 @@ export function OfficeChat({
             ))}
             {busy && <div className="office-chat-bubble is-bot is-wait">Reading the books…</div>}
           </div>
-          <form
+          <LiquidGlass
+            as="form"
             className="office-chat-composer"
-            onSubmit={(e) => {
+            strength="secondary"
+            onSubmit={(e: { preventDefault: () => void }) => {
               e.preventDefault();
               void send(draft);
             }}
@@ -210,7 +213,7 @@ export function OfficeChat({
             <button type="submit" disabled={busy || !draft.trim()}>
               Send
             </button>
-          </form>
+          </LiquidGlass>
         </section>
       )}
     </>
