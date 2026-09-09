@@ -16,7 +16,13 @@ export function ShopShell() {
   useBag();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const search = useSearch({ strict: false }) as { q?: string };
+  const search = useSearch({ strict: false }) as {
+    q?: string;
+    cat?: string;
+    who?: string;
+    sort?: string;
+    stock?: string;
+  };
   const { user, profile } = useBeannelAuth();
   const count = bagCount();
   const openOrders = useOpenOrderCount();
@@ -33,7 +39,16 @@ export function ShopShell() {
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
     tick("light");
-    void navigate({ to: "/shop", search: { q: q.trim() || undefined, cat: undefined } });
+    void navigate({
+      to: "/shop",
+      search: {
+        q: q.trim() || undefined,
+        cat: search.cat,
+        who: search.who,
+        sort: search.sort,
+        stock: search.stock,
+      },
+    });
   };
 
   const homeOn = pathname === "/" || pathname.startsWith("/shop");
