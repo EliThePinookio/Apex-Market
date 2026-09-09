@@ -1021,8 +1021,19 @@ a.group-row:active { background: var(--color-bg-subtle); }
   text-transform: uppercase;
 }
 
-.tag-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.tag-row-scroll { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 0.15rem; }
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: safe center;
+  gap: 0.5rem;
+}
+.tag-row-scroll {
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  overflow-x: auto;
+  padding-bottom: 0.15rem;
+}
 .tag-row-scroll > * { flex: 0 0 auto; }
 .tag-chip {
   display: inline-flex;
@@ -1809,7 +1820,7 @@ html.dark .shop-dock {
   border-color: color-mix(in oklab, #fff 18%, color-mix(in oklab, var(--gold) 30%, transparent));
 }
 .shop-search {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
   display: flex;
   align-items: center;
@@ -1887,6 +1898,7 @@ html.dark .shop-dock {
 .shop-top-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.1rem;
   flex-shrink: 0;
 }
@@ -1921,6 +1933,7 @@ html.dark .shop-dock {
   align-items: center;
   gap: 0.65rem;
   min-width: 0;
+  flex: 0 1 auto;
   color: var(--shop-ink);
 }
 .shop-bag-btn {
@@ -1963,7 +1976,7 @@ html.dark .shop-dock {
 }
 .shop-main:has(.shop-checkout-wrap) {
   justify-content: center;
-  align-items: stretch;
+  align-items: center;
   padding: 0.75rem;
 }
 @media (min-width: 768px) {
@@ -2130,6 +2143,11 @@ html.dark .shop-dock {
   border-radius: 24px;
   box-shadow: var(--highlight), var(--shadow-lift);
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  align-self: center;
 }
 @media (max-width: 767px) {
   .shop-body.shop-checkout-wrap,
@@ -2151,6 +2169,8 @@ html.dark .shop-dock {
 .shop-account-actions {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
   gap: 0.65rem;
   width: 100%;
 }
@@ -2197,9 +2217,12 @@ html.dark .shop-dock {
   transition: transform var(--motion-medium) var(--ease-out);
 }
 .mall-body {
+  flex: 1 1 auto;
   padding: clamp(0.55rem, 1.8vw, 0.9rem) clamp(0.6rem, 1.9vw, 0.9rem) clamp(0.65rem, 2vw, 0.95rem);
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
   gap: 0.15rem;
   min-height: 0;
 }
@@ -2314,10 +2337,14 @@ html.dark .shop-dock {
   transition: transform var(--motion-medium) var(--ease-out);
 }
 .dept-label {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  margin-top: auto;
+  min-height: 2.55rem;
   padding: 0.65rem 0.55rem 0.7rem;
   font-size: 0.8125rem;
   font-weight: 650;
@@ -2484,11 +2511,13 @@ html.dark .shop-dock {
 .shop-line {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.85rem;
   padding: 0.75rem;
   background: var(--color-bg-elevated);
   border-radius: var(--radius-lg);
   box-shadow: var(--highlight), var(--shadow-lift);
+  text-align: left;
 }
 .shop-line img {
   width: 4.25rem;
@@ -2547,7 +2576,15 @@ html.dark .shop-dock {
   top: auto;
   right: auto;
 }
-.shop-toolbar { margin-top: 0.85rem; }
+.shop-toolbar {
+  margin-top: 0.85rem;
+  display: flex;
+  justify-content: safe center;
+}
+.shop-toolbar .tag-row {
+  justify-content: safe center;
+  width: 100%;
+}
 .shop-desktop-only { display: none; }
 @media (min-width: 1024px) {
   .shop-desktop-only { display: flex; }
@@ -2562,7 +2599,7 @@ html.dark .shop-dock {
   flex-shrink: 0;
   display: flex;
   align-items: stretch;
-  justify-content: space-between;
+  justify-content: space-evenly;
   gap: 0.15rem;
   width: calc(100% - (2 * var(--nav-gutter-x, 0.7rem)));
   max-width: min(36rem, 100%);
@@ -3054,7 +3091,7 @@ html.dark .office-frame {
   flex-shrink: 0;
   display: flex;
   align-items: stretch;
-  justify-content: space-between;
+  justify-content: space-evenly;
   gap: 0.12rem;
   width: calc(100% - (2 * var(--nav-gutter-x, 0.7rem)));
   max-width: min(36rem, 100%);
@@ -3446,6 +3483,10 @@ html.dark .office-dock {
   border-radius: var(--radius-md);
   padding: 1rem 1.05rem 0.85rem;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
   box-shadow: var(--highlight), var(--shadow-lift);
   backdrop-filter: blur(var(--blur-lg)) saturate(1.65);
   -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(1.65);
@@ -3481,7 +3522,8 @@ html.dark .office-dock {
 .office-kpi-hint.is-warn { color: var(--color-warning); }
 .office-kpi-spark {
   height: 2.5rem;
-  margin-top: 0.65rem;
+  margin-top: auto;
+  padding-top: 0.65rem;
 }
 
 .money-action-meta {
@@ -4264,6 +4306,11 @@ html:not(.dark) .shop-home .tag-chip {
 .shop-intro-hero {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   padding: 1.35rem 1.15rem 0.35rem;
   max-width: 72rem;
   margin: 0 auto;
