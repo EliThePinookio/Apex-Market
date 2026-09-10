@@ -5,7 +5,7 @@ import { BrandMark, Wordmark } from "@/components/ui/brand-mark";
 import { ClothGround } from "@/components/ui/cloth-ground";
 import { LiquidGlass } from "@/components/ui/liquid-glass";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { bagCount, useBag } from "@/lib/beannel/cart";
+import { useBag } from "@/lib/beannel/cart";
 import { useBeannelAuth } from "@/lib/beannel/auth";
 import { useOpenOrderCount } from "@/components/shop/ShopOrders";
 import { Toaster } from "sonner";
@@ -13,7 +13,7 @@ import { tick } from "@/lib/feel";
 import { forgetBrowserPaystackSecret } from "@/lib/beannel/keys";
 
 export function ShopShell() {
-  useBag();
+  const bag = useBag();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const search = useSearch({ strict: false }) as {
@@ -24,7 +24,7 @@ export function ShopShell() {
     stock?: string;
   };
   const { user, profile } = useBeannelAuth();
-  const count = bagCount();
+  const count = bag.reduce((s, i) => s + i.qty, 0);
   const openOrders = useOpenOrderCount();
   const [q, setQ] = useState(search.q || "");
 
@@ -73,6 +73,7 @@ export function ShopShell() {
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search BEANNEL"
             aria-label="Search the shop"
+            suppressHydrationWarning
           />
           <button type="submit" aria-label="Search">
             <span className="shop-search-go">Search</span>

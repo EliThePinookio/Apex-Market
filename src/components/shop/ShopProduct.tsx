@@ -16,12 +16,12 @@ import {
   type ShopStorefront,
 } from "@/lib/beannel/shop";
 import { slugProduct } from "@/lib/beannel/shop-meta";
-import { isSaved, toggleSaved, useSaved } from "@/lib/beannel/wishlist";
+import { toggleSaved, useSaved } from "@/lib/beannel/wishlist";
 import { useBeannelAuth } from "@/lib/beannel/auth";
 import { cn } from "@/lib/cn";
 
 export function ShopProduct() {
-  useSaved();
+  const savedItems = useSaved();
   const { productId } = useParams({ strict: false }) as { productId: string };
   const navigate = useNavigate();
   const { user } = useBeannelAuth();
@@ -95,8 +95,8 @@ export function ShopProduct() {
   const max = Math.max(1, variant.stock);
   const out = variant.stock <= 0;
   const sizes = group.variants.filter((v) => v.size);
-  const saved = isSaved(variant.listingId);
   const slug = group.slug || slugProduct(group.name, group.category);
+  const saved = savedItems.some((s) => s.listingId === variant.listingId || s.slug === slug);
   const compareAt = variant.compareAt || group.compareAt;
   const description = variant.description || group.description || "";
 
@@ -244,7 +244,12 @@ export function ShopProduct() {
           <h2 className="text-[1.05rem] font-semibold mb-4">You may also like</h2>
           <div className="mall-grid">
             {related.map((g) => (
-              <ShopCard key={g.slug} group={g} currency={cur} saved={isSaved(g.variants[0]?.listingId || g.slug)} />
+              <ShopCard
+                key={g.slug}
+                group={g}
+                currency={cur}
+                saved={savedItems.some((s) => s.listingId === g.variants[0]?.listingId || s.slug === g.slug)}
+              />
             ))}
           </div>
         </section>

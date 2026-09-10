@@ -59,7 +59,8 @@ export function OfficeChat({
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
-  const [messages, setMessages] = useState<Bubble[]>(loadMemory);
+  const [messages, setMessages] = useState<Bubble[]>([]);
+  const [memoryReady, setMemoryReady] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
   const { present, shown, onPanelTransitionEnd } = useSheetPresence(open);
 
@@ -74,8 +75,14 @@ export function OfficeChat({
   }, [transactions, products, prevBounds]);
 
   useEffect(() => {
+    setMessages(loadMemory());
+    setMemoryReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!memoryReady) return;
     saveMemory(messages);
-  }, [messages]);
+  }, [messages, memoryReady]);
 
   useEffect(() => {
     if (!open) return;

@@ -69,6 +69,8 @@ export function clearBag(): void {
   emit([]);
 }
 
+const EMPTY: BagItem[] = [];
+
 export function useBag(): BagItem[] {
   return useSyncExternalStore(
     (fn) => {
@@ -76,6 +78,6 @@ export function useBag(): BagItem[] {
       return () => listeners.delete(fn);
     },
     () => cache,
-    () => cache,
+    () => EMPTY,
   );
 }

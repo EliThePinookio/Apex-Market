@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { money } from "@/lib/apex/money";
-import { bagTotal, setBagQty, useBag } from "@/lib/beannel/cart";
+import { setBagQty, useBag } from "@/lib/beannel/cart";
 import { fetchShopStorefront, type ShopStorefront } from "@/lib/beannel/shop";
 import { useBeannelAuth } from "@/lib/beannel/auth";
 import { useEffect, useState } from "react";
@@ -18,7 +18,7 @@ export function ShopCart() {
   }, []);
 
   const cur = store?.currency || "GH₵";
-  const total = bagTotal();
+  const total = items.reduce((s, i) => s + i.price * i.qty, 0);
 
   if (items.length === 0) {
     return (

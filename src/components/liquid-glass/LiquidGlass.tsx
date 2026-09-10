@@ -107,7 +107,10 @@ export const LiquidGlass = forwardRef<HTMLElement, LiquidGlassProps & Record<str
       physics.current.frame = null;
     }
     physics.current.running = false;
-    if (rootRef.current) rootRef.current.style.willChange = "auto";
+    if (rootRef.current) {
+      rootRef.current.style.willChange = "auto";
+      rootRef.current.classList.remove("is-live");
+    }
   };
 
   const isSettled = () => {
@@ -182,7 +185,10 @@ export const LiquidGlass = forwardRef<HTMLElement, LiquidGlassProps & Record<str
     if (physics.current.running) return;
     physics.current.running = true;
     physics.current.lastTime = undefined;
-    if (rootRef.current) rootRef.current.style.willChange = "transform";
+    if (rootRef.current) {
+      rootRef.current.classList.add("is-live");
+      rootRef.current.style.willChange = "transform";
+    }
     physics.current.frame = requestAnimationFrame(animate);
   };
 

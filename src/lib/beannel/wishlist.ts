@@ -56,6 +56,8 @@ export function removeSaved(listingId: string): void {
   emit(cache.filter((i) => i.listingId !== listingId));
 }
 
+const EMPTY: SavedItem[] = [];
+
 export function useSaved(): SavedItem[] {
   return useSyncExternalStore(
     (fn) => {
@@ -63,6 +65,6 @@ export function useSaved(): SavedItem[] {
       return () => listeners.delete(fn);
     },
     () => cache,
-    () => cache,
+    () => EMPTY,
   );
 }

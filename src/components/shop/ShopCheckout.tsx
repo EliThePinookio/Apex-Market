@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { money } from "@/lib/apex/money";
-import { bagTotal, clearBag, useBag, type BagItem } from "@/lib/beannel/cart";
+import { clearBag, useBag, type BagItem } from "@/lib/beannel/cart";
 import { useBeannelAuth } from "@/lib/beannel/auth";
 import { forgetBrowserPaystackSecret } from "@/lib/beannel/keys";
 import { startPaystackCheckout, verifyPaystackCheckout } from "@/lib/beannel/paystack";
@@ -126,7 +126,7 @@ export function ShopCheckout() {
   }, [search.reference, search.trxref, user, orderId]);
 
   const cur = store?.currency || "GH₵";
-  const total = bagTotal();
+  const total = items.reduce((s, i) => s + i.price * i.qty, 0);
 
   const place = async (payment: Pay, bag: BagItem[]) => {
     const businessId = store?.businessId || "";

@@ -849,14 +849,18 @@ export function subscribeShopOrders(onChange: () => void): () => void {
 }
 
 export function subscribeShopListings(onChange: () => void): () => void {
-  const channel = supabase
-    .channel("beannel-shop-listings")
-    .on("postgres_changes", { event: "*", schema: "public", table: "products" }, (payload) => {
-      const row = (payload.new || payload.old) as { id?: string } | null;
-      if (String(row?.id || "").startsWith("list-")) onChange();
-    })
-    .subscribe();
-  return () => {
-    void supabase.removeChannel(channel);
-  };
+  try {
+    const channel = supabase
+      .channel("beannel-shop-listings")
+      .on("postgres_changes", { event: "*", schema: "public", table: "products" }, (payload) => {
+        const row = (payload.new || payload.old) as { id?: string } | null;
+        if (String(row?.id || "").startsWith("list-")) onChange();
+      })
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  } catch {
+    return () => undefined;
+  }
 }
