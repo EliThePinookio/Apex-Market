@@ -1,4 +1,4 @@
-import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import { useNavigate, useParams } from "@tanstack/react-router";
 import { Heart, MessageCircle, Minus, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";

@@ -193,3 +193,18 @@ html.dark .liquid-glass--pane {
     rotateY(var(--lg-ry))
     scale(var(--lg-scale));
 }
+
+.liquid-glass.mall-card:hover,
+.liquid-glass.dept-tile:hover,
+.liquid-glass.cat-chip:hover,
+.liquid-glass.cat-tile:hover,
+.liquid-glass.tag-chip:hover,
+.liquid-glass.tag-chip[data-active="true"] {
+  transform:
+    perspective(900px)
+    translate3d(var(--lg-x), var(--lg-y), 0)
+    rotateX(var(--lg-rx))
+    rotateY(var(--lg-ry))
+    scale(var(--lg-scale));
+  animation: none;
+}

@@ -63,7 +63,11 @@ export function ShopOrders() {
         });
     };
     load();
-    return onShopPing(load);
+    const unsub = onShopPing(load);
+    return () => {
+      live = false;
+      unsub();
+    };
   }, [user, isLoading]);
 
   const shown = useMemo(() => {

@@ -227,8 +227,8 @@ export function saveProductOn(
     category: productData.category?.trim() || "Apparels",
     buyPrice: Number(productData.buyPrice) || 0,
     sellPrice: Number(productData.sellPrice) || 0,
-    stockQuantity: Number(productData.stockQuantity) ?? 0,
-    minStockThreshold: Number(productData.minStockThreshold) ?? 5,
+    stockQuantity: Number(productData.stockQuantity) || 0,
+    minStockThreshold: Number(productData.minStockThreshold) || 5,
     unit: productData.unit?.trim() || "pcs",
     barcode: productData.barcode || "",
     notes: writeShopMeta(description, {

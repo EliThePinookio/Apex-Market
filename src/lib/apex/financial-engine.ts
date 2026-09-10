@@ -1,6 +1,5 @@
 import {
   Transaction,
-  Product,
   FinancialSummary,
   ActualVsForecastMetric,
   WhatIfSimulationParams,
@@ -42,9 +41,6 @@ export function computeActualVsForecast(
   healthRatios: FinancialHealthRatios;
   dailyVelocity: { avgSales: number; avgExpenses: number; avgProfit: number };
 } {
-  const salesTx = transactions.filter((t) => t.type === 'sale');
-  const expenseTx = transactions.filter((t) => t.type === 'expense');
-
   // Compute active date span
   const now = new Date();
   const daysMap: { [dateStr: string]: { actualSales: number; actualExpenses: number; actualProfit: number } } = {};

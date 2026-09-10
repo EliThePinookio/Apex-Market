@@ -1067,9 +1067,9 @@ a.group-row:active { background: var(--color-bg-subtle); }
   box-shadow: inset 0 1px 1px rgba(15, 15, 18, 0.22), 0 0 0 1px color-mix(in oklab, var(--color-fg) 14%, transparent);
   flex-shrink: 0;
 }
-.tag-chip:active { transform: scale(0.96); }
+.tag-chip:active:not(.liquid-glass) { transform: scale(0.96); }
 @media (hover: hover) and (pointer: fine) {
-  .tag-chip:hover { transform: translateY(-2px); }
+  .tag-chip:hover:not(.liquid-glass) { transform: translateY(-2px); }
 }
 .tag-chip[data-active="true"] {
   background: var(--color-accent);
@@ -1517,14 +1517,14 @@ input[type="range"]::-moz-range-thumb {
   white-space: nowrap;
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
 }
-.cat-tile:active { transform: scale(0.985); }
+.cat-tile:active:not(.liquid-glass) { transform: scale(0.985); }
 @media (hover: hover) and (pointer: fine) {
-  .cat-tile:hover {
+  .cat-tile:hover:not(.liquid-glass) {
     transform: translateY(-3px);
     box-shadow: var(--shadow-3);
   }
   .cat-tile:hover img { transform: scale(1.07); }
-  .cat-tile:hover:active { transform: scale(0.985); }
+  .cat-tile:hover:active:not(.liquid-glass) { transform: scale(0.985); }
 }
 
 .cat-chip {
@@ -2220,7 +2220,6 @@ html.dark .shop-dock {
 }
 @media (hover: hover) and (pointer: fine) {
   .mall-card:hover {
-    transform: translateY(-3px);
     box-shadow: var(--highlight), var(--shadow-3);
   }
   .mall-card:hover .mall-photo img { transform: scale(1.045); }
@@ -2384,7 +2383,6 @@ html.dark .shop-dock {
 }
 @media (hover: hover) and (pointer: fine) {
   .dept-tile:hover {
-    transform: translateY(-3px);
     box-shadow: var(--highlight), var(--shadow-3);
   }
   .dept-tile:hover .dept-photo img { transform: scale(1.045); }
@@ -3991,7 +3989,6 @@ html.dark .office-dock {
 .liquid-root .dept-tile:hover,
 .liquid-root .shop-order-card:hover,
 .liquid-root .office-kpi-card:hover {
-  transform: none;
   filter: none;
 }
 
@@ -4144,8 +4141,8 @@ a.shop-line:active,
   transition-timing-function: var(--ease-press);
 }
 
-.mall-card:active,
-.dept-tile:active,
+.mall-card:active:not(.liquid-glass),
+.dept-tile:active:not(.liquid-glass),
 .shop-order-card:active {
   transform: scale(var(--motion-scale-press-tile));
   filter: brightness(0.98);
@@ -4460,11 +4457,11 @@ html.dark .shop-home .mall-price { color: var(--gold-bright); }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.shop-home .mall-card:active,
-.shop-home .dept-tile:active {
+.shop-home .mall-card:active:not(.liquid-glass),
+.shop-home .dept-tile:active:not(.liquid-glass) {
   transform: scale(0.98);
 }
-.shop-home .tag-chip:active {
+.shop-home .tag-chip:active:not(.liquid-glass) {
   transform: scale(0.98);
 }
 .shop-home .mall-add {
@@ -4572,19 +4569,6 @@ html.dark .cloth-mesh {
     radial-gradient(38% 32% at 86% 18%, color-mix(in oklab, var(--gold) 8%, transparent), transparent 68%),
     radial-gradient(46% 40% at 62% 88%, color-mix(in oklab, var(--gold-deep) 7%, transparent), transparent 72%);
 }
-.shop-home .dept-tile,
-.shop-home .mall-card {
-  content-visibility: auto;
-  contain-intrinsic-size: 220px 280px;
-  contain: layout paint;
-}
-@media (hover: hover) and (pointer: fine) {
-  .shop-home .dept-tile:hover,
-  .shop-home .mall-card:hover,
-  .shop-home .cat-chip:hover {
-    transform: translateY(-3px) scale(1.012);
-  }
-}
 @supports (animation-timeline: scroll()) {
   .cloth-photo {
     animation: cloth-drift linear both;
@@ -4598,11 +4582,6 @@ html.dark .cloth-mesh {
 }
 @media (prefers-reduced-motion: reduce) {
   .cloth-photo { animation: none; }
-  .shop-home .dept-tile:hover,
-  .shop-home .mall-card:hover,
-  .shop-home .cat-chip:hover {
-    transform: none;
-  }
 }
 
 .pos-stage {

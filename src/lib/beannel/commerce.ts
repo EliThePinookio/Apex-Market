@@ -139,7 +139,7 @@ export function parseOrderEnvelope(description: string): OrderEnvelope | null {
   let status: OrderStatus = "placed";
   let saleId: string | undefined;
   let updatedAt = "";
-  let address = (parts[5] || "").replace(/^uid:.*$/, "");
+  const address = (parts[5] || "").replace(/^uid:.*$/, "");
   for (const part of parts.slice(5)) {
     if (part.startsWith("uid:")) userId = part.slice(4);
     else if (part.startsWith("st:")) {

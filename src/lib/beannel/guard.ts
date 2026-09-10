@@ -3,6 +3,8 @@ const WEAK_PINS = new Set(["1234", "0000", "1111", "2222", "1212", "2580", "4321
 export function sanitizeText(value: string, max = 200): string {
   return value
     .replace(/[<>]/g, "")
+    // Strip C0 control characters so pasted names cannot smuggle extra fields.
+    // eslint-disable-next-line no-control-regex
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
     .replace(/\|/g, " ")
     .trim()

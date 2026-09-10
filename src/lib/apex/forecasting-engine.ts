@@ -177,7 +177,6 @@ export function calculateLinearRegression(data: number[]): {
   let sumY = 0;
   let sumXY = 0;
   let sumX2 = 0;
-  let sumY2 = 0;
 
   for (let x = 0; x < n; x++) {
     const y = data[x];
@@ -185,7 +184,6 @@ export function calculateLinearRegression(data: number[]): {
     sumY += y;
     sumXY += x * y;
     sumX2 += x * x;
-    sumY2 += y * y;
   }
 
   const denominator = n * sumX2 - sumX * sumX;
@@ -232,7 +230,7 @@ export function generateForecast(
   const forecastAheadDays = Math.max(1, config.forecastAheadDays);
   const movingWindow = Math.min(historicalDays, Math.max(1, config.movingAverageWindow));
   const alpha = Math.max(0.01, Math.min(0.99, Number(config.smoothingAlpha) || 0.35));
-  const multiplier = Math.max(0, Math.min(5.0, Number(config.growthMultiplier) ?? 1.0));
+  const multiplier = Math.max(0, Math.min(5.0, Number(config.growthMultiplier) || 1.0));
 
   // 1. Build continuous daily buckets for the historical timeframe
   const daysMap: {
@@ -322,7 +320,6 @@ export function generateForecast(
     else if (config.model === 'weighted_moving_average' && wma !== null) selectedForecast = wma;
     else if (config.model === 'exponential_smoothing') selectedForecast = ema;
     else if (config.model === 'ensemble') {
-      const validSma = sma ?? trend;
       const validWma = wma ?? trend;
       selectedForecast = (trend * 0.4 + validWma * 0.35 + ema * 0.25);
     }

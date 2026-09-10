@@ -437,7 +437,7 @@ function contactFromSaleNotes(notes: string, fallbackName: string): {
     /* plain text */
   }
   const phoneMatch = notes.match(/\+?\d[\d\s()-]{8,}\d/);
-  const addrMatch = notes.match(/(?:deliver(?:y| to)?|address)\s*[:\-]\s*(.+)/i);
+  const addrMatch = notes.match(/(?:deliver(?:y| to)?|address)\s*[:-]\s*(.+)/i);
   return {
     name: fallbackName,
     phone: phoneMatch ? phoneMatch[0].replace(/[^\d+]/g, "") : "",
